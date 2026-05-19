@@ -17,6 +17,7 @@
     "db:setup": "node ./scripts/setup-db.mjs",
     "db:migrate:orgs": "node ./scripts/migrate-orgs.mjs",
     "db:migrate:channels": "node ./scripts/migrate-connected-accounts.mjs",
+    "db:migrate:posts": "node ./scripts/migrate-posts.mjs",
     "db:verify": "node ./scripts/verify-auth.mjs",
     "db:studio": "drizzle-kit studio"
   },

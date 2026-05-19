@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { OverviewChannelsCard } from "@/components/connected-accounts/overview-channels-card";
+import { OverviewScheduledCard } from "@/components/composer/overview-scheduled-card";
 import { OverviewWorkspaceCard } from "@/components/organization/overview-workspace-card";
 
 export default function DashboardOverviewPage() {
@@ -10,10 +11,7 @@ export default function DashboardOverviewPage() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <OverviewWorkspaceCard />
         <OverviewChannelsCard />
-        <Card>
-          <CardTitle>Scheduled</CardTitle>
-          <CardDescription>No posts in your queue yet. Open Composer to draft one.</CardDescription>
-        </Card>
+        <OverviewScheduledCard />
       </section>
 
       <Card className="border-primary/20 bg-primary/5">

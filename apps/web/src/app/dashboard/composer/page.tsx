@@ -1,12 +1,20 @@
-import { PlaceholderPanel } from "@/components/dashboard/placeholder-panel";
+import { listConnectedAccounts, listPostsForOrganization } from "@socialbd/db";
 
-export default function ComposerPage() {
+import { ComposerForm } from "@/components/composer/composer-form";
+import { PostList } from "@/components/composer/post-list";
+import { requireActiveOrganization } from "@/lib/dashboard-session";
+
+export default async function ComposerPage() {
+  const { organizationId } = await requireActiveOrganization();
+  const [channels, posts] = await Promise.all([
+    listConnectedAccounts(organizationId),
+    listPostsForOrganization(organizationId),
+  ]);
+
   return (
-    <PlaceholderPanel
-      title="Composer coming soon"
-      description="Draft posts, upload media, and customize captions per platform. This is the next major MVP feature after account connections."
-      ctaLabel="Back to overview"
-      ctaHref="/dashboard"
-    />
+    <div className="space-y-6">
+      <ComposerForm channels={channels} />
+      <PostList posts={posts} />
+    </div>
   );
 }

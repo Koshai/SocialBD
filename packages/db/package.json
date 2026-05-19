@@ -15,6 +15,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:setup": "node ./scripts/setup-db.mjs",
+    "db:migrate:orgs": "node ./scripts/migrate-orgs.mjs",
     "db:verify": "node ./scripts/verify-auth.mjs",
     "db:studio": "drizzle-kit studio"
   },

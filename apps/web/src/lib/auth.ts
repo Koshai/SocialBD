@@ -2,6 +2,7 @@
 import { db, schema } from "@socialbd/db";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
+import { organization } from "better-auth/plugins";
 
 const baseURL =
   process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -28,5 +29,8 @@ export const auth = betterAuth({
     enabled: true,
   },
   trustedOrigins,
-  plugins: [nextCookies()],
+  plugins: [
+    organization(),
+    nextCookies(),
+  ],
 });

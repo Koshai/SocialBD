@@ -9,6 +9,13 @@ export function getDashboardPageMeta(pathname: string): {
     (nav) => nav.href === pathname || pathname.startsWith(`${nav.href}/`),
   );
 
+  if (pathname === "/dashboard/workspaces/new") {
+    return {
+      title: "New workspace",
+      description: "Create a workspace for a client, brand, or your own team.",
+    };
+  }
+
   if (!item) {
     return {
       title: "Dashboard",

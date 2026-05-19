@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceGate } from "@/components/organization/workspace-gate";
+
 import { DashboardHeader } from "./dashboard-header";
 import { MobileNav } from "./mobile-nav";
 import { SidebarNav } from "./sidebar-nav";
@@ -31,7 +33,7 @@ export function DashboardShell({
         <MobileNav />
         <DashboardHeader user={user} title={title} description={description} />
         <main id="dashboard-main" className="flex-1 px-4 py-6 sm:px-6">
-          {children}
+          <WorkspaceGate>{children}</WorkspaceGate>
         </main>
       </div>
     </div>

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 
 type DashboardHeaderProps = {
   user: {
@@ -27,7 +28,8 @@ export function DashboardHeader({ user, title, description }: DashboardHeaderPro
         {description ? <p className="text-sm text-muted">{description}</p> : null}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <OrganizationSwitcher />
         <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2">
           <span
             aria-hidden

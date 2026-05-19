@@ -11,7 +11,8 @@
     "db:push": "pnpm --filter @socialbd/db db:push",
     "db:setup": "pnpm --filter @socialbd/db db:setup",
     "db:verify": "pnpm --filter @socialbd/db db:verify",
-    "db:migrate:orgs": "pnpm --filter @socialbd/db db:migrate:orgs"
+    "db:migrate:orgs": "pnpm --filter @socialbd/db db:migrate:orgs",
+    "db:migrate:channels": "pnpm --filter @socialbd/db db:migrate:channels"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

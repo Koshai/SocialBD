@@ -1,15 +1,3 @@
-﻿import "./load-env";
-
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-
-import * as schema from "./schema/index";
-
-const databaseUrl =
-  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5434/socialbd";
-
-const pool = new Pool({ connectionString: databaseUrl });
-
-export const db = drizzle(pool, { schema });
-
-export { pool, schema };
+﻿export { db, pool, schema } from "./db";
+export * from "./connected-accounts";
+export * from "./members";

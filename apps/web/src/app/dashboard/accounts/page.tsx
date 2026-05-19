@@ -1,12 +1,17 @@
-import { PlaceholderPanel } from "@/components/dashboard/placeholder-panel";
+import { Suspense } from "react";
 
-export default function AccountsPage() {
+import { ConnectedAccountsPanel } from "@/components/connected-accounts/connected-accounts-panel";
+import { listConnectedAccounts } from "@/lib/connected-accounts";
+import { requireActiveOrganization } from "@/lib/dashboard-session";
+import { isMetaConfigured } from "@/lib/meta/config";
+
+export default async function AccountsPage() {
+  const { organizationId } = await requireActiveOrganization();
+  const accounts = await listConnectedAccounts(organizationId);
+
   return (
-    <PlaceholderPanel
-      title="Connect your channels"
-      description="Link Facebook Pages, Instagram, and LinkedIn accounts. Meta API approval runs in parallel with this UI work."
-      ctaLabel="Back to overview"
-      ctaHref="/dashboard"
-    />
+    <Suspense fallback={<p className="text-sm text-muted">Loading accounts...</p>}>
+      <ConnectedAccountsPanel accounts={accounts} metaConfigured={isMetaConfigured()} />
+    </Suspense>
   );
 }

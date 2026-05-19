@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { OverviewChannelsCard } from "@/components/connected-accounts/overview-channels-card";
 import { OverviewWorkspaceCard } from "@/components/organization/overview-workspace-card";
 
 export default function DashboardOverviewPage() {
@@ -8,10 +9,7 @@ export default function DashboardOverviewPage() {
     <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <OverviewWorkspaceCard />
-        <Card>
-          <CardTitle>Channels</CardTitle>
-          <CardDescription>0 connected — link Facebook, Instagram, or LinkedIn next.</CardDescription>
-        </Card>
+        <OverviewChannelsCard />
         <Card>
           <CardTitle>Scheduled</CardTitle>
           <CardDescription>No posts in your queue yet. Open Composer to draft one.</CardDescription>

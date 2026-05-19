@@ -18,7 +18,16 @@ function getQueue() {
   return queue;
 }
 
+export async function removePublishJob(postId: string) {
+  const job = await getQueue().getJob(postId);
+  if (job) {
+    await job.remove();
+  }
+}
+
 export async function enqueuePublishPost(postId: string, runAt?: Date | null) {
+  await removePublishJob(postId);
+
   const delay = runAt ? Math.max(0, runAt.getTime() - Date.now()) : 0;
 
   await getQueue().add(

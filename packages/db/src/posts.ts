@@ -1,4 +1,4 @@
-import { and, desc, eq, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
@@ -15,6 +15,10 @@ export type PostWithChannel = {
   createdAt: Date;
   channelName: string;
   platform: string;
+};
+
+export type CalendarPost = PostWithChannel & {
+  displayAt: Date;
 };
 
 export async function createPost(input: {
@@ -159,6 +163,92 @@ export async function markPostFailed(postId: string) {
       updatedAt: now,
     })
     .where(eq(post.id, postId));
+}
+
+export async function listCalendarPosts(
+  organizationId: string,
+  rangeStart: Date,
+  rangeEnd: Date,
+) {
+  const rows = await db
+    .select({
+      id: post.id,
+      body: post.body,
+      status: post.status,
+      scheduledAt: post.scheduledAt,
+      publishedAt: post.publishedAt,
+      createdAt: post.createdAt,
+      channelName: connectedAccount.displayName,
+      platform: connectedAccount.platform,
+    })
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(
+      and(
+        eq(post.organizationId, organizationId),
+        or(
+          and(
+            eq(post.status, "scheduled"),
+            gte(post.scheduledAt, rangeStart),
+            lte(post.scheduledAt, rangeEnd),
+          ),
+          and(
+            eq(post.status, "published"),
+            gte(post.publishedAt, rangeStart),
+            lte(post.publishedAt, rangeEnd),
+          ),
+          and(
+            eq(post.status, "failed"),
+            gte(post.scheduledAt, rangeStart),
+            lte(post.scheduledAt, rangeEnd),
+          ),
+        ),
+      ),
+    );
+
+  const calendarPosts = rows
+    .map((row) => {
+      const displayAt =
+        row.status === "published" ? row.publishedAt : (row.scheduledAt ?? row.createdAt);
+      if (!displayAt) return null;
+      return { ...row, status: row.status as PostStatus, displayAt };
+    })
+    .filter((row): row is CalendarPost => row !== null);
+
+  calendarPosts.sort((a, b) => a.displayAt.getTime() - b.displayAt.getTime());
+  return calendarPosts;
+}
+
+export async function reschedulePost(input: {
+  postId: string;
+  organizationId: string;
+  scheduledAt: Date;
+}) {
+  if (input.scheduledAt.getTime() <= Date.now()) {
+    throw new Error("Schedule time must be in the future.");
+  }
+
+  const [updated] = await db
+    .update(post)
+    .set({
+      status: "scheduled",
+      scheduledAt: input.scheduledAt,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(post.id, input.postId),
+        eq(post.organizationId, input.organizationId),
+        inArray(post.status, ["scheduled", "failed"]),
+      ),
+    )
+    .returning();
+
+  if (!updated) {
+    throw new Error("Post not found or cannot be rescheduled.");
+  }
+
+  return updated;
 }
 
 export async function listDueScheduledPostIds(limit = 50) {

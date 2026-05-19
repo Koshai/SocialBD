@@ -1,12 +1,24 @@
-import { PlaceholderPanel } from "@/components/dashboard/placeholder-panel";
+import { countScheduledPosts, listCalendarPosts } from "@socialbd/db";
 
-export default function CalendarPage() {
+import { CalendarWeek } from "@/components/calendar/calendar-week";
+import { endOfWeek, startOfWeek } from "@/lib/calendar";
+import { requireActiveOrganization } from "@/lib/dashboard-session";
+
+export default async function CalendarPage() {
+  const { organizationId } = await requireActiveOrganization();
+  const weekStart = startOfWeek(new Date());
+  const weekEnd = endOfWeek(weekStart);
+
+  const [posts, scheduledCount] = await Promise.all([
+    listCalendarPosts(organizationId, weekStart, weekEnd),
+    countScheduledPosts(organizationId),
+  ]);
+
   return (
-    <PlaceholderPanel
-      title="Calendar coming soon"
-      description="View scheduled posts in a week or month view and drag to reschedule. Wired to the BullMQ publish worker when scheduling is ready."
-      ctaLabel="Back to overview"
-      ctaHref="/dashboard"
+    <CalendarWeek
+      initialWeekStart={weekStart.toISOString()}
+      initialPosts={posts}
+      initialScheduledCount={scheduledCount}
     />
   );
 }

@@ -25,8 +25,8 @@ export function OverviewScheduledCardLive({ initial }: OverviewScheduledCardLive
       </div>
       <CardDescription>
         {scheduledCount === 0
-          ? "No posts in your queue. Scheduled posts update here when they publish."
-          : `${scheduledCount} post${scheduledCount === 1 ? "" : "s"} scheduled — status refreshes automatically.`}
+          ? "No posts in your queue. Schedule from Composer or view the calendar."
+          : `${scheduledCount} post${scheduledCount === 1 ? "" : "s"} scheduled — see Calendar or wait for auto-publish.`}
       </CardDescription>
     </Card>
   );

@@ -1,0 +1,26 @@
+{
+  "name": "@socialbd/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@socialbd/db": "workspace:*",
+    "bullmq": "^5.41.0",
+    "ioredis": "^5.6.0"
+  },
+  "devDependencies": {
+    "@socialbd/eslint-config": "workspace:*",
+    "@socialbd/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "eslint": "^9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "@socialbd/ui/styles/tokens.css";
+
+/* Scan shared UI package so Tailwind generates classes used in @socialbd/ui */
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+
+@theme inline {
+  --color-background: var(--sb-background);
+  --color-foreground: var(--sb-foreground);
+  --color-primary: var(--sb-primary);
+  --color-accent: var(--sb-accent);
+  --color-muted: var(--sb-muted);
+  --color-surface: var(--sb-surface);
+  --color-border: var(--sb-border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-lg: var(--sb-radius);
+}
+
+body {
+  background: var(--sb-background);
+  color: var(--sb-foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

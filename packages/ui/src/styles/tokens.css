@@ -1,0 +1,26 @@
+:root {
+  /* Brand — teal primary, coral accent */
+  --sb-primary: #0d9488;
+  --sb-primary-hover: #14b8a6;
+  --sb-accent: #f97316;
+  --sb-accent-muted: #fdba74;
+
+  --sb-background: #fafaf9;
+  --sb-foreground: #0f172a;
+  --sb-muted: #64748b;
+  --sb-surface: #ffffff;
+  --sb-border: #e2e8f0;
+
+  --sb-radius: 0.75rem;
+  --sb-focus-ring: 2px solid #14b8a6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sb-background: #0f172a;
+    --sb-foreground: #f8fafc;
+    --sb-muted: #94a3b8;
+    --sb-surface: #1e293b;
+    --sb-border: #334155;
+  }
+}

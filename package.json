@@ -1,0 +1,33 @@
+{
+  "name": "socialbd",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css}\"",
+    "db:migrate": "pnpm --filter @socialbd/db db:migrate",
+    "db:push": "pnpm --filter @socialbd/db db:push",
+    "db:setup": "pnpm --filter @socialbd/db db:setup",
+    "db:verify": "pnpm --filter @socialbd/db db:verify"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@11.1.2",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "unrs-resolver",
+      "esbuild",
+      "msgpackr-extract"
+    ]
+  }
+}

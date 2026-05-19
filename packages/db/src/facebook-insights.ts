@@ -1,6 +1,17 @@
+import { MetaApiError, classifyMetaErrorMessage } from "./meta-errors";
+
 const GRAPH_VERSION = "v21.0";
 
-type GraphError = { message: string; code?: number };
+type GraphError = { message: string; code?: number; error_subcode?: number };
+
+function getAppAccessToken() {
+  const appId = process.env.META_APP_ID;
+  const appSecret = process.env.META_APP_SECRET;
+  if (!appId || !appSecret) {
+    throw new Error("Meta app credentials are not configured.");
+  }
+  return `${appId}|${appSecret}`;
+}
 
 async function graphGet<T>(path: string, params: Record<string, string>) {
   const url = new URL(`https://graph.facebook.com/${GRAPH_VERSION}${path}`);
@@ -12,10 +23,47 @@ async function graphGet<T>(path: string, params: Record<string, string>) {
   const json = (await response.json()) as T & { error?: GraphError };
 
   if (!response.ok || json.error) {
-    throw new Error(json.error?.message ?? `Meta API failed (${response.status}).`);
+    const message = json.error?.message ?? `Meta API failed (${response.status}).`;
+    const kind = classifyMetaErrorMessage(message, json.error?.code, json.error?.error_subcode);
+    throw new MetaApiError(message, kind, json.error?.code, json.error?.error_subcode);
   }
 
   return json;
+}
+
+type DebugTokenResponse = {
+  data?: {
+    is_valid?: boolean;
+    scopes?: string[];
+  };
+};
+
+export async function debugTokenScopes(accessToken: string) {
+  const json = await graphGet<DebugTokenResponse>("/debug_token", {
+    input_token: accessToken,
+    access_token: getAppAccessToken(),
+  });
+
+  if (!json.data?.is_valid) {
+    throw new MetaApiError(
+      "Access token is invalid or expired. Reconnect the Page under Accounts.",
+      "expired",
+    );
+  }
+
+  return json.data.scopes ?? [];
+}
+
+export function tokenHasScope(scopes: string[] | string | null | undefined, scope: string) {
+  if (!scopes) return false;
+  if (Array.isArray(scopes)) {
+    return scopes.includes(scope);
+  }
+  return scopes
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .includes(scope);
 }
 
 type SummaryNode = {
@@ -47,32 +95,35 @@ export async function fetchPostEngagement(
 ): Promise<PostEngagementMetrics> {
   const baseFields = "comments.summary(true),reactions.summary(true),shares";
 
-  try {
-    const withInsights = await graphGet<PostEngagementResponse>(`/${externalPostId}`, {
-      access_token: pageAccessToken,
-      fields: `${baseFields},insights.metric(post_impressions).period(lifetime)`,
-    });
+  let data: PostEngagementResponse;
 
-    return parsePostEngagement(withInsights, true);
-  } catch {
-    const basic = await graphGet<PostEngagementResponse>(`/${externalPostId}`, {
+  try {
+    data = await graphGet<PostEngagementResponse>(`/${externalPostId}`, {
       access_token: pageAccessToken,
       fields: baseFields,
     });
-
-    return parsePostEngagement(basic, false);
+  } catch (error) {
+    if (error instanceof MetaApiError) {
+      throw error;
+    }
+    throw error;
   }
-}
 
-function parsePostEngagement(
-  data: PostEngagementResponse,
-  hasInsights: boolean,
-): PostEngagementMetrics {
   let impressions: number | null = null;
 
-  if (hasInsights) {
-    const metric = data.insights?.data?.find((item) => item.name === "post_impressions");
+  try {
+    const insights = await graphGet<PostEngagementResponse>(`/${externalPostId}`, {
+      access_token: pageAccessToken,
+      fields: "insights.metric(post_impressions).period(lifetime)",
+    });
+    const metric = insights.insights?.data?.find((item) => item.name === "post_impressions");
     impressions = metric?.values?.[0]?.value ?? null;
+  } catch (error) {
+    if (error instanceof MetaApiError && error.kind === "permission") {
+      impressions = null;
+    } else {
+      throw error;
+    }
   }
 
   return {

@@ -11,6 +11,7 @@ export type PublicConnectedAccount = {
   username: string | null;
   pictureUrl: string | null;
   status: string;
+  scopes: string | null;
   createdAt: Date;
 };
 
@@ -23,6 +24,7 @@ function toPublic(row: typeof connectedAccount.$inferSelect): PublicConnectedAcc
     username: row.username,
     pictureUrl: row.pictureUrl,
     status: row.status,
+    scopes: row.scopes,
     createdAt: row.createdAt,
   };
 }

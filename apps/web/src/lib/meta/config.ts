@@ -23,3 +23,7 @@ export function isMetaConfigured() {
   const { appId, appSecret } = getMetaConfig();
   return Boolean(appId && appSecret);
 }
+
+export function usesMetaLoginConfig() {
+  return Boolean(process.env.META_LOGIN_CONFIG_ID?.trim());
+}

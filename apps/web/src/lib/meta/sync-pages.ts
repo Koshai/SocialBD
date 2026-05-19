@@ -1,6 +1,7 @@
-import { getMetaScopeString } from "./scopes";
+import { debugTokenScopes, upsertFacebookPageAccount } from "@socialbd/db";
+
 import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";
-import { upsertFacebookPageAccount } from "@socialbd/db";
+import { getMetaScopeString } from "./scopes";
 
 export async function syncFacebookPagesForOrganization(input: {
   organizationId: string;
@@ -14,9 +15,17 @@ export async function syncFacebookPagesForOrganization(input: {
       : null;
 
   const pages = await fetchFacebookPages(longLived.access_token);
-  const scopes = getMetaScopeString();
+  const requestedScopes = getMetaScopeString();
 
   for (const page of pages) {
+    let scopes = requestedScopes;
+    try {
+      const granted = await debugTokenScopes(page.access_token);
+      scopes = granted.join(",");
+    } catch {
+      // Keep requested scope list if debug_token is unavailable.
+    }
+
     await upsertFacebookPageAccount({
       organizationId: input.organizationId,
       pageId: page.id,

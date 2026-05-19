@@ -64,6 +64,7 @@ export type ConnectedAccountWithToken = {
   platform: string;
   providerAccountId: string;
   accessToken: string;
+  scopes: string | null;
 };
 
 export async function listConnectedAccountsWithTokens(organizationId: string) {
@@ -74,6 +75,7 @@ export async function listConnectedAccountsWithTokens(organizationId: string) {
       platform: connectedAccount.platform,
       providerAccountId: connectedAccount.providerAccountId,
       accessToken: connectedAccount.accessToken,
+      scopes: connectedAccount.scopes,
     })
     .from(connectedAccount)
     .where(

@@ -8,6 +8,9 @@ import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
+import { META_ANALYTICS_SCOPE, tokenHasScope } from "@/lib/meta/permissions";
+
+import { MetaPermissionCard } from "./meta-permission-card";
 import { MetaSetupCard } from "./meta-setup-card";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -22,11 +25,13 @@ const ERROR_MESSAGES: Record<string, string> = {
 type ConnectedAccountsPanelProps = {
   accounts: PublicConnectedAccount[];
   metaConfigured: boolean;
+  usesLoginConfig: boolean;
 };
 
 export function ConnectedAccountsPanel({
   accounts,
   metaConfigured,
+  usesLoginConfig,
 }: ConnectedAccountsPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,6 +71,14 @@ export function ConnectedAccountsPanel({
   return (
     <div className="space-y-6">
       {!metaConfigured ? <MetaSetupCard /> : null}
+
+      {metaConfigured &&
+      accounts.some(
+        (account) =>
+          account.platform === "facebook_page" && !tokenHasScope(account.scopes, META_ANALYTICS_SCOPE),
+      ) ? (
+        <MetaPermissionCard usesLoginConfig={usesLoginConfig} />
+      ) : null}
 
       {banner ? (
         <p
@@ -129,6 +142,14 @@ export function ConnectedAccountsPanel({
                     {getPlatformLabel(account.platform)}
                     {account.username ? ` · @${account.username}` : null}
                   </p>
+                  {account.platform === "facebook_page" && account.scopes ? (
+                    <p className="text-xs text-muted">
+                      Token scopes: {account.scopes}
+                      {!tokenHasScope(account.scopes, META_ANALYTICS_SCOPE)
+                        ? " · missing pages_read_engagement"
+                        : null}
+                    </p>
+                  ) : null}
                 </div>
               </div>
               <Button

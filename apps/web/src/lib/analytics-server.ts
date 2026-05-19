@@ -1,14 +1,20 @@
 import {
+  MetaApiError,
   countPublishedPosts,
+  debugTokenScopes,
   fetchPageSummary,
   fetchPostEngagement,
   listConnectedAccountsWithTokens,
   listPublishedPostsForAnalytics,
+  tokenHasScope,
+  userMessageForMetaError,
 } from "@socialbd/db";
 
 import type { AnalyticsSnapshot, ChannelAnalytics, PostAnalytics } from "./analytics-types";
 
 export type { AnalyticsSnapshot, ChannelAnalytics, PostAnalytics };
+
+const ANALYTICS_SCOPE = "pages_read_engagement";
 
 export async function buildAnalyticsSnapshot(organizationId: string): Promise<AnalyticsSnapshot> {
   const warnings: string[] = [];
@@ -22,6 +28,24 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
 
   if (facebookPages.length === 0) {
     warnings.push("Connect a Facebook Page from Accounts to see analytics.");
+  }
+
+  let pagesMissingScope = 0;
+  for (const account of facebookPages) {
+    let hasScope = tokenHasScope(account.scopes, ANALYTICS_SCOPE);
+    try {
+      const granted = await debugTokenScopes(account.accessToken);
+      hasScope = granted.includes(ANALYTICS_SCOPE);
+    } catch {
+      // Fall back to stored scope list from last connect.
+    }
+    if (!hasScope) pagesMissingScope += 1;
+  }
+
+  if (pagesMissingScope > 0) {
+    warnings.push(
+      "Analytics needs the pages_read_engagement permission on your Page token. Add it to your Meta Login configuration (or enable META_OAUTH_EXTENDED_SCOPES), then disconnect and reconnect each Page under Accounts — saving it in the app dashboard alone is not enough.",
+    );
   }
 
   const channels: ChannelAnalytics[] = [];
@@ -47,12 +71,14 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         platform: account.platform,
         followers: null,
         publishedPosts: 0,
-        error: error instanceof Error ? error.message : "Could not load page stats.",
+        error: userMessageForMetaError(error),
       });
     }
   }
 
   const posts: PostAnalytics[] = [];
+  let permissionFailures = 0;
+  let expiredFailures = 0;
 
   for (const row of publishedPosts) {
     if (row.platform !== "facebook_page") continue;
@@ -74,6 +100,11 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         engagement,
       });
     } catch (error) {
+      if (error instanceof MetaApiError) {
+        if (error.kind === "permission") permissionFailures += 1;
+        if (error.kind === "expired") expiredFailures += 1;
+      }
+
       posts.push({
         id: row.id,
         body: row.body,
@@ -85,23 +116,37 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         shares: 0,
         impressions: null,
         engagement: 0,
-        error: error instanceof Error ? error.message : "Could not load post metrics.",
+        error: userMessageForMetaError(error),
       });
     }
   }
 
   if (posts.some((item) => item.impressions === null && !item.error)) {
     warnings.push(
-      "Impressions need pages_read_engagement or read_insights on your Meta app. Reactions, comments, and shares still load when permitted.",
+      "Impressions may be unavailable without pages_read_engagement. Reactions, comments, and shares can still load when permitted.",
     );
   }
 
-  if (posts.some((item) => item.error)) {
-    warnings.push("Some posts could not be loaded from Meta. Tokens may have expired — reconnect the Page.");
+  if (permissionFailures > 0 && !warnings.some((w) => w.includes("pages_read_engagement"))) {
+    warnings.push(
+      `${permissionFailures} post(s) failed: Page token is missing pages_read_engagement. Reconnect the Page under Accounts after updating your Meta Login configuration.`,
+    );
+  }
+
+  if (expiredFailures > 0) {
+    warnings.push(
+      `${expiredFailures} post(s) failed: access token expired. Disconnect and reconnect the Page under Accounts.`,
+    );
+  }
+
+  const otherFailures = posts.filter((item) => item.error).length - permissionFailures - expiredFailures;
+  if (otherFailures > 0) {
+    warnings.push(`${otherFailures} post(s) could not be loaded from Meta. See the error on each post.`);
   }
 
   const totals = posts.reduce(
     (acc, item) => {
+      if (item.error) return acc;
       acc.reactions += item.reactions;
       acc.comments += item.comments;
       acc.shares += item.shares;
@@ -116,7 +161,7 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
       reactions: 0,
       comments: 0,
       shares: 0,
-      impressions: posts.some((p) => p.impressions != null) ? 0 : null,
+      impressions: posts.some((p) => !p.error && p.impressions != null) ? 0 : null,
       engagement: 0,
     },
   );

@@ -29,8 +29,7 @@ export function ComposerForm({ channels }: ComposerFormProps) {
     );
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function savePost(publishNow: boolean) {
     setError(null);
     setPending(true);
 
@@ -40,7 +39,8 @@ export function ComposerForm({ channels }: ComposerFormProps) {
       body: JSON.stringify({
         connectedAccountId,
         body,
-        scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        scheduledAt: publishNow ? null : scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        publishNow,
       }),
     });
 
@@ -57,15 +57,23 @@ export function ComposerForm({ channels }: ComposerFormProps) {
     router.refresh();
   }
 
+  const hasSchedule = Boolean(scheduledAt);
+
   return (
     <Card>
       <CardTitle>New post</CardTitle>
       <CardDescription>
-        Draft now or pick a future time to schedule. Publishing to Facebook runs in the next
-        phase (worker).
+        Save a draft, schedule for later, or publish now to your Facebook Page. Ensure the worker
+        is running (<code className="text-xs">pnpm dev</code> includes it) and Redis is up.
       </CardDescription>
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+      <form
+        className="mt-6 space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void savePost(false);
+        }}
+      >
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Channel</span>
           <select
@@ -102,7 +110,9 @@ export function ComposerForm({ channels }: ComposerFormProps) {
             onChange={(e) => setScheduledAt(e.target.value)}
             className="h-10 w-full max-w-xs rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
-          <span className="block text-xs text-muted">Leave empty to save as draft.</span>
+          <span className="block text-xs text-muted">
+            Pick a future time, then use Schedule post. Leave empty for draft or publish now.
+          </span>
         </label>
 
         {error ? (
@@ -111,9 +121,21 @@ export function ComposerForm({ channels }: ComposerFormProps) {
           </p>
         ) : null}
 
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving..." : scheduledAt ? "Schedule post" : "Save draft"}
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" variant="outline" disabled={pending || hasSchedule}>
+            {pending ? "Saving..." : "Save draft"}
+          </Button>
+          <Button
+            type="button"
+            disabled={pending || !hasSchedule}
+            onClick={() => void savePost(false)}
+          >
+            {pending ? "Saving..." : "Schedule post"}
+          </Button>
+          <Button type="button" disabled={pending || hasSchedule} onClick={() => void savePost(true)}>
+            {pending ? "Publishing..." : "Publish now"}
+          </Button>
+        </div>
       </form>
     </Card>
   );

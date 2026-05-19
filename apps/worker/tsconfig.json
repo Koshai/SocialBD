@@ -1,8 +1,12 @@
 {
-  "extends": "@socialbd/typescript-config/node.json",
+  "extends": "@socialbd/typescript-config/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

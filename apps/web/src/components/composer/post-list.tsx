@@ -23,12 +23,22 @@ export function PostList({ posts }: PostListProps) {
   return (
     <Card>
       <CardTitle>Recent posts</CardTitle>
-      <CardDescription>Drafts and scheduled posts for this workspace.</CardDescription>
+      <CardDescription>Drafts, scheduled, published, and failed posts for this workspace.</CardDescription>
       <ul className="mt-4 space-y-3">
         {posts.map((item) => (
           <li key={item.id} className="rounded-lg border border-border px-3 py-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-medium capitalize">{item.status}</span>
+              <span
+                className={`font-medium capitalize ${
+                  item.status === "failed"
+                    ? "text-red-600"
+                    : item.status === "published"
+                      ? "text-emerald-700"
+                      : ""
+                }`}
+              >
+                {item.status}
+              </span>
               <span className="text-muted">
                 {item.channelName} · {getPlatformLabel(item.platform)}
               </span>
@@ -36,6 +46,14 @@ export function PostList({ posts }: PostListProps) {
             <p className="mt-2 line-clamp-3 whitespace-pre-wrap">{item.body}</p>
             {item.scheduledAt ? (
               <p className="mt-1 text-xs text-muted">Scheduled {formatWhen(item.scheduledAt)}</p>
+            ) : null}
+            {item.publishedAt ? (
+              <p className="mt-1 text-xs text-muted">Published {formatWhen(item.publishedAt)}</p>
+            ) : null}
+            {item.status === "failed" ? (
+              <p className="mt-2 text-xs text-red-600">
+                Publishing failed — check worker logs and Meta permissions (pages_manage_posts).
+              </p>
             ) : null}
           </li>
         ))}

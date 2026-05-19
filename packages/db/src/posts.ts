@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, lte, sql } from "drizzle-orm";
 
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
@@ -101,4 +101,73 @@ export async function getConnectedAccountForOrganization(
     .limit(1);
 
   return row ?? null;
+}
+
+export type PostForPublish = {
+  id: string;
+  body: string;
+  status: string;
+  scheduledAt: Date | null;
+  platform: string;
+  pageId: string;
+  pageAccessToken: string;
+};
+
+export async function getPostForPublish(postId: string, organizationId?: string) {
+  const conditions = [eq(post.id, postId)];
+  if (organizationId) {
+    conditions.push(eq(post.organizationId, organizationId));
+  }
+
+  const [row] = await db
+    .select({
+      id: post.id,
+      body: post.body,
+      status: post.status,
+      scheduledAt: post.scheduledAt,
+      platform: connectedAccount.platform,
+      pageId: connectedAccount.providerAccountId,
+      pageAccessToken: connectedAccount.accessToken,
+    })
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(and(...conditions))
+    .limit(1);
+
+  return row ?? null;
+}
+
+export async function markPostPublished(postId: string, externalPostId: string) {
+  const now = new Date();
+  await db
+    .update(post)
+    .set({
+      status: "published",
+      publishedAt: now,
+      externalPostId,
+      updatedAt: now,
+    })
+    .where(eq(post.id, postId));
+}
+
+export async function markPostFailed(postId: string) {
+  const now = new Date();
+  await db
+    .update(post)
+    .set({
+      status: "failed",
+      updatedAt: now,
+    })
+    .where(eq(post.id, postId));
+}
+
+export async function listDueScheduledPostIds(limit = 50) {
+  const now = new Date();
+  const rows = await db
+    .select({ id: post.id })
+    .from(post)
+    .where(and(eq(post.status, "scheduled"), lte(post.scheduledAt, now)))
+    .limit(limit);
+
+  return rows.map((row) => row.id);
 }

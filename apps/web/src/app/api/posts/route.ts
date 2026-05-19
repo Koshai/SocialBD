@@ -1,8 +1,19 @@
-import { createPost, getConnectedAccountForOrganization } from "@socialbd/db";
+import { countScheduledPosts, createPost, getConnectedAccountForOrganization, listPostsForOrganization } from "@socialbd/db";
 import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { enqueuePublishPost } from "@/lib/publish-queue";
+import { serializePostSnapshot } from "@/lib/posts-api";
+
+export async function GET() {
+  const { organizationId } = await requireActiveOrganization();
+  const [posts, scheduledCount] = await Promise.all([
+    listPostsForOrganization(organizationId),
+    countScheduledPosts(organizationId),
+  ]);
+
+  return NextResponse.json(serializePostSnapshot({ posts, scheduledCount }));
+}
 
 export async function POST(request: Request) {
   const { organizationId, userId } = await requireActiveOrganization();

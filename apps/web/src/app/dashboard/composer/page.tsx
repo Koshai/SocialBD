@@ -1,20 +1,22 @@
-import { listConnectedAccounts, listPostsForOrganization } from "@socialbd/db";
+import { countScheduledPosts, listConnectedAccounts, listPostsForOrganization } from "@socialbd/db";
 
 import { ComposerForm } from "@/components/composer/composer-form";
-import { PostList } from "@/components/composer/post-list";
+import { PostListLive } from "@/components/composer/post-list-live";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 
 export default async function ComposerPage() {
   const { organizationId } = await requireActiveOrganization();
-  const [channels, posts] = await Promise.all([
+  const [channels, posts, scheduledCount] = await Promise.all([
     listConnectedAccounts(organizationId),
     listPostsForOrganization(organizationId),
+    countScheduledPosts(organizationId),
   ]);
 
   return (
     <div className="space-y-6">
       <ComposerForm channels={channels} />
-      <PostList posts={posts} />
+      <PostListLive initial={{ posts, scheduledCount }} />
     </div>
   );
 }
+

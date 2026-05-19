@@ -1,7 +1,9 @@
 import { Card, CardDescription, CardTitle } from "@socialbd/ui";
-import { countScheduledPosts } from "@socialbd/db";
+import { countScheduledPosts, listPostsForOrganization } from "@socialbd/db";
 
 import { getDashboardSession } from "@/lib/dashboard-session";
+
+import { OverviewScheduledCardLive } from "./overview-scheduled-card-live";
 
 export async function OverviewScheduledCard() {
   const session = await getDashboardSession();
@@ -16,16 +18,10 @@ export async function OverviewScheduledCard() {
     );
   }
 
-  const count = await countScheduledPosts(organizationId);
+  const [posts, scheduledCount] = await Promise.all([
+    listPostsForOrganization(organizationId, 5),
+    countScheduledPosts(organizationId),
+  ]);
 
-  return (
-    <Card>
-      <CardTitle>Scheduled</CardTitle>
-      <CardDescription>
-        {count === 0
-          ? "No posts in your queue yet. Open Composer to draft or schedule one."
-          : `${count} post${count === 1 ? "" : "s"} scheduled — view in Calendar soon.`}
-      </CardDescription>
-    </Card>
-  );
+  return <OverviewScheduledCardLive initial={{ posts, scheduledCount }} />;
 }

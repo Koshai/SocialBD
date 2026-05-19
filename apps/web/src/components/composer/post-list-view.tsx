@@ -11,18 +11,26 @@ function formatWhen(date: Date | null) {
   }).format(date);
 }
 
-type PostListProps = {
+type PostListViewProps = {
   posts: PostWithChannel[];
+  isPolling?: boolean;
 };
 
-export function PostList({ posts }: PostListProps) {
+export function PostListView({ posts, isPolling = false }: PostListViewProps) {
   if (posts.length === 0) {
     return null;
   }
 
   return (
     <Card>
-      <CardTitle>Recent posts</CardTitle>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <CardTitle>Recent posts</CardTitle>
+        {isPolling ? (
+          <span className="text-xs font-medium text-primary" aria-live="polite">
+            Updating…
+          </span>
+        ) : null}
+      </div>
       <CardDescription>Drafts, scheduled, published, and failed posts for this workspace.</CardDescription>
       <ul className="mt-4 space-y-3">
         {posts.map((item) => (
@@ -34,7 +42,9 @@ export function PostList({ posts }: PostListProps) {
                     ? "text-red-600"
                     : item.status === "published"
                       ? "text-emerald-700"
-                      : ""
+                      : item.status === "scheduled"
+                        ? "text-primary"
+                        : ""
                 }`}
               >
                 {item.status}

@@ -1,15 +1,16 @@
-import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
+import { NextResponse } from "next/server";
+
 import { buildAnalyticsSnapshot } from "@/lib/analytics-server";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 
-export default async function AnalyticsPage() {
+export async function GET() {
   const { organizationId } = await requireActiveOrganization();
 
   try {
-    const initial = await buildAnalyticsSnapshot(organizationId);
-    return <AnalyticsDashboard initial={initial} />;
+    const snapshot = await buildAnalyticsSnapshot(organizationId);
+    return NextResponse.json(snapshot);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not load analytics.";
-    return <AnalyticsDashboard initial={null} initialError={message} />;
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

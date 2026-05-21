@@ -23,6 +23,7 @@ function PreviewPlaceholder({ label }: { label: string }) {
 export function PostPreview(props: PostPreviewProps) {
   const { t } = usePreferences();
   const isInstagram = props.platform === "instagram";
+  const isLinkedIn = props.platform === "linkedin_organization";
   const caption = props.body.trim() || (isInstagram ? t("composer.previewIgCaption") : t("composer.previewCaption"));
   const captionClass = bengaliTextClassName(caption);
   const handle = props.username
@@ -42,7 +43,9 @@ export function PostPreview(props: PostPreviewProps) {
             className={
               isInstagram
                 ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 via-pink-500 to-purple-600 text-[10px] font-bold text-white"
-                : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary"
+                : isLinkedIn
+                  ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-[#0a66c2] text-xs font-bold text-white"
+                  : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary"
             }
           >
             {(isInstagram ? handle : props.displayName).slice(0, 1).toUpperCase()}
@@ -90,7 +93,11 @@ export function PostPreview(props: PostPreviewProps) {
       </div>
 
       <p className="text-xs text-muted">
-        {isInstagram ? t("composer.previewIgHint") : t("composer.previewFbHint")}
+        {isInstagram
+          ? t("composer.previewIgHint")
+          : isLinkedIn
+            ? t("composer.previewLinkedInHint")
+            : t("composer.previewFbHint")}
       </p>
     </div>
   );

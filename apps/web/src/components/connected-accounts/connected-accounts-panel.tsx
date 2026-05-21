@@ -1,30 +1,42 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
+import { getMetaErrorMessage } from "@/lib/i18n/meta-error-message";
+import { getLinkedInErrorMessage } from "@/lib/linkedin/error-message";
+import type { TranslateFn } from "@/lib/i18n/translate";
 import { getPlatformLabel } from "@/lib/platform-labels";
-
 import { META_ANALYTICS_SCOPE, tokenHasScope } from "@/lib/meta/permissions";
 
-import { getMetaErrorMessage } from "@/lib/i18n/meta-error-message";
-
+import { LinkedInSetupCard } from "./linkedin-setup-card";
 import { MetaPermissionCard } from "./meta-permission-card";
 import { MetaSetupCard } from "./meta-setup-card";
 
 type ConnectedAccountsPanelProps = {
   accounts: PublicConnectedAccount[];
   metaConfigured: boolean;
+  linkedInConfigured: boolean;
   usesLoginConfig: boolean;
 };
+
+function resolveConnectError(error: string, t: TranslateFn) {
+  if (error.startsWith("linkedin_")) {
+    return getLinkedInErrorMessage(error, t);
+  }
+  if (error.startsWith("meta_")) {
+    return getMetaErrorMessage(error, t);
+  }
+  return getMetaErrorMessage(error, t);
+}
 
 export function ConnectedAccountsPanel({
   accounts,
   metaConfigured,
+  linkedInConfigured,
   usesLoginConfig,
 }: ConnectedAccountsPanelProps) {
   const router = useRouter();
@@ -35,10 +47,24 @@ export function ConnectedAccountsPanel({
   const banner = useMemo(() => {
     const connected = searchParams.get("connected");
     const instagram = searchParams.get("instagram");
+    const linkedInConnected = searchParams.get("linkedin_connected");
     const error = searchParams.get("error");
 
+    if (linkedInConnected) {
+      return {
+        type: "success" as const,
+        message: t("accounts.connectedLinkedIn", {
+          count: linkedInConnected,
+          plural: linkedInConnected === "1" ? "" : "s",
+        }),
+      };
+    }
+
     if (connected) {
-      const pagePart = t("accounts.connectedPages", { count: connected, plural: connected === "1" ? "" : "s" });
+      const pagePart = t("accounts.connectedPages", {
+        count: connected,
+        plural: connected === "1" ? "" : "s",
+      });
       const igPart =
         instagram && instagram !== "0"
           ? t("accounts.connectedIg", { count: instagram, plural: instagram === "1" ? "" : "s" })
@@ -52,7 +78,7 @@ export function ConnectedAccountsPanel({
     if (error) {
       return {
         type: "error" as const,
-        message: getMetaErrorMessage(error, t),
+        message: resolveConnectError(error, t),
       };
     }
 
@@ -72,6 +98,7 @@ export function ConnectedAccountsPanel({
   return (
     <div className="space-y-6">
       {!metaConfigured ? <MetaSetupCard /> : null}
+      {!linkedInConfigured ? <LinkedInSetupCard /> : null}
 
       {metaConfigured &&
       accounts.some(
@@ -113,6 +140,28 @@ export function ConnectedAccountsPanel({
         </div>
       </Card>
 
+      <Card>
+        <CardTitle>{t("accounts.linkedinPages")}</CardTitle>
+        <CardDescription>{t("accounts.connectHintLinkedIn")}</CardDescription>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {linkedInConfigured ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                window.location.href = "/api/linkedin/connect";
+              }}
+            >
+              {t("accounts.connectLinkedIn")}
+            </Button>
+          ) : (
+            <Button variant="secondary" disabled>
+              {t("accounts.connectLinkedIn")}
+            </Button>
+          )}
+        </div>
+      </Card>
+
       {accounts.length > 0 ? (
         <ul className="space-y-3">
           {accounts.map((account) => (
@@ -139,7 +188,7 @@ export function ConnectedAccountsPanel({
                   <p className="font-medium">{account.displayName}</p>
                   <p className="text-sm text-muted">
                     {getPlatformLabel(account.platform, t)}
-                    {account.username ? ` · @${account.username}` : null}
+                    {account.username ? ` · ${account.username}` : null}
                   </p>
                   {account.platform === "facebook_page" && account.scopes ? (
                     <p className="text-xs text-muted">
@@ -169,4 +218,3 @@ export function ConnectedAccountsPanel({
     </div>
   );
 }
-

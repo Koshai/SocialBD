@@ -15,7 +15,7 @@ export default async function ComposerPage() {
   const role = await getMemberRoleForUser(userId, organizationId);
   const [channels, posts, scheduledCount, pendingApprovalCount] = await Promise.all([
     listConnectedAccounts(organizationId),
-    listPostsForOrganization(organizationId),
+    listPostsForOrganization(organizationId, 8),
     countScheduledPosts(organizationId),
     countPendingApprovalPosts(organizationId),
   ]);

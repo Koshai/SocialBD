@@ -18,26 +18,58 @@ function formatWhen(date: Date | null) {
 type PostListViewProps = {
   posts: PostWithChannel[];
   isPolling?: boolean;
+  emptyMessage?: string;
+  title?: string;
+  description?: string;
+  footerLink?: { href: string; label: string };
 };
 
-export function PostListView({ posts, isPolling = false }: PostListViewProps) {
+export function PostListView({
+  posts,
+  isPolling = false,
+  emptyMessage,
+  title,
+  description,
+  footerLink,
+}: PostListViewProps) {
   const { t } = usePreferences();
 
   if (posts.length === 0) {
-    return null;
+    if (!emptyMessage) return null;
+    return (
+      <Card>
+        <CardTitle>{title ?? t("posts.recentTitle")}</CardTitle>
+        {description ? <CardDescription>{description}</CardDescription> : null}
+        <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
+        {footerLink ? (
+          <p className="mt-3">
+            <a href={footerLink.href} className="text-sm font-medium text-primary hover:underline">
+              {footerLink.label}
+            </a>
+          </p>
+        ) : null}
+      </Card>
+    );
   }
 
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <CardTitle>{t("posts.recentTitle")}</CardTitle>
+        <CardTitle>{title ?? t("posts.recentTitle")}</CardTitle>
         {isPolling ? (
           <span className="text-xs font-medium text-primary" aria-live="polite">
             {t("common.updating")}
           </span>
         ) : null}
       </div>
-      <CardDescription>{t("posts.recentDesc")}</CardDescription>
+      <CardDescription>{description ?? t("posts.recentDesc")}</CardDescription>
+      {footerLink ? (
+        <p className="mt-1">
+          <a href={footerLink.href} className="text-xs font-medium text-primary hover:underline">
+            {footerLink.label}
+          </a>
+        </p>
+      ) : null}
       <ul className="mt-4 space-y-3">
         {posts.map((item) => (
           <li key={item.id} className="rounded-lg border border-border px-3 py-3 text-sm">

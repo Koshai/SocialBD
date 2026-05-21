@@ -26,6 +26,25 @@ export function getAppBaseUrl(request?: Request) {
  * In development, uses the request origin when it differs from META_REDIRECT_URI
  * so port 3001 vs 3000 mismatches do not 404 the callback.
  */
+export function getLinkedInRedirectUri(request: Request) {
+  const requestOrigin = getRequestOrigin(request);
+  const envUri = process.env.LINKEDIN_REDIRECT_URI?.trim();
+
+  if (envUri) {
+    const envOrigin = new URL(envUri).origin;
+    if (process.env.NODE_ENV === "development" && envOrigin !== requestOrigin) {
+      console.warn(
+        `[linkedin] LINKEDIN_REDIRECT_URI (${envUri}) does not match dev server (${requestOrigin}). ` +
+          `Using ${requestOrigin}/api/linkedin/callback — add this URI in LinkedIn app settings.`,
+      );
+      return `${requestOrigin}/api/linkedin/callback`;
+    }
+    return envUri;
+  }
+
+  return `${requestOrigin}/api/linkedin/callback`;
+}
+
 export function getMetaRedirectUri(request: Request) {
   const requestOrigin = getRequestOrigin(request);
   const envUri = process.env.META_REDIRECT_URI?.trim();

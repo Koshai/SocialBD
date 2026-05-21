@@ -9,4 +9,5 @@ export * from "./facebook-publish";
 export * from "./media-storage";
 export * from "./media-publish-token";
 export * from "./instagram-publish";
+export * from "./linkedin-publish";
 export * from "./posts";

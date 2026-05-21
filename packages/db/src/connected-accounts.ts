@@ -149,6 +149,55 @@ export async function upsertInstagramAccount(input: {
     });
 }
 
+export async function upsertLinkedInOrganizationAccount(input: {
+  organizationId: string;
+  linkedInOrganizationId: string;
+  displayName: string;
+  vanityName?: string | null;
+  pictureUrl?: string | null;
+  accessToken: string;
+  tokenExpiresAt?: Date | null;
+  scopes: string;
+}) {
+  const now = new Date();
+  const id = crypto.randomUUID();
+
+  await db
+    .insert(connectedAccount)
+    .values({
+      id,
+      organizationId: input.organizationId,
+      platform: "linkedin_organization",
+      providerAccountId: input.linkedInOrganizationId,
+      displayName: input.displayName,
+      username: input.vanityName ?? null,
+      pictureUrl: input.pictureUrl ?? null,
+      accessToken: input.accessToken,
+      tokenExpiresAt: input.tokenExpiresAt ?? null,
+      scopes: input.scopes,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        connectedAccount.organizationId,
+        connectedAccount.platform,
+        connectedAccount.providerAccountId,
+      ],
+      set: {
+        displayName: input.displayName,
+        username: input.vanityName ?? null,
+        pictureUrl: input.pictureUrl ?? null,
+        accessToken: input.accessToken,
+        tokenExpiresAt: input.tokenExpiresAt ?? null,
+        scopes: input.scopes,
+        status: "active",
+        updatedAt: now,
+      },
+    });
+}
+
 export async function disconnectAccount(input: { accountId: string; organizationId: string }) {
   const [deleted] = await db
     .delete(connectedAccount)

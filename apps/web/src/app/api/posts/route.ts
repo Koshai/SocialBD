@@ -1,29 +1,65 @@
 import {
   assertMediaBelongsToOrganization,
   countPendingApprovalPosts,
+  countPostsByStatus,
   countScheduledPosts,
   createPost,
   getConnectedAccountForOrganization,
-  listPostsForOrganization,
+  listPostsFiltered,
+  type PostStatus,
 } from "@socialbd/db";
 import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
 import { enqueuePublishPost } from "@/lib/publish-queue";
-import { serializePostSnapshot } from "@/lib/posts-api";
+import {
+  parsePostHistoryFilter,
+  serializePostSnapshot,
+  type PostSnapshotJson,
+} from "@/lib/posts-api";
 
-export async function GET() {
+const VALID_STATUSES = new Set([
+  "all",
+  "draft",
+  "pending_approval",
+  "scheduled",
+  "published",
+  "failed",
+  "rejected",
+]);
+
+export async function GET(request: Request) {
   const { organizationId } = await requireActiveOrganization();
-  const [posts, scheduledCount, pendingApprovalCount] = await Promise.all([
-    listPostsForOrganization(organizationId),
+  const { searchParams } = new URL(request.url);
+
+  const statusRaw = searchParams.get("status") ?? "all";
+  const status = VALID_STATUSES.has(statusRaw) ? statusRaw : "all";
+  const filter = parsePostHistoryFilter(searchParams);
+  const limitRaw = Number(searchParams.get("limit") ?? "20");
+  const limit = Number.isFinite(limitRaw) ? limitRaw : 20;
+  const cursor = searchParams.get("cursor") ?? undefined;
+
+  const [{ posts, nextCursor }, counts, scheduledCount, pendingApprovalCount] = await Promise.all([
+    listPostsFiltered({
+      organizationId,
+      status: status === "all" ? "all" : (status as PostStatus),
+      platform: filter.platform,
+      limit,
+      cursor,
+    }),
+    countPostsByStatus(organizationId),
     countScheduledPosts(organizationId),
     countPendingApprovalPosts(organizationId),
   ]);
 
-  return NextResponse.json(
-    serializePostSnapshot({ posts, scheduledCount, pendingApprovalCount }),
-  );
+  const body: PostSnapshotJson = {
+    ...serializePostSnapshot({ posts, scheduledCount, pendingApprovalCount }),
+    counts,
+    nextCursor,
+  };
+
+  return NextResponse.json(body);
 }
 
 export async function POST(request: Request) {
@@ -77,6 +113,10 @@ export async function POST(request: Request) {
 
   if (account.platform === "instagram" && !mediaPath) {
     return NextResponse.json({ error: "Instagram posts require an image." }, { status: 400 });
+  }
+
+  if (account.platform === "linkedin_organization" && !body.trim() && !mediaPath) {
+    return NextResponse.json({ error: "LinkedIn posts require a caption or an image." }, { status: 400 });
   }
 
   let scheduledAt: Date | null = null;

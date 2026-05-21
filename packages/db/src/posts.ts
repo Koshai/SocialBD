@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
 
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
@@ -79,26 +79,133 @@ export async function createPost(input: {
   return row;
 }
 
-export async function listPostsForOrganization(organizationId: string, limit = 20) {
+const postListSelect = {
+  id: post.id,
+  body: post.body,
+  hasMedia: sql<boolean>`(${post.mediaPath} IS NOT NULL)`,
+  status: post.status,
+  scheduledAt: post.scheduledAt,
+  publishedAt: post.publishedAt,
+  createdAt: post.createdAt,
+  channelName: connectedAccount.displayName,
+  platform: connectedAccount.platform,
+};
+
+export type PostListQuery = {
+  organizationId: string;
+  status?: PostStatus | "all";
+  platform?: string | "all";
+  limit?: number;
+  cursor?: string;
+};
+
+export type PostListResult = {
+  posts: PostWithChannel[];
+  nextCursor: string | null;
+};
+
+export type PostStatusCounts = Record<PostStatus | "all", number>;
+
+function encodePostCursor(row: { createdAt: Date; id: string }) {
+  return Buffer.from(
+    JSON.stringify({ createdAt: row.createdAt.toISOString(), id: row.id }),
+  ).toString("base64url");
+}
+
+function decodePostCursor(cursor: string) {
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as {
+      createdAt: string;
+      id: string;
+    };
+    const createdAt = new Date(parsed.createdAt);
+    if (Number.isNaN(createdAt.getTime()) || !parsed.id) {
+      return null;
+    }
+    return { createdAt, id: parsed.id };
+  } catch {
+    return null;
+  }
+}
+
+export async function listPostsFiltered(query: PostListQuery): Promise<PostListResult> {
+  const limit = Math.min(Math.max(query.limit ?? 20, 1), 50);
+  const conditions = [eq(post.organizationId, query.organizationId)];
+
+  if (query.status && query.status !== "all") {
+    conditions.push(eq(post.status, query.status));
+  }
+
+  if (query.platform && query.platform !== "all") {
+    conditions.push(eq(connectedAccount.platform, query.platform));
+  }
+
+  if (query.cursor) {
+    const decoded = decodePostCursor(query.cursor);
+    if (decoded) {
+      conditions.push(
+        or(
+          lt(post.createdAt, decoded.createdAt),
+          and(eq(post.createdAt, decoded.createdAt), lt(post.id, decoded.id)),
+        )!,
+      );
+    }
+  }
+
   const rows = await db
-    .select({
-      id: post.id,
-      body: post.body,
-      hasMedia: sql<boolean>`(${post.mediaPath} IS NOT NULL)`,
-      status: post.status,
-      scheduledAt: post.scheduledAt,
-      publishedAt: post.publishedAt,
-      createdAt: post.createdAt,
-      channelName: connectedAccount.displayName,
-      platform: connectedAccount.platform,
-    })
+    .select(postListSelect)
     .from(post)
     .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
-    .where(eq(post.organizationId, organizationId))
-    .orderBy(desc(post.createdAt))
-    .limit(limit);
+    .where(and(...conditions))
+    .orderBy(desc(post.createdAt), desc(post.id))
+    .limit(limit + 1);
 
-  return rows as PostWithChannel[];
+  const hasMore = rows.length > limit;
+  const slice = (hasMore ? rows.slice(0, limit) : rows) as PostWithChannel[];
+  const last = slice[slice.length - 1];
+
+  return {
+    posts: slice,
+    nextCursor: hasMore && last ? encodePostCursor(last) : null,
+  };
+}
+
+export async function countPostsByStatus(organizationId: string): Promise<PostStatusCounts> {
+  const rows = await db
+    .select({
+      status: post.status,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(post)
+    .where(eq(post.organizationId, organizationId))
+    .groupBy(post.status);
+
+  const counts: PostStatusCounts = {
+    all: 0,
+    draft: 0,
+    pending_approval: 0,
+    scheduled: 0,
+    published: 0,
+    failed: 0,
+    rejected: 0,
+  };
+
+  for (const row of rows) {
+    const status = row.status as PostStatus;
+    counts[status] = row.count;
+    counts.all = (counts.all ?? 0) + row.count;
+  }
+
+  return counts;
+}
+
+export async function listPostsForOrganization(organizationId: string, limit = 20) {
+  const { posts } = await listPostsFiltered({
+    organizationId,
+    status: "all",
+    limit,
+  });
+  return posts;
 }
 
 export async function countScheduledPosts(organizationId: string) {

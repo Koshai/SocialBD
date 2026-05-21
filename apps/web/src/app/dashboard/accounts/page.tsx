@@ -4,6 +4,7 @@ import { AccountsLoadingFallback } from "@/components/connected-accounts/account
 import { ConnectedAccountsPanel } from "@/components/connected-accounts/connected-accounts-panel";
 import { listConnectedAccounts } from "@/lib/connected-accounts";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
+import { isLinkedInConfigured } from "@/lib/linkedin/config";
 import { isMetaConfigured, usesMetaLoginConfig } from "@/lib/meta/config";
 
 export default async function AccountsPage() {
@@ -15,6 +16,7 @@ export default async function AccountsPage() {
       <ConnectedAccountsPanel
         accounts={accounts}
         metaConfigured={isMetaConfigured()}
+        linkedInConfigured={isLinkedInConfigured()}
         usesLoginConfig={usesMetaLoginConfig()}
       />
     </Suspense>

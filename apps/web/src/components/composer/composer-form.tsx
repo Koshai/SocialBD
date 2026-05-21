@@ -124,13 +124,19 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
   }) {
     setError(null);
 
-    if (isInstagram && !media) {
+    const channel = channels.find((item) => item.id === connectedAccountId);
+    const channelIsInstagram = channel?.platform === "instagram";
+    const channelIsLinkedIn = channel?.platform === "linkedin_organization";
+
+    if (channelIsInstagram && !media) {
       setError(t("composer.igImageRequired"));
       return;
     }
 
     if (!body.trim() && !media) {
-      setError(t("composer.captionOrImage"));
+      setError(
+        channelIsLinkedIn ? t("posts.linkedinCaptionRequired") : t("composer.captionOrImage"),
+      );
       return;
     }
 

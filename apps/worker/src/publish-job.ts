@@ -6,6 +6,7 @@ import {
   markPostPublished,
   publishFacebookPagePost,
   publishInstagramPost,
+  publishLinkedInOrganizationPost,
 } from "@socialbd/db";
 
 export async function processPublishJob(postId: string) {
@@ -34,6 +35,22 @@ export async function processPublishJob(postId: string) {
 
       await markPostPublished(postId, externalPostId);
       console.log(`[worker] Published post ${postId} → ${externalPostId}`);
+      return;
+    }
+
+    if (row.platform === "linkedin_organization") {
+      const { externalPostId } = await publishLinkedInOrganizationPost({
+        organizationId: row.pageId,
+        accessToken: row.pageAccessToken,
+        commentary: row.body,
+        media:
+          row.mediaPath && row.mediaMimeType
+            ? { path: row.mediaPath, mimeType: row.mediaMimeType }
+            : undefined,
+      });
+
+      await markPostPublished(postId, externalPostId);
+      console.log(`[worker] Published LinkedIn post ${postId} → ${externalPostId}`);
       return;
     }
 

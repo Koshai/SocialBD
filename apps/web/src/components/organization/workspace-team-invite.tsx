@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 import { buildInvitationAcceptUrl } from "@/lib/invitation-email";
 
@@ -12,6 +13,7 @@ type WorkspaceTeamInviteProps = {
 };
 
 export function WorkspaceTeamInvite({ organizationId, canInvite }: WorkspaceTeamInviteProps) {
+  const { t } = usePreferences();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -29,8 +31,9 @@ export function WorkspaceTeamInvite({ organizationId, canInvite }: WorkspaceTeam
     setInviteLink(null);
     setPending(true);
 
+    const trimmedEmail = email.trim();
     const { data, error: inviteError } = await authClient.organization.inviteMember({
-      email: email.trim(),
+      email: trimmedEmail,
       role: "member",
       organizationId,
     });
@@ -38,7 +41,7 @@ export function WorkspaceTeamInvite({ organizationId, canInvite }: WorkspaceTeam
     setPending(false);
 
     if (inviteError) {
-      setError(inviteError.message ?? "Could not send invitation.");
+      setError(inviteError.message ?? t("workspace.couldNotInvite"));
       return;
     }
 
@@ -49,34 +52,30 @@ export function WorkspaceTeamInvite({ organizationId, canInvite }: WorkspaceTeam
     setInviteLink(link);
     setSuccess(
       link
-        ? `Invitation created for ${email.trim()}. Share the link below (also printed in your dev server terminal if email is not configured).`
-        : `Invitation sent to ${email.trim()}.`,
+        ? t("workspace.inviteSuccessLink", { email: trimmedEmail })
+        : t("workspace.inviteSuccessEmail", { email: trimmedEmail }),
     );
     setEmail("");
   }
 
   return (
     <Card>
-      <CardTitle>Invite teammate</CardTitle>
-      <CardDescription>
-        Members can draft and submit posts for approval. They only get access to this workspace.
-        Invites are emailed via Resend (set RESEND_API_KEY and EMAIL_FROM). Invitees must verify
-        their email before they can accept.
-      </CardDescription>
+      <CardTitle>{t("workspace.inviteTitle")}</CardTitle>
+      <CardDescription>{t("workspace.inviteDesc")}</CardDescription>
       <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={(e) => void invite(e)}>
         <label className="min-w-[220px] flex-1 space-y-1 text-sm">
-          <span className="font-medium">Email</span>
+          <span className="font-medium">{t("common.email")}</span>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="teammate@example.com"
+            placeholder={t("workspace.emailPlaceholder")}
             className="h-10 w-full rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </label>
         <Button type="submit" disabled={pending}>
-          {pending ? "Sending…" : "Send invite"}
+          {pending ? t("workspace.sending") : t("workspace.sendInvite")}
         </Button>
       </form>
       {error ? (
@@ -87,7 +86,7 @@ export function WorkspaceTeamInvite({ organizationId, canInvite }: WorkspaceTeam
       {success ? <p className="mt-3 text-sm text-emerald-700">{success}</p> : null}
       {inviteLink ? (
         <div className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs">
-          <p className="font-medium text-foreground">Accept link (dev / copy to teammate)</p>
+          <p className="font-medium text-foreground">{t("workspace.acceptLinkLabel")}</p>
           <p className="mt-1 break-all font-mono text-muted">{inviteLink}</p>
         </div>
       ) : null}

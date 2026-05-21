@@ -6,6 +6,7 @@ import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { PostPreview } from "@/components/composer/post-preview";
 import { TemplatePicker } from "@/components/composer/template-picker";
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
 import type { CaptionTone } from "@/lib/openai-caption";
 import { getPlatformLabel } from "@/lib/platform-labels";
@@ -25,6 +26,7 @@ type UploadedMedia = {
 
 export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps) {
   const router = useRouter();
+  const { t } = usePreferences();
   const [connectedAccountId, setConnectedAccountId] = useState(channels[0]?.id ?? "");
   const [body, setBody] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -39,10 +41,8 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
   if (channels.length === 0) {
     return (
       <Card>
-        <CardTitle>No channels connected</CardTitle>
-        <CardDescription>
-          Connect a Facebook Page from Accounts before composing a post.
-        </CardDescription>
+        <CardTitle>{t("composer.noChannelsTitle")}</CardTitle>
+        <CardDescription>{t("composer.noChannelsDesc")}</CardDescription>
       </Card>
     );
   }
@@ -58,7 +58,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setError("Only image files can be dropped or selected.");
+      setError(t("composer.onlyImages"));
       return;
     }
 
@@ -71,7 +71,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
     setUploading(false);
 
     if (!response.ok) {
-      setError(data.error ?? "Could not upload image.");
+      setError(data.error ?? t("common.couldNotUpload"));
       return;
     }
 
@@ -88,7 +88,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
 
   function applyTemplate(template: PostTemplate) {
     setError(null);
-    if (body.trim() && !window.confirm("Replace your current caption with this template?")) {
+    if (body.trim() && !window.confirm(t("composer.confirmReplaceTemplate"))) {
       return;
     }
     setBody(template.caption);
@@ -108,7 +108,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
     setAiPending(false);
 
     if (!response.ok) {
-      setError(data.error ?? "Could not generate caption.");
+      setError(data.error ?? t("common.couldNotGenerate"));
       return;
     }
 
@@ -125,12 +125,12 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
     setError(null);
 
     if (isInstagram && !media) {
-      setError("Instagram posts require an image.");
+      setError(t("composer.igImageRequired"));
       return;
     }
 
     if (!body.trim() && !media) {
-      setError("Add a caption or an image.");
+      setError(t("composer.captionOrImage"));
       return;
     }
 
@@ -159,7 +159,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
     setPending(false);
 
     if (!response.ok) {
-      setError(data.error ?? "Could not save post.");
+      setError(data.error ?? t("common.couldNotSavePost"));
       return;
     }
 
@@ -177,11 +177,9 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
 
   return (
     <Card>
-      <CardTitle>New post</CardTitle>
+      <CardTitle>{t("composer.title")}</CardTitle>
       <CardDescription>
-        {canPublishDirectly
-          ? "Pick a template or write a caption, preview for your channel, then publish or schedule."
-          : "Draft with templates and preview, then submit for approval."}
+        {canPublishDirectly ? t("composer.descPublish") : t("composer.descApproval")}
       </CardDescription>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
@@ -193,7 +191,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
           }}
         >
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Channel</span>
+          <span className="font-medium">{t("composer.channel")}</span>
           <select
             value={connectedAccountId}
             onChange={(e) => setConnectedAccountId(e.target.value)}
@@ -202,14 +200,16 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
           >
             {channels.map((channel) => (
               <option key={channel.id} value={channel.id}>
-                {channel.displayName} ({getPlatformLabel(channel.platform)})
+                {channel.displayName} ({getPlatformLabel(channel.platform, t)})
               </option>
             ))}
           </select>
         </label>
 
         <div className="space-y-2 text-sm">
-          <span className="font-medium">{isInstagram ? "Image (required for Instagram)" : "Image (optional)"}</span>
+          <span className="font-medium">
+            {isInstagram ? t("composer.imageRequired") : t("composer.imageOptional")}
+          </span>
           <div
             onDragEnter={(e) => {
               e.preventDefault();
@@ -241,7 +241,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
             ].join(" ")}
           >
             <p className="text-center text-sm text-muted">
-              {isDragging ? "Drop image here" : "Drag and drop an image here, or choose a file"}
+              {isDragging ? t("composer.dropHere") : t("composer.dragDrop")}
             </p>
             <input
               type="file"
@@ -251,7 +251,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
               className="mt-3 block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary"
             />
           </div>
-          {uploading ? <p className="text-xs text-muted">Uploading…</p> : null}
+          {uploading ? <p className="text-xs text-muted">{t("composer.uploading")}</p> : null}
           {media ? (
             <div className="flex items-start gap-3 rounded-lg border border-border p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -261,7 +261,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
                 className="h-24 w-24 rounded-md object-cover"
               />
               <Button type="button" variant="outline" size="sm" onClick={clearMedia} disabled={busy}>
-                Remove
+                {t("composer.removeImage")}
               </Button>
             </div>
           ) : null}
@@ -270,44 +270,39 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
         <TemplatePicker disabled={busy} onApply={applyTemplate} />
 
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Caption</span>
+          <span className="font-medium">{t("composer.caption")}</span>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={6}
             lang={bengaliTextClassName(body) ? "bn" : undefined}
-            placeholder="Write your post, or describe it briefly and use Generate caption…"
+            placeholder={t("composer.captionPlaceholder")}
             className={`w-full rounded-lg border border-border bg-background px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${bengaliTextClassName(body)}`}
           />
-          <p className="text-xs text-muted">
-            Bangla typing: enable Avro (or Windows Bengali IME) with{" "}
-            <kbd className="rounded border border-border px-1 font-mono text-[10px]">Win</kbd> +{" "}
-            <kbd className="rounded border border-border px-1 font-mono text-[10px]">Space</kbd> to
-            switch keyboards. Captions render in Noto Sans Bengali automatically.
-          </p>
+          <p className="text-xs text-muted">{t("composer.banglaKeyboardHint")}</p>
         </label>
 
         <div className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">
-            <span className="font-medium">AI tone</span>
+            <span className="font-medium">{t("composer.aiTone")}</span>
             <select
               value={tone}
               onChange={(e) => setTone(e.target.value as CaptionTone)}
               disabled={busy}
               className="h-10 rounded-lg border border-border bg-background px-3"
             >
-              <option value="casual">Casual</option>
-              <option value="professional">Professional</option>
-              <option value="promotional">Promotional</option>
+              <option value="casual">{t("composer.toneCasual")}</option>
+              <option value="professional">{t("composer.toneProfessional")}</option>
+              <option value="promotional">{t("composer.tonePromotional")}</option>
             </select>
           </label>
           <Button type="button" variant="outline" disabled={busy} onClick={() => void generateCaption()}>
-            {aiPending ? "Generating…" : "Generate caption"}
+            {aiPending ? t("composer.generating") : t("composer.generateCaption")}
           </Button>
         </div>
 
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Schedule (optional)</span>
+          <span className="font-medium">{t("composer.scheduleOptional")}</span>
           <input
             type="datetime-local"
             value={scheduledAt}
@@ -325,7 +320,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
 
         <div className="flex flex-wrap gap-3">
           <Button type="submit" variant="outline" disabled={busy || (canPublishDirectly && hasSchedule)}>
-            {pending ? "Saving..." : "Save draft"}
+            {pending ? t("composer.saving") : t("composer.saveDraft")}
           </Button>
 
           {canPublishDirectly ? (
@@ -335,14 +330,14 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
                 disabled={busy || !hasSchedule}
                 onClick={() => void savePost({ schedule: true })}
               >
-                {pending ? "Saving..." : "Schedule post"}
+                {pending ? t("composer.saving") : t("composer.schedulePost")}
               </Button>
               <Button
                 type="button"
                 disabled={busy || hasSchedule}
                 onClick={() => void savePost({ publishNow: true })}
               >
-                {pending ? "Publishing..." : "Publish now"}
+                {pending ? t("composer.publishing") : t("composer.publishNow")}
               </Button>
             </>
           ) : (
@@ -351,7 +346,11 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
               disabled={busy}
               onClick={() => void savePost({ submitForApproval: true })}
             >
-              {pending ? "Submitting..." : hasSchedule ? "Submit for approval (scheduled)" : "Submit for approval"}
+              {pending
+                ? t("composer.submitting")
+                : hasSchedule
+                  ? t("composer.submitApprovalScheduled")
+                  : t("composer.submitApproval")}
             </Button>
           )}
         </div>
@@ -360,7 +359,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
         <aside className="lg:sticky lg:top-6 lg:self-start">
           <PostPreview
             platform={previewPlatform}
-            displayName={selectedChannel?.displayName ?? "Your Page"}
+            displayName={selectedChannel?.displayName ?? t("common.yourPage")}
             username={selectedChannel?.username}
             body={body}
             mediaPreviewUrl={media?.previewUrl ?? null}

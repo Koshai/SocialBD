@@ -4,10 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 import { slugify } from "@/lib/slugify";
 
 export function CreateWorkspaceForm() {
+  const { t } = usePreferences();
   const router = useRouter();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -29,14 +31,14 @@ export function CreateWorkspaceForm() {
 
     const workspaceSlug = slugify(slug || name);
     if (!workspaceSlug) {
-      setError("Enter a workspace name to generate a URL slug.");
+      setError(t("workspace.needSlug"));
       setPending(false);
       return;
     }
 
     const slugCheck = await authClient.organization.checkSlug({ slug: workspaceSlug });
     if (slugCheck.error || !slugCheck.data?.status) {
-      setError("That workspace URL is already taken. Try another slug.");
+      setError(t("workspace.slugTaken"));
       setPending(false);
       return;
     }
@@ -47,7 +49,7 @@ export function CreateWorkspaceForm() {
     });
 
     if (created.error || !created.data) {
-      setError(created.error?.message ?? "Could not create workspace.");
+      setError(created.error?.message ?? t("workspace.couldNotCreate"));
       setPending(false);
       return;
     }
@@ -63,26 +65,26 @@ export function CreateWorkspaceForm() {
 
   return (
     <Card className="max-w-lg">
-      <CardTitle>Create your workspace</CardTitle>
-      <CardDescription>
-        Agencies and brands use workspaces to separate clients. You can create more later.
-      </CardDescription>
+      <CardTitle>{t("workspace.createYourWorkspace")}</CardTitle>
+      <CardDescription>{t("workspace.createDesc")}</CardDescription>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Workspace name</span>
+          <span className="font-medium">{t("workspace.workspaceName")}</span>
           <input
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
             required
-            placeholder="e.g. Dhaka Digital Agency"
+            placeholder={t("workspace.namePlaceholder")}
             className="h-10 w-full rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </label>
 
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">URL slug</span>
-          <span className="block text-xs text-muted">socialbd.com/workspaces/{slug || "your-slug"}</span>
+          <span className="font-medium">{t("workspace.urlSlug")}</span>
+          <span className="block text-xs text-muted">
+            {t("workspace.slugHint", { slug: slug || "your-slug" })}
+          </span>
           <input
             value={slug}
             onChange={(e) => {
@@ -101,7 +103,7 @@ export function CreateWorkspaceForm() {
         ) : null}
 
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Creating..." : "Create workspace"}
+          {pending ? t("workspace.creating") : t("workspace.createWorkspace")}
         </Button>
       </form>
     </Card>

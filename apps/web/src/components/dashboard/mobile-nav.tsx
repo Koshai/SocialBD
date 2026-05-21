@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { dashboardNav, isNavActive } from "@/lib/dashboard-nav";
+import { usePreferences } from "@/components/preferences/preferences-provider";
+import { dashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { t } = usePreferences();
 
   return (
     <nav
       aria-label="Dashboard mobile"
       className="flex gap-2 overflow-x-auto border-b border-border bg-surface px-4 py-3 md:hidden"
     >
-      {dashboardNav.map((item) => {
+      {dashboardNavRoutes.map((item) => {
         const active = isNavActive(pathname, item.href);
         return (
           <Link
@@ -24,7 +26,7 @@ export function MobileNav() {
               active ? "bg-primary text-white" : "bg-background text-muted",
             ].join(" ")}
           >
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}

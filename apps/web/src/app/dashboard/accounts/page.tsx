@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { AccountsLoadingFallback } from "@/components/connected-accounts/accounts-loading-fallback";
 import { ConnectedAccountsPanel } from "@/components/connected-accounts/connected-accounts-panel";
 import { listConnectedAccounts } from "@/lib/connected-accounts";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
@@ -10,7 +11,7 @@ export default async function AccountsPage() {
   const accounts = await listConnectedAccounts(organizationId);
 
   return (
-    <Suspense fallback={<p className="text-sm text-muted">Loading accounts...</p>}>
+    <Suspense fallback={<AccountsLoadingFallback />}>
       <ConnectedAccountsPanel
         accounts={accounts}
         metaConfigured={isMetaConfigured()}

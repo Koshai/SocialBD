@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { getDashboardPageMeta } from "@/lib/dashboard-page-meta";
+import { useDashboardPageMeta } from "@/lib/i18n/use-dashboard-page-meta";
 import { DashboardShell } from "./dashboard-shell";
 
 type DashboardLayoutClientProps = {
@@ -15,8 +15,7 @@ type DashboardLayoutClientProps = {
 };
 
 export function DashboardLayoutClient({ user, children }: DashboardLayoutClientProps) {
-  const pathname = usePathname();
-  const { title, description } = getDashboardPageMeta(pathname);
+  const { title, description } = useDashboardPageMeta();
 
   return (
     <DashboardShell user={user} title={title} description={description}>

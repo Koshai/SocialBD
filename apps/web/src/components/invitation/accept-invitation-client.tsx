@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 
 type AcceptInvitationClientProps = {
@@ -18,6 +19,7 @@ export function AcceptInvitationClient({
   organizationId,
   invitedEmail,
 }: AcceptInvitationClientProps) {
+  const { t } = usePreferences();
   const router = useRouter();
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,10 @@ export function AcceptInvitationClient({
     const sessionEmail = session.user.email?.toLowerCase();
     if (sessionEmail && sessionEmail !== invitedEmail.toLowerCase()) {
       setError(
-        `You are signed in as ${session.user.email}, but this invite was sent to ${invitedEmail}. Sign in with the invited email or create an account using that address.`,
+        t("invite.wrongEmail", {
+          signedIn: session.user.email ?? "",
+          invited: invitedEmail,
+        }),
       );
       return;
     }
@@ -53,11 +58,9 @@ export function AcceptInvitationClient({
       if (cancelled) return;
 
       if (acceptError) {
-        const message = acceptError.message ?? "Could not accept invitation.";
+        const message = acceptError.message ?? t("invite.couldNotAccept");
         if (message.toLowerCase().includes("verif")) {
-          setError(
-            `${message} Open the verification link we emailed you when you signed up, then reload this page.`,
-          );
+          setError(`${message}${t("invite.verifyAccept")}`);
         } else {
           setError(message);
         }
@@ -84,13 +87,14 @@ export function AcceptInvitationClient({
     session?.user,
     session?.user.email,
     sessionPending,
+    t,
   ]);
 
   if (sessionPending || status === "accepting") {
     return (
       <Card>
-        <CardTitle>Joining workspace…</CardTitle>
-        <CardDescription>Accepting your invitation. Please wait.</CardDescription>
+        <CardTitle>{t("invite.joiningTitle")}</CardTitle>
+        <CardDescription>{t("invite.joiningDesc")}</CardDescription>
       </Card>
     );
   }
@@ -98,19 +102,19 @@ export function AcceptInvitationClient({
   if (error) {
     return (
       <Card className="border-red-200 bg-red-50/80">
-        <CardTitle>Invitation could not be accepted</CardTitle>
+        <CardTitle>{t("invite.errorTitle")}</CardTitle>
         <CardDescription className="mt-2 whitespace-pre-wrap text-sm">{error}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link href={`/login?next=${encodeURIComponent(`/accept-invitation/${invitationId}`)}`}>
             <Button type="button" size="sm">
-              Sign in with invited email
+              {t("invite.signInInvited")}
             </Button>
           </Link>
           <Link
             href={`/signup?next=${encodeURIComponent(`/accept-invitation/${invitationId}`)}`}
           >
             <Button type="button" variant="outline" size="sm">
-              Create account
+              {t("invite.createAccount")}
             </Button>
           </Link>
         </div>
@@ -120,8 +124,8 @@ export function AcceptInvitationClient({
 
   return (
     <Card>
-      <CardTitle>Almost there</CardTitle>
-      <CardDescription>Redirecting you to the workspace…</CardDescription>
+      <CardTitle>{t("invite.almostThere")}</CardTitle>
+      <CardDescription>{t("invite.redirecting")}</CardDescription>
     </Card>
   );
 }

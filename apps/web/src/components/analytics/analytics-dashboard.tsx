@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import type { AnalyticsSnapshot } from "@/lib/analytics-types";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
@@ -24,6 +25,7 @@ type AnalyticsDashboardProps = {
 };
 
 export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboardProps) {
+  const { t } = usePreferences();
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot | null>(initial);
   const [error, setError] = useState(initialError ?? null);
   const [pending, setPending] = useState(false);
@@ -38,12 +40,12 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
     setPending(false);
 
     if (!response.ok) {
-      setError(data.error ?? "Could not load analytics.");
+      setError(data.error ?? t("analytics.couldNotLoad"));
       return;
     }
 
     setSnapshot(data);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!initial) {
@@ -54,17 +56,17 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
   if (error && !snapshot) {
     return (
       <Card className="border-red-200 bg-red-50">
-        <CardTitle>Analytics unavailable</CardTitle>
+        <CardTitle>{t("analytics.unavailable")}</CardTitle>
         <CardDescription>{error}</CardDescription>
         <Button type="button" className="mt-4" onClick={() => void refresh()}>
-          Retry
+          {t("common.retry")}
         </Button>
       </Card>
     );
   }
 
   if (!snapshot) {
-    return <p className="text-sm text-muted">Loading analytics from Meta…</p>;
+    return <p className="text-sm text-muted">{t("analytics.loading")}</p>;
   }
 
   const { channels, posts, totals, warnings } = snapshot;
@@ -73,7 +75,7 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
     <div className="space-y-6">
       {warnings.length > 0 ? (
         <Card className="border-amber-200 bg-amber-50/80">
-          <CardTitle className="text-base">Notes</CardTitle>
+          <CardTitle className="text-base">{t("common.notes")}</CardTitle>
           <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-muted">
             {warnings.map((warning) => (
               <li key={warning}>{warning}</li>
@@ -83,39 +85,39 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">Metrics from your connected Facebook Pages via Meta Graph API.</p>
+        <p className="text-sm text-muted">{t("analytics.sourceNote")}</p>
         <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => void refresh()}>
-          {pending ? "Refreshing…" : "Refresh"}
+          {pending ? t("analytics.refreshing") : t("analytics.refresh")}
         </Button>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
-          <CardTitle className="text-base">Published</CardTitle>
+          <CardTitle className="text-base">{t("analytics.published")}</CardTitle>
           <p className="mt-2 text-3xl font-bold">{formatNumber(totals.publishedPosts)}</p>
-          <CardDescription>Posts sent through SocialBD</CardDescription>
+          <CardDescription>{t("analytics.publishedDesc")}</CardDescription>
         </Card>
         <Card>
-          <CardTitle className="text-base">Engagement</CardTitle>
+          <CardTitle className="text-base">{t("analytics.engagement")}</CardTitle>
           <p className="mt-2 text-3xl font-bold">{formatNumber(totals.engagement)}</p>
-          <CardDescription>Reactions + comments + shares (recent)</CardDescription>
+          <CardDescription>{t("analytics.engagementDesc")}</CardDescription>
         </Card>
         <Card>
-          <CardTitle className="text-base">Impressions</CardTitle>
+          <CardTitle className="text-base">{t("analytics.impressions")}</CardTitle>
           <p className="mt-2 text-3xl font-bold">{formatNumber(totals.impressions)}</p>
-          <CardDescription>Lifetime on loaded posts</CardDescription>
+          <CardDescription>{t("analytics.impressionsDesc")}</CardDescription>
         </Card>
         <Card>
-          <CardTitle className="text-base">Comments</CardTitle>
+          <CardTitle className="text-base">{t("analytics.commentsCard")}</CardTitle>
           <p className="mt-2 text-3xl font-bold">{formatNumber(totals.comments)}</p>
-          <CardDescription>On recent published posts</CardDescription>
+          <CardDescription>{t("analytics.commentsDesc")}</CardDescription>
         </Card>
       </section>
 
       {channels.length > 0 ? (
         <Card>
-          <CardTitle>Channels</CardTitle>
-          <CardDescription>Per connected Page</CardDescription>
+          <CardTitle>{t("analytics.channelsTitle")}</CardTitle>
+          <CardDescription>{t("analytics.channelsDesc")}</CardDescription>
           <ul className="mt-4 space-y-3">
             {channels.map((channel) => (
               <li
@@ -124,12 +126,12 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
               >
                 <span>
                   <span className="font-medium">{channel.displayName}</span>
-                  <span className="ml-2 text-muted">{getPlatformLabel(channel.platform)}</span>
+                  <span className="ml-2 text-muted">{getPlatformLabel(channel.platform, t)}</span>
                 </span>
                 <span className="text-muted">
                   {channel.error
                     ? channel.error
-                    : `${formatNumber(channel.followers)} followers · ${channel.publishedPosts} published`}
+                    : `${formatNumber(channel.followers)} ${t("common.followers")} · ${channel.publishedPosts} ${t("common.publishedCount")}`}
                 </span>
               </li>
             ))}
@@ -138,10 +140,10 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
       ) : null}
 
       <Card>
-        <CardTitle>Recent published posts</CardTitle>
-        <CardDescription>Last {posts.length} posts with engagement from Meta</CardDescription>
+        <CardTitle>{t("analytics.recentTitle")}</CardTitle>
+        <CardDescription>{t("analytics.recentDesc", { count: posts.length })}</CardDescription>
         {posts.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">Publish posts from Composer to see metrics here.</p>
+          <p className="mt-4 text-sm text-muted">{t("analytics.emptyPosts")}</p>
         ) : (
           <ul className="mt-4 space-y-3">
             {posts.map((post) => (
@@ -155,12 +157,20 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
                   <p className="mt-2 text-xs text-red-600">{post.error}</p>
                 ) : (
                   <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
-                    <span>{formatNumber(post.reactions)} reactions</span>
-                    <span>{formatNumber(post.comments)} comments</span>
-                    <span>{formatNumber(post.shares)} shares</span>
-                    <span>{formatNumber(post.impressions)} impressions</span>
+                    <span>
+                      {formatNumber(post.reactions)} {t("common.reactions")}
+                    </span>
+                    <span>
+                      {formatNumber(post.comments)} {t("common.comments")}
+                    </span>
+                    <span>
+                      {formatNumber(post.shares)} {t("common.shares")}
+                    </span>
+                    <span>
+                      {formatNumber(post.impressions)} {t("common.impressions")}
+                    </span>
                     <span className="font-medium text-foreground">
-                      {formatNumber(post.engagement)} total engagement
+                      {formatNumber(post.engagement)} {t("common.totalEngagement")}
                     </span>
                   </div>
                 )}

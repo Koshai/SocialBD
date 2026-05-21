@@ -5,11 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button, Card, CardDescription, CardTitle, SocialBDLogo } from "@socialbd/ui";
 
+import { AppearanceControls } from "@/components/preferences/appearance-controls";
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 
 type AuthMode = "login" | "signup";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
+  const { t } = usePreferences();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +45,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         });
 
         if (result.error) {
-          setError(result.error.message ?? "Could not create account.");
+          setError(result.error.message ?? t("auth.couldNotCreate"));
           return;
         }
 
         setNotice(
-          `We sent a verification link to ${email}. Open it, then sign in${nextPath ? " to continue to your invitation" : ""}.`,
+          t("auth.verifyNotice", {
+            email,
+            inviteSuffix: nextPath ? t("auth.verifyNoticeInviteSuffix") : "",
+          }),
         );
         return;
       }
@@ -59,9 +65,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       });
 
       if (result.error) {
-        const message = result.error.message ?? "Invalid email or password.";
+        const message = result.error.message ?? t("auth.invalidCredentials");
         if (message.toLowerCase().includes("verif")) {
-          setError(`${message} Check your inbox for the verification link, then try again.`);
+          setError(`${message}${t("auth.verifyHint")}`);
         } else {
           setError(message);
         }
@@ -71,7 +77,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const message = err instanceof Error ? err.message : t("auth.genericError");
       setError(message);
     } finally {
       setPending(false);
@@ -79,7 +85,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center gap-4 px-6 py-12">
+      <AppearanceControls />
       <Card className="w-full space-y-6">
         <div className="space-y-4 text-center">
           <div className="flex justify-center">
@@ -87,12 +94,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           </div>
           <div>
             <CardTitle className="text-2xl">
-              {isSignup ? "Create your account" : "Welcome back"}
+              {isSignup ? t("auth.createAccount") : t("auth.welcomeBack")}
             </CardTitle>
             <CardDescription>
-              {isSignup
-                ? "We will email you a verification link before you can sign in or accept invites."
-                : "Sign in to manage your SocialBD workspaces."}
+              {isSignup ? t("auth.signupDesc") : t("auth.loginDesc")}
             </CardDescription>
           </div>
         </div>
@@ -100,7 +105,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           {isSignup ? (
             <label className="block space-y-1 text-sm">
-              <span className="font-medium">Name</span>
+              <span className="font-medium">{t("auth.name")}</span>
               <input
                 name="name"
                 type="text"
@@ -113,7 +118,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           ) : null}
 
           <label className="block space-y-1 text-sm">
-            <span className="font-medium">Email</span>
+            <span className="font-medium">{t("auth.email")}</span>
             <input
               name="email"
               type="email"
@@ -125,7 +130,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           </label>
 
           <label className="block space-y-1 text-sm">
-            <span className="font-medium">Password</span>
+            <span className="font-medium">{t("auth.password")}</span>
             <input
               name="password"
               type="password"
@@ -158,12 +163,16 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             variant={isSignup ? "secondary" : "default"}
             disabled={pending}
           >
-            {pending ? "Please wait..." : isSignup ? "Create account" : "Sign in"}
+            {pending
+              ? t("auth.pleaseWait")
+              : isSignup
+                ? t("auth.createAccountBtn")
+                : t("auth.signIn")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted">
-          {isSignup ? "Already have an account?" : "New to SocialBD?"}{" "}
+          {isSignup ? t("auth.alreadyHaveAccount") : t("auth.newToSocialbd")}{" "}
           <Link
             href={
               isSignup
@@ -176,7 +185,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             }
             className="font-medium text-primary underline-offset-2 hover:underline"
           >
-            {isSignup ? "Sign in" : "Create an account"}
+            {isSignup ? t("auth.signIn") : t("auth.createAnAccount")}
           </Link>
         </p>
       </Card>

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Button } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import {
-  POST_TEMPLATE_CATEGORIES,
   POST_TEMPLATE_CATEGORY_ORDER,
   getTemplatesByCategory,
   type PostTemplate,
@@ -17,22 +17,19 @@ type TemplatePickerProps = {
 };
 
 export function TemplatePicker({ disabled, onApply }: TemplatePickerProps) {
+  const { t } = usePreferences();
   const [category, setCategory] = useState<PostTemplateCategory>(POST_TEMPLATE_CATEGORY_ORDER[0]);
-  const meta = POST_TEMPLATE_CATEGORIES[category];
   const templates = getTemplatesByCategory(category);
 
   return (
     <div className="space-y-3 rounded-xl border border-border bg-background p-3">
       <div>
-        <p className="text-sm font-medium">Caption templates</p>
-        <p className="text-xs text-muted">
-          Bangladesh-focused starters. Choose a category, then a template. Replace [brackets] or
-          [বাংলা প্লেসহোল্ডার] before you publish.
-        </p>
+        <p className="text-sm font-medium">{t("composer.templatesTitle")}</p>
+        <p className="text-xs text-muted">{t("composer.templatesHint")}</p>
       </div>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Category</span>
+        <span className="font-medium">{t("composer.templateCategory")}</span>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as PostTemplateCategory)}
@@ -41,11 +38,11 @@ export function TemplatePicker({ disabled, onApply }: TemplatePickerProps) {
         >
           {POST_TEMPLATE_CATEGORY_ORDER.map((key) => (
             <option key={key} value={key}>
-              {POST_TEMPLATE_CATEGORIES[key].label}
+              {t(`templateCategories.${key}`)}
             </option>
           ))}
         </select>
-        <span className="text-xs text-muted">{meta.description}</span>
+        <span className="text-xs text-muted">{t(`templateCategories.${category}Desc`)}</span>
       </label>
 
       <ul className="flex flex-wrap gap-2">
@@ -57,6 +54,7 @@ export function TemplatePicker({ disabled, onApply }: TemplatePickerProps) {
               size="sm"
               disabled={disabled}
               onClick={() => onApply(template)}
+              className={category === "bangla" ? "bengali-text" : undefined}
             >
               {template.name}
             </Button>

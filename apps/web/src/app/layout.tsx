@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Bengali } from "next/font/google";
+
+import Script from "next/script";
+
+import { PreferencesProvider } from "@/components/preferences/preferences-provider";
+import { getServerPreferences } from "@/lib/i18n/server";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,17 +32,28 @@ export const metadata: Metadata = {
     "Schedule posts, manage teams, and grow your brand — priced in BDT with local payments.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { locale, theme } = await getServerPreferences();
+
   return (
     <html
-      lang="en"
+      lang={locale}
+      data-theme={theme}
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansBengali.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <Script id="socialbd-preferences" strategy="beforeInteractive">
+          {`(function(){try{var c=document.cookie.split("; ").reduce(function(a,p){var x=p.split("=");a[x[0]]=decodeURIComponent(x.slice(1).join("="));return a},{});var l=c["socialbd-locale"];if(l==="bn"){document.documentElement.lang="bn";document.documentElement.classList.add("locale-bn");}else{document.documentElement.lang="en";document.documentElement.classList.remove("locale-bn");}var th=c["socialbd-theme"]||"system";var r=document.documentElement;r.dataset.theme=th;function d(on){if(on)r.classList.add("dark");else r.classList.remove("dark");}if(th==="dark")d(true);else if(th==="light")d(false);else d(window.matchMedia("(prefers-color-scheme: dark)").matches);}catch(e){}})();`}
+        </Script>
+        <PreferencesProvider initialLocale={locale} initialTheme={theme}>
+          {children}
+        </PreferencesProvider>
+      </body>
     </html>
   );
 }

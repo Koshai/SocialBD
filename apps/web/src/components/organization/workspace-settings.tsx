@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 
 import { WorkspaceTeamInvite } from "./workspace-team-invite";
@@ -12,20 +13,19 @@ type WorkspaceSettingsProps = {
 };
 
 export function WorkspaceSettings({ canInvite }: WorkspaceSettingsProps) {
+  const { t } = usePreferences();
   const { data: organizations, isPending } = authClient.useListOrganizations();
   const { data: activeOrganization } = authClient.useActiveOrganization();
 
   if (isPending) {
-    return <p className="text-sm text-muted">Loading workspaces...</p>;
+    return <p className="text-sm text-muted">{t("common.loadingWorkspaces")}</p>;
   }
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardTitle>Workspaces</CardTitle>
-        <CardDescription>
-          Switch workspaces from the header, or create another for a new client or brand.
-        </CardDescription>
+        <CardTitle>{t("workspace.workspaces")}</CardTitle>
+        <CardDescription>{t("workspace.workspacesDesc")}</CardDescription>
         <ul className="mt-4 space-y-2">
           {organizations?.map((org) => (
             <li
@@ -37,14 +37,14 @@ export function WorkspaceSettings({ canInvite }: WorkspaceSettingsProps) {
                 <span className="ml-2 text-muted">/{org.slug}</span>
               </span>
               {org.id === activeOrganization?.id ? (
-                <span className="text-xs font-medium text-primary">Active</span>
+                <span className="text-xs font-medium text-primary">{t("common.active")}</span>
               ) : null}
             </li>
           ))}
         </ul>
         <div className="mt-4">
           <Link href="/dashboard/workspaces/new">
-            <Button variant="outline">Create workspace</Button>
+            <Button variant="outline">{t("workspace.createWorkspace")}</Button>
           </Link>
         </div>
       </Card>

@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 
 export function OrganizationSwitcher() {
+  const { t } = usePreferences();
   const router = useRouter();
   const { data: organizations, isPending } = authClient.useListOrganizations();
   const { data: activeOrganization } = authClient.useActiveOrganization();
@@ -23,7 +25,7 @@ export function OrganizationSwitcher() {
   if (isPending) {
     return (
       <span className="text-sm text-muted" aria-live="polite">
-        Loading workspaces...
+        {t("common.loadingWorkspaces")}
       </span>
     );
   }
@@ -34,8 +36,8 @@ export function OrganizationSwitcher() {
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="sr-only">Active workspace</span>
-      <span className="hidden text-muted sm:inline">Workspace</span>
+      <span className="sr-only">{t("common.activeWorkspace")}</span>
+      <span className="hidden text-muted sm:inline">{t("common.workspace")}</span>
       <select
         value={activeOrganization?.id ?? ""}
         disabled={pending}
@@ -54,7 +56,7 @@ export function OrganizationSwitcher() {
         size="sm"
         onClick={() => router.push("/dashboard/workspaces/new")}
       >
-        New
+        {t("common.new")}
       </Button>
     </label>
   );

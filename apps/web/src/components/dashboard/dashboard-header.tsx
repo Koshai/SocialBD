@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { AppearanceControls } from "@/components/preferences/appearance-controls";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 
 type DashboardHeaderProps = {
@@ -29,6 +30,7 @@ export function DashboardHeader({ user, title, description }: DashboardHeaderPro
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
+        <AppearanceControls />
         <OrganizationSwitcher />
         <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2">
           <span

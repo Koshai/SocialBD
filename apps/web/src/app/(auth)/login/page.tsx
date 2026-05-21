@@ -1,10 +1,11 @@
 ﻿import { Suspense } from "react";
 
 import { AuthForm } from "@/components/auth/auth-form";
+import { AuthLoadingFallback } from "@/components/auth/auth-loading-fallback";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<p className="p-12 text-center text-sm text-muted">Loading…</p>}>
+    <Suspense fallback={<AuthLoadingFallback />}>
       <AuthForm mode="login" />
     </Suspense>
   );

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { AcceptInvitationClient } from "@/components/invitation/accept-invitation-client";
+import { getServerTranslator } from "@/lib/i18n/server";
 
 type PageProps = {
   params: Promise<{ invitationId: string }>;
@@ -11,6 +12,7 @@ type PageProps = {
 
 export default async function AcceptInvitationPage({ params }: PageProps) {
   const { invitationId } = await params;
+  const t = await getServerTranslator();
   const invite = await getInvitationPreview(invitationId);
 
   if (!invite) {
@@ -21,14 +23,13 @@ export default async function AcceptInvitationPage({ params }: PageProps) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md items-center px-6 py-12">
         <Card>
-          <CardTitle>Invitation unavailable</CardTitle>
+          <CardTitle>{t("invite.unavailable")}</CardTitle>
           <CardDescription className="mt-2">
-            This invitation is no longer active ({invite.status}). Ask your workspace admin to
-            send a new invite.
+            {t("invite.unavailableDesc", { status: invite.status })}
           </CardDescription>
           <p className="mt-4">
             <Link href="/login" className="text-sm font-medium text-primary hover:underline">
-              Sign in
+              {t("auth.signIn")}
             </Link>
           </p>
         </Card>
@@ -40,7 +41,7 @@ export default async function AcceptInvitationPage({ params }: PageProps) {
     <main className="mx-auto flex min-h-screen max-w-md items-center px-6 py-12">
       <div className="w-full space-y-4">
         <p className="text-center text-sm text-muted">
-          You are joining <span className="font-medium text-foreground">{invite.organizationName}</span>
+          {t("invite.joining", { org: invite.organizationName })}
         </p>
         <AcceptInvitationClient
           invitationId={invitationId}

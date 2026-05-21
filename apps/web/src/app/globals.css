@@ -25,6 +25,10 @@ body {
   font-family: var(--font-geist-sans), var(--font-noto-bengali), system-ui, sans-serif;
 }
 
+html.locale-bn body {
+  font-family: var(--font-noto-bengali), var(--font-geist-sans), system-ui, sans-serif;
+}
+
 /* Bengali / Bangla script (composer, previews, templates) */
 .font-bengali,
 [lang="bn"],

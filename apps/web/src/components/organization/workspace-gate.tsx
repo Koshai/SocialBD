@@ -3,10 +3,13 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { CreateWorkspaceForm } from "./create-workspace-form";
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 
+import { CreateWorkspaceForm } from "./create-workspace-form";
+
 export function WorkspaceGate({ children }: { children: React.ReactNode }) {
+  const { t } = usePreferences();
   const pathname = usePathname();
   const router = useRouter();
   const { data: organizations, isPending } = authClient.useListOrganizations();
@@ -22,7 +25,7 @@ export function WorkspaceGate({ children }: { children: React.ReactNode }) {
   if (isPending) {
     return (
       <p className="text-sm text-muted" aria-live="polite">
-        Loading your workspaces...
+        {t("common.loadingYourWorkspaces")}
       </p>
     );
   }

@@ -16,6 +16,8 @@ import {
   parseCalendarPosts,
   type CalendarSnapshotJson,
 } from "@/lib/calendar-api";
+import { usePreferences } from "@/components/preferences/preferences-provider";
+import { getPostStatusLabel } from "@/lib/i18n/post-status";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
 const POLL_INTERVAL_MS = 4_000;
@@ -59,6 +61,7 @@ export function CalendarWeek({
   initialPosts,
   initialScheduledCount,
 }: CalendarWeekProps) {
+  const { t } = usePreferences();
   const [weekStart, setWeekStart] = useState(() => new Date(initialWeekStart));
   const [posts, setPosts] = useState(initialPosts);
   const [scheduledCount, setScheduledCount] = useState(initialScheduledCount);
@@ -143,7 +146,7 @@ export function CalendarWeek({
     setPending(false);
 
     if (!response.ok) {
-      setError(data.error ?? "Could not reschedule.");
+      setError(data.error ?? t("calendar.couldNotReschedule"));
       return;
     }
 
@@ -165,22 +168,22 @@ export function CalendarWeek({
       <Card>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Publishing calendar</CardTitle>
+            <CardTitle>{t("calendar.title")}</CardTitle>
             <CardDescription>
               {weekLabel}
               {scheduledCount > 0
-                ? ` · ${scheduledCount} scheduled in queue`
-                : " · No scheduled posts in queue"}
+                ? t("calendar.scheduledInQueue", { count: scheduledCount })
+                : t("calendar.noScheduledInQueue")}
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {isPolling ? (
               <span className="text-xs font-medium text-primary" aria-live="polite">
-                Updating…
+                {t("common.updating")}
               </span>
             ) : null}
             <Button type="button" variant="outline" size="sm" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>
-              Previous
+              {t("calendar.previous")}
             </Button>
             <Button
               type="button"
@@ -189,10 +192,10 @@ export function CalendarWeek({
               disabled={isCurrentWeek}
               onClick={() => setWeekStart(startOfWeek(new Date()))}
             >
-              This week
+              {t("calendar.thisWeek")}
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
-              Next
+              {t("calendar.next")}
             </Button>
           </div>
         </div>
@@ -220,11 +223,11 @@ export function CalendarWeek({
                             : "cursor-default"
                         }`}
                       >
-                        <span className="block font-medium capitalize">{post.status}</span>
+                        <span className="block font-medium">{getPostStatusLabel(post.status, t)}</span>
                         <span className="block text-muted">{formatTime(post.displayAt)}</span>
                         <span className="mt-1 line-clamp-2">{post.body}</span>
                         <span className="mt-1 block text-[10px] text-muted">
-                          {post.channelName} · {getPlatformLabel(post.platform)}
+                          {post.channelName} · {getPlatformLabel(post.platform, t)}
                         </span>
                       </button>
                     </li>
@@ -238,11 +241,11 @@ export function CalendarWeek({
 
       {selectedPost ? (
         <Card>
-          <CardTitle>Reschedule post</CardTitle>
+          <CardTitle>{t("calendar.rescheduleTitle")}</CardTitle>
           <CardDescription className="line-clamp-2">{selectedPost.body}</CardDescription>
           <form className="mt-4 space-y-4" onSubmit={handleReschedule}>
             <label className="block space-y-1 text-sm">
-              <span className="font-medium">New time</span>
+              <span className="font-medium">{t("calendar.newTime")}</span>
               <input
                 type="datetime-local"
                 value={rescheduleAt}
@@ -258,10 +261,10 @@ export function CalendarWeek({
             ) : null}
             <div className="flex gap-3">
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving..." : "Save new time"}
+                {pending ? t("composer.saving") : t("calendar.saveNewTime")}
               </Button>
               <Button type="button" variant="outline" onClick={() => setSelectedPost(null)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             </div>
           </form>

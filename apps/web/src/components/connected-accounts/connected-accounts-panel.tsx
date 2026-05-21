@@ -5,22 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
+import { usePreferences } from "@/components/preferences/preferences-provider";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
 import { META_ANALYTICS_SCOPE, tokenHasScope } from "@/lib/meta/permissions";
 
+import { getMetaErrorMessage } from "@/lib/i18n/meta-error-message";
+
 import { MetaPermissionCard } from "./meta-permission-card";
 import { MetaSetupCard } from "./meta-setup-card";
-
-const ERROR_MESSAGES: Record<string, string> = {
-  meta_not_configured: "Meta credentials are missing on the server.",
-  meta_denied: "Facebook login was cancelled or denied.",
-  meta_invalid_callback: "Invalid response from Facebook. Try connecting again.",
-  meta_invalid_state: "Session expired. Start the connection again.",
-  meta_no_pages: "No Facebook Pages found for this account. You need admin access to at least one Page.",
-  meta_sync_failed: "Could not save your Pages. Check server logs and Meta app settings.",
-};
 
 type ConnectedAccountsPanelProps = {
   accounts: PublicConnectedAccount[];
@@ -34,6 +28,7 @@ export function ConnectedAccountsPanel({
   usesLoginConfig,
 }: ConnectedAccountsPanelProps) {
   const router = useRouter();
+  const { t } = usePreferences();
   const searchParams = useSearchParams();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -43,26 +38,26 @@ export function ConnectedAccountsPanel({
     const error = searchParams.get("error");
 
     if (connected) {
-      const pagePart = `Connected ${connected} Facebook Page${connected === "1" ? "" : "s"}`;
+      const pagePart = t("accounts.connectedPages", { count: connected, plural: connected === "1" ? "" : "s" });
       const igPart =
         instagram && instagram !== "0"
-          ? ` and ${instagram} Instagram account${instagram === "1" ? "" : "s"}`
+          ? t("accounts.connectedIg", { count: instagram, plural: instagram === "1" ? "" : "s" })
           : "";
       return {
         type: "success" as const,
-        message: `${pagePart}${igPart}.`,
+        message: `${pagePart}${igPart}`.replace(/\.\./g, "."),
       };
     }
 
     if (error) {
       return {
         type: "error" as const,
-        message: ERROR_MESSAGES[error] ?? "Something went wrong connecting Facebook.",
+        message: getMetaErrorMessage(error, t),
       };
     }
 
     return null;
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   async function handleDisconnect(accountId: string) {
     setPendingId(accountId);
@@ -100,11 +95,8 @@ export function ConnectedAccountsPanel({
       ) : null}
 
       <Card>
-        <CardTitle>Facebook Pages</CardTitle>
-        <CardDescription>
-          Connect Facebook Pages you manage. Instagram appears when a Page has a linked Business or
-          Creator account. LinkedIn is planned next.
-        </CardDescription>
+        <CardTitle>{t("accounts.facebookPages")}</CardTitle>
+        <CardDescription>{t("accounts.connectHint")}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-3">
           {metaConfigured ? (
             <Button
@@ -113,10 +105,10 @@ export function ConnectedAccountsPanel({
                 window.location.href = "/api/meta/connect";
               }}
             >
-              Connect Facebook
+              {t("accounts.connectFacebook")}
             </Button>
           ) : (
-            <Button disabled>Connect Facebook</Button>
+            <Button disabled>{t("accounts.connectFacebook")}</Button>
           )}
         </div>
       </Card>
@@ -146,14 +138,14 @@ export function ConnectedAccountsPanel({
                 <div>
                   <p className="font-medium">{account.displayName}</p>
                   <p className="text-sm text-muted">
-                    {getPlatformLabel(account.platform)}
+                    {getPlatformLabel(account.platform, t)}
                     {account.username ? ` · @${account.username}` : null}
                   </p>
                   {account.platform === "facebook_page" && account.scopes ? (
                     <p className="text-xs text-muted">
-                      Token scopes: {account.scopes}
+                      {t("common.tokenScopes")}: {account.scopes}
                       {!tokenHasScope(account.scopes, META_ANALYTICS_SCOPE)
-                        ? " · missing pages_read_engagement"
+                        ? t("common.missingEngagementScope")
                         : null}
                     </p>
                   ) : null}
@@ -166,13 +158,13 @@ export function ConnectedAccountsPanel({
                 disabled={pendingId === account.id}
                 onClick={() => handleDisconnect(account.id)}
               >
-                {pendingId === account.id ? "Disconnecting..." : "Disconnect"}
+                {pendingId === account.id ? t("accounts.disconnecting") : t("accounts.disconnect")}
               </Button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted">No channels connected yet for this workspace.</p>
+        <p className="text-sm text-muted">{t("accounts.noChannels")}</p>
       )}
     </div>
   );

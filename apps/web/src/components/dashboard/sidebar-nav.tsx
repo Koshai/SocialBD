@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SocialBDLogo } from "@socialbd/ui";
 
-import { dashboardNav, isNavActive } from "@/lib/dashboard-nav";
+import { usePreferences } from "@/components/preferences/preferences-provider";
+import { dashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { t } = usePreferences();
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border bg-surface">
@@ -21,7 +23,7 @@ export function SidebarNav() {
       </div>
 
       <nav aria-label="Dashboard" className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {dashboardNav.map((item) => {
+        {dashboardNavRoutes.map((item) => {
           const active = isNavActive(pathname, item.href);
           return (
             <Link
@@ -36,16 +38,16 @@ export function SidebarNav() {
                   : "text-muted hover:bg-background hover:text-foreground",
               ].join(" ")}
             >
-              <span className="block text-sm font-medium">{item.label}</span>
-              <span className="mt-0.5 block text-xs opacity-80">{item.description}</span>
+              <span className="block text-sm font-medium">{t(item.labelKey)}</span>
+              <span className="mt-0.5 block text-xs opacity-80">{t(item.descriptionKey)}</span>
             </Link>
           );
         })}
       </nav>
 
       <div className="border-t border-border px-5 py-4">
-        <p className="text-xs text-muted">SocialBD MVP</p>
-        <p className="text-xs text-muted">Built for Bangladesh</p>
+        <p className="text-xs text-muted">{t("brand.taglineMvp")}</p>
+        <p className="text-xs text-muted">{t("brand.taglineBd")}</p>
       </div>
     </aside>
   );

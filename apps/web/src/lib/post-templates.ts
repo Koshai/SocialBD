@@ -17,36 +17,6 @@ export type PostTemplate = {
   caption: string;
 };
 
-export const POST_TEMPLATE_CATEGORIES: Record<
-  PostTemplateCategory,
-  { label: string; description: string }
-> = {
-  festival: {
-    label: "Festivals & national days",
-    description: "Eid, Puja, Pohela Boishakh, Independence & Victory Day.",
-  },
-  promo: {
-    label: "Offers & launches",
-    description: "Sales, discounts, and new product announcements.",
-  },
-  ecommerce: {
-    label: "E-commerce & orders",
-    description: "Facebook Shop, Daraz, COD, and delivery updates.",
-  },
-  engagement: {
-    label: "Engagement & community",
-    description: "Questions, polls, UGC, and follower appreciation.",
-  },
-  general: {
-    label: "Everyday business",
-    description: "Hours, location, hiring, and thank-yous.",
-  },
-  bangla: {
-    label: "বাংলা (Bangla captions)",
-    description: "Bangla script templates — use Avro or your Bengali keyboard to edit.",
-  },
-};
-
 /** Starter captions — replace text in [brackets] before publishing. */
 export const POST_TEMPLATES: PostTemplate[] = [
   // —— Festivals & national days ——

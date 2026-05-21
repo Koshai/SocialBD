@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import type { PostWithChannel } from "@socialbd/db";
+import { usePreferences } from "@/components/preferences/preferences-provider";
+import { getPostStatusLabel } from "@/lib/i18n/post-status";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
 function formatWhen(date: Date) {
@@ -21,6 +23,7 @@ type ApprovalsPanelProps = {
 
 export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
   const router = useRouter();
+  const { t } = usePreferences();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +37,10 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
     setPendingId(null);
 
     if (!response.ok) {
-      setError(data.error ?? `Could not ${action} post.`);
+      setError(
+        data.error ??
+          (action === "approve" ? t("approvals.couldNotApprove") : t("approvals.couldNotReject")),
+      );
       return;
     }
 
@@ -44,21 +50,16 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
   if (!canReview) {
     return (
       <Card>
-        <CardTitle>Approvals</CardTitle>
-        <CardDescription>
-          Only workspace owners and admins can approve posts. Submit drafts from Composer for
-          review.
-        </CardDescription>
+        <CardTitle>{t("approvals.title")}</CardTitle>
+        <CardDescription>{t("approvals.noAccessDesc")}</CardDescription>
       </Card>
     );
   }
 
   return (
     <Card>
-      <CardTitle>Pending approval</CardTitle>
-      <CardDescription>
-        Approve to publish now or honor the requested schedule. Reject to send back to the author.
-      </CardDescription>
+      <CardTitle>{t("approvals.pendingTitle")}</CardTitle>
+      <CardDescription>{t("approvals.pendingDesc")}</CardDescription>
 
       {error ? (
         <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -67,7 +68,7 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
       ) : null}
 
       {posts.length === 0 ? (
-        <p className="mt-4 text-sm text-muted">No posts waiting for approval.</p>
+        <p className="mt-4 text-sm text-muted">{t("approvals.empty")}</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {posts.map((post) => (
@@ -75,17 +76,17 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span>
                   <span className="font-medium">{post.channelName}</span>
-                  <span className="ml-2 text-xs text-muted">{getPlatformLabel(post.platform)}</span>
+                  <span className="ml-2 text-xs text-muted">{getPlatformLabel(post.platform, t)}</span>
                 </span>
                 <span className="text-xs text-muted">{formatWhen(post.createdAt)}</span>
               </div>
               <p className="mt-2 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
               {post.scheduledAt ? (
                 <p className="mt-1 text-xs text-amber-700">
-                  Requested schedule: {formatWhen(post.scheduledAt)}
+                  {t("approvals.requestedSchedule", { when: formatWhen(post.scheduledAt) })}
                 </p>
               ) : (
-                <p className="mt-1 text-xs text-muted">Publish immediately when approved</p>
+                <p className="mt-1 text-xs text-muted">{t("approvals.publishWhenApproved")}</p>
               )}
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
@@ -94,7 +95,7 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
                   disabled={pendingId === post.id}
                   onClick={() => void review(post.id, "approve")}
                 >
-                  {pendingId === post.id ? "Working…" : "Approve"}
+                  {pendingId === post.id ? t("common.working") : t("approvals.approve")}
                 </Button>
                 <Button
                   type="button"
@@ -103,7 +104,7 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
                   disabled={pendingId === post.id}
                   onClick={() => void review(post.id, "reject")}
                 >
-                  Reject
+                  {t("approvals.reject")}
                 </Button>
               </div>
             </li>

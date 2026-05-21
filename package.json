@@ -14,7 +14,8 @@
     "db:migrate:orgs": "pnpm --filter @socialbd/db db:migrate:orgs",
     "db:migrate:channels": "pnpm --filter @socialbd/db db:migrate:channels",
     "db:migrate:posts": "pnpm --filter @socialbd/db db:migrate:posts",
-    "db:migrate:media": "pnpm --filter @socialbd/db db:migrate:media"
+    "db:migrate:media": "pnpm --filter @socialbd/db db:migrate:media",
+    "db:migrate:ideas": "pnpm --filter @socialbd/db db:migrate:ideas"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

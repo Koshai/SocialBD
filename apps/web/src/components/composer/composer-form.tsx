@@ -8,14 +8,16 @@ import { PostPreview } from "@/components/composer/post-preview";
 import { TemplatePicker } from "@/components/composer/template-picker";
 import { usePreferences } from "@/components/preferences/preferences-provider";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
-import type { CaptionTone } from "@/lib/openai-caption";
+import type { CaptionTone } from "@/lib/openai-client";
 import { getPlatformLabel } from "@/lib/platform-labels";
 import { bengaliTextClassName } from "@/lib/bengali-text";
+import type { IdeaJson } from "@/lib/ideas-api";
 import type { PostTemplate } from "@/lib/post-templates";
 
 type ComposerFormProps = {
   channels: PublicConnectedAccount[];
   canPublishDirectly: boolean;
+  promoteIdea?: IdeaJson | null;
 };
 
 type UploadedMedia = {
@@ -24,11 +26,11 @@ type UploadedMedia = {
   previewUrl: string;
 };
 
-export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps) {
+export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: ComposerFormProps) {
   const router = useRouter();
   const { t } = usePreferences();
   const [connectedAccountId, setConnectedAccountId] = useState(channels[0]?.id ?? "");
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(promoteIdea?.body ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
   const [media, setMedia] = useState<UploadedMedia | null>(null);
   const [tone, setTone] = useState<CaptionTone>("casual");
@@ -158,6 +160,7 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
         scheduledAt: options.publishNow ? null : scheduleIso,
         publishNow: options.publishNow === true,
         submitForApproval: options.submitForApproval === true,
+        ideaId: promoteIdea?.id ?? null,
       }),
     });
 
@@ -187,6 +190,15 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
       <CardDescription>
         {canPublishDirectly ? t("composer.descPublish") : t("composer.descApproval")}
       </CardDescription>
+
+      {promoteIdea ? (
+        <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+          <p className="font-medium text-primary">
+            {t("composer.fromIdeaBanner", { title: promoteIdea.title })}
+          </p>
+          <p className="mt-1 text-muted">{t("composer.fromIdeaHint")}</p>
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
         <form

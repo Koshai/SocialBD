@@ -1,5 +1,8 @@
 ﻿export { db, pool, schema } from "./db";
+export * from "./campaigns";
 export * from "./connected-accounts";
+export * from "./content-ideas";
+export * from "./content-tags";
 export * from "./members";
 export * from "./invitations";
 export * from "./analytics";

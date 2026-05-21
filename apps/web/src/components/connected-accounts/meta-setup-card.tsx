@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardDescription, CardTitle } from "@socialbd/ui";
+import { Card, CardTitle } from "@socialbd/ui";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
 
@@ -10,7 +10,7 @@ export function MetaSetupCard() {
   return (
     <Card className="border-amber-200 bg-amber-50/80">
       <CardTitle>{t("accounts.metaSetupTitle")}</CardTitle>
-      <CardDescription className="space-y-2">
+      <div className="mt-2 space-y-2 text-sm text-muted">
         <p>{t("accounts.metaSetupEnv")}</p>
         <p>
           <a
@@ -24,7 +24,7 @@ export function MetaSetupCard() {
           {" — "}
           {t("accounts.metaSetupSteps")}
         </p>
-      </CardDescription>
+      </div>
     </Card>
   );
 }

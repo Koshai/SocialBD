@@ -17,6 +17,9 @@ export function DashboardOverview() {
           <Link href="/dashboard/accounts">
             <Button>{t("workspace.connectAccounts")}</Button>
           </Link>
+          <Link href="/dashboard/ideas">
+            <Button variant="outline">{t("workspace.openIdeas")}</Button>
+          </Link>
           <Link href="/dashboard/composer">
             <Button variant="outline">{t("workspace.openComposer")}</Button>
           </Link>

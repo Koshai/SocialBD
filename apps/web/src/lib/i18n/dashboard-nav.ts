@@ -6,6 +6,7 @@ export type DashboardNavRoute = {
 
 export const dashboardNavRoutes: DashboardNavRoute[] = [
   { href: "/dashboard", labelKey: "nav.overview", descriptionKey: "nav.overviewDesc" },
+  { href: "/dashboard/ideas", labelKey: "nav.ideas", descriptionKey: "nav.ideasDesc" },
   { href: "/dashboard/composer", labelKey: "nav.composer", descriptionKey: "nav.composerDesc" },
   { href: "/dashboard/posts", labelKey: "nav.posts", descriptionKey: "nav.postsDesc" },
   { href: "/dashboard/calendar", labelKey: "nav.calendar", descriptionKey: "nav.calendarDesc" },

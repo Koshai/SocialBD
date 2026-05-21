@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
-import { generatePostCaption, type CaptionTone } from "@/lib/openai-caption";
-
-const TONES = new Set<CaptionTone>(["casual", "professional", "promotional"]);
+import { isCaptionTone } from "@/lib/openai-client";
+import { generatePostCaption } from "@/lib/openai-caption";
 
 export async function POST(request: Request) {
   await requireActiveOrganization();
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
     typeof json === "object" && json !== null && "tone" in json
       ? String((json as { tone: unknown }).tone)
       : "casual";
-  const tone = TONES.has(toneRaw as CaptionTone) ? (toneRaw as CaptionTone) : "casual";
+  const tone = isCaptionTone(toneRaw) ? toneRaw : "casual";
 
   try {
     const caption = await generatePostCaption({ brief, tone });

@@ -5,6 +5,7 @@ import {
   countScheduledPosts,
   createPost,
   getConnectedAccountForOrganization,
+  markContentIdeaPromoted,
   listPostsFiltered,
   type PostStatus,
 } from "@socialbd/db";
@@ -98,6 +99,10 @@ export async function POST(request: Request) {
     typeof json === "object" &&
     json !== null &&
     (json as { submitForApproval?: boolean }).submitForApproval === true;
+  const ideaId =
+    typeof json === "object" && json !== null && "ideaId" in json
+      ? String((json as { ideaId: unknown }).ideaId).trim() || null
+      : null;
 
   const role = await getMemberRoleForUser(userId, organizationId);
   const canPublish = canPublishDirectly(role);
@@ -177,6 +182,14 @@ export async function POST(request: Request) {
       await enqueuePublishPost(created.id);
     } else if (canPublish && created.status === "scheduled" && created.scheduledAt) {
       await enqueuePublishPost(created.id, created.scheduledAt);
+    }
+
+    if (ideaId) {
+      await markContentIdeaPromoted({
+        ideaId,
+        organizationId,
+        postId: created.id,
+      });
     }
 
     return NextResponse.json({

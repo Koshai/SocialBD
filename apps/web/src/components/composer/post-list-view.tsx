@@ -31,29 +31,36 @@ export function PostListView({ posts, isPolling = false }: PostListViewProps) {
           </span>
         ) : null}
       </div>
-      <CardDescription>Drafts, scheduled, published, and failed posts for this workspace.</CardDescription>
+      <CardDescription>
+        Drafts, pending approval, scheduled, published, and failed posts for this workspace.
+      </CardDescription>
       <ul className="mt-4 space-y-3">
         {posts.map((item) => (
           <li key={item.id} className="rounded-lg border border-border px-3 py-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span
                 className={`font-medium capitalize ${
-                  item.status === "failed"
+                  item.status === "failed" || item.status === "rejected"
                     ? "text-red-600"
                     : item.status === "published"
                       ? "text-emerald-700"
                       : item.status === "scheduled"
                         ? "text-primary"
-                        : ""
+                        : item.status === "pending_approval"
+                          ? "text-amber-700"
+                          : ""
                 }`}
               >
-                {item.status}
+                {item.status.replace(/_/g, " ")}
               </span>
               <span className="text-muted">
                 {item.channelName} · {getPlatformLabel(item.platform)}
               </span>
             </div>
-            <p className="mt-2 line-clamp-3 whitespace-pre-wrap">{item.body}</p>
+            <p className="mt-2 line-clamp-3 whitespace-pre-wrap">
+              {item.hasMedia ? <span className="mr-2 text-xs text-muted">📷</span> : null}
+              {item.body || (item.hasMedia ? "(Image post)" : "")}
+            </p>
             {item.scheduledAt ? (
               <p className="mt-1 text-xs text-muted">Scheduled {formatWhen(item.scheduledAt)}</p>
             ) : null}

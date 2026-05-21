@@ -44,21 +44,24 @@ export async function GET(request: Request) {
 
   try {
     const token = await exchangeCodeForToken(code, redirectUri);
-    const pagesConnected = await syncFacebookPagesForOrganization({
+    const { pageCount, instagramCount } = await syncFacebookPagesForOrganization({
       organizationId: payload.organizationId,
       userAccessToken: token.access_token,
       tokenExpiresInSeconds: token.expires_in,
     });
 
-    if (pagesConnected === 0) {
+    if (pageCount === 0) {
       return NextResponse.redirect(
         appUrl(request, "/dashboard/accounts", { error: "meta_no_pages" }),
       );
     }
 
-    return NextResponse.redirect(
-      appUrl(request, "/dashboard/accounts", { connected: String(pagesConnected) }),
-    );
+    const params: Record<string, string> = { connected: String(pageCount) };
+    if (instagramCount > 0) {
+      params.instagram = String(instagramCount);
+    }
+
+    return NextResponse.redirect(appUrl(request, "/dashboard/accounts", params));
   } catch (cause) {
     console.error("[meta/callback]", cause);
     return NextResponse.redirect(

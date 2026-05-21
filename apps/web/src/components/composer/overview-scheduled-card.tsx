@@ -23,5 +23,7 @@ export async function OverviewScheduledCard() {
     countScheduledPosts(organizationId),
   ]);
 
-  return <OverviewScheduledCardLive initial={{ posts, scheduledCount }} />;
+  return (
+    <OverviewScheduledCardLive initial={{ posts, scheduledCount, pendingApprovalCount: 0 }} />
+  );
 }

@@ -1,9 +1,11 @@
 import {
+  createSignedMediaUrl,
   getPostForPublish,
   listDueScheduledPostIds,
   markPostFailed,
   markPostPublished,
   publishFacebookPagePost,
+  publishInstagramPost,
 } from "@socialbd/db";
 
 export async function processPublishJob(postId: string) {
@@ -18,19 +20,42 @@ export async function processPublishJob(postId: string) {
     return;
   }
 
-  if (row.platform !== "facebook_page") {
-    throw new Error(`Unsupported platform: ${row.platform}`);
-  }
-
   try {
-    const { externalPostId } = await publishFacebookPagePost({
-      pageId: row.pageId,
-      pageAccessToken: row.pageAccessToken,
-      message: row.body,
-    });
+    if (row.platform === "facebook_page") {
+      const { externalPostId } = await publishFacebookPagePost({
+        pageId: row.pageId,
+        pageAccessToken: row.pageAccessToken,
+        message: row.body,
+        media:
+          row.mediaPath && row.mediaMimeType
+            ? { path: row.mediaPath, mimeType: row.mediaMimeType }
+            : undefined,
+      });
 
-    await markPostPublished(postId, externalPostId);
-    console.log(`[worker] Published post ${postId} → ${externalPostId}`);
+      await markPostPublished(postId, externalPostId);
+      console.log(`[worker] Published post ${postId} → ${externalPostId}`);
+      return;
+    }
+
+    if (row.platform === "instagram") {
+      if (!row.mediaPath || !row.mediaMimeType) {
+        throw new Error("Instagram posts require an image.");
+      }
+
+      const imageUrl = createSignedMediaUrl(row.mediaPath);
+      const { externalPostId } = await publishInstagramPost({
+        igUserId: row.pageId,
+        pageAccessToken: row.pageAccessToken,
+        caption: row.body,
+        imageUrl,
+      });
+
+      await markPostPublished(postId, externalPostId);
+      console.log(`[worker] Published Instagram post ${postId} → ${externalPostId}`);
+      return;
+    }
+
+    throw new Error(`Unsupported platform: ${row.platform}`);
   } catch (error) {
     await markPostFailed(postId);
     throw error;

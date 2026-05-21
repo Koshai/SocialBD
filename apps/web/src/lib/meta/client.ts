@@ -7,6 +7,12 @@ type TokenResponse = {
   expires_in?: number;
 };
 
+type InstagramBusinessAccount = {
+  id: string;
+  username?: string;
+  profile_picture_url?: string;
+};
+
 type FacebookPage = {
   id: string;
   name: string;
@@ -14,6 +20,7 @@ type FacebookPage = {
   category?: string;
   username?: string;
   picture?: { data?: { url?: string } };
+  instagram_business_account?: InstagramBusinessAccount;
 };
 
 type AccountsResponse = {
@@ -68,7 +75,8 @@ export async function exchangeForLongLivedToken(shortLivedToken: string) {
 export async function fetchFacebookPages(userAccessToken: string) {
   const result = await graphGet<AccountsResponse>("/me/accounts", {
     access_token: userAccessToken,
-    fields: "id,name,access_token,category,username,picture",
+    fields:
+      "id,name,access_token,category,username,picture,instagram_business_account{id,username,profile_picture_url}",
   });
 
   return result.data ?? [];

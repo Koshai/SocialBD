@@ -40,13 +40,30 @@ export async function listPublishedPostsForAnalytics(organizationId: string, lim
     .orderBy(desc(post.publishedAt))
     .limit(limit);
 
-  return rows
+  const filtered = rows
     .filter((row): row is PublishedPostForAnalytics => Boolean(row.externalPostId && row.publishedAt))
     .map((row) => ({
       ...row,
       externalPostId: row.externalPostId!,
       publishedAt: row.publishedAt!,
     }));
+
+  const accounts = await listConnectedAccountsWithTokens(organizationId);
+  const accountByPageId = new Map(
+    accounts
+      .filter((account) => account.platform === "facebook_page")
+      .map((account) => [account.providerAccountId, account]),
+  );
+
+  return filtered.map((row) => {
+    const live = accountByPageId.get(row.pageId);
+    if (!live) return row;
+    return {
+      ...row,
+      pageAccessToken: live.accessToken,
+      channelName: live.displayName,
+    };
+  });
 }
 
 export async function countPublishedPosts(organizationId: string) {

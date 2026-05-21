@@ -30,11 +30,13 @@ export function classifyMetaErrorMessage(message: string, code?: number, subcode
 
   if (
     code === 10 ||
-    code === 200 ||
     lower.includes("pages_read_engagement") ||
     lower.includes("page public content access") ||
-    lower.includes("permission") ||
-    lower.includes("does not have permission")
+    lower.includes("does not have permission") ||
+    (code === 200 &&
+      (lower.includes("permission") ||
+        lower.includes("pages_read_engagement") ||
+        lower.includes("page public content access")))
   ) {
     return "permission";
   }
@@ -42,9 +44,18 @@ export function classifyMetaErrorMessage(message: string, code?: number, subcode
   return "unknown";
 }
 
-export function userMessageForMetaError(error: unknown) {
+export type MetaErrorMessageContext = {
+  hasEngagementScope?: boolean;
+  channelName?: string;
+};
+
+export function userMessageForMetaError(error: unknown, context?: MetaErrorMessageContext) {
   if (error instanceof MetaApiError) {
     if (error.kind === "permission") {
+      if (context?.hasEngagementScope) {
+        const page = context.channelName ? ` on ${context.channelName}` : "";
+        return `Meta could not load engagement for this post${page}. Your Page token includes pages_read_engagement, but Meta still blocked the request (${error.message}). This often means your app needs Advanced Access for that permission, or Page Public Content Access under App Review — even for posts on Pages you manage.`;
+      }
       return "Missing Meta permission on this Page token. Add pages_read_engagement to your Login configuration, then disconnect and reconnect the Page under Accounts.";
     }
     if (error.kind === "expired") {

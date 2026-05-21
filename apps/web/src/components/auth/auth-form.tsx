@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button, Card, CardDescription, CardTitle, SocialBDLogo } from "@socialbd/ui";
 
@@ -11,14 +11,20 @@ type AuthMode = "login" | "signup";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const isSignup = mode === "signup";
+  const nextPath = searchParams.get("next");
+  const redirectTo =
+    nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setNotice(null);
     setPending(true);
 
     const formData = new FormData(event.currentTarget);
@@ -32,27 +38,37 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           email,
           password,
           name,
-          callbackURL: "/dashboard",
+          callbackURL: redirectTo,
         });
 
         if (result.error) {
           setError(result.error.message ?? "Could not create account.");
           return;
         }
-      } else {
-        const result = await authClient.signIn.email({
-          email,
-          password,
-          callbackURL: "/dashboard",
-        });
 
-        if (result.error) {
-          setError(result.error.message ?? "Invalid email or password.");
-          return;
-        }
+        setNotice(
+          `We sent a verification link to ${email}. Open it, then sign in${nextPath ? " to continue to your invitation" : ""}.`,
+        );
+        return;
       }
 
-      router.push("/dashboard");
+      const result = await authClient.signIn.email({
+        email,
+        password,
+        callbackURL: redirectTo,
+      });
+
+      if (result.error) {
+        const message = result.error.message ?? "Invalid email or password.";
+        if (message.toLowerCase().includes("verif")) {
+          setError(`${message} Check your inbox for the verification link, then try again.`);
+        } else {
+          setError(message);
+        }
+        return;
+      }
+
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -75,7 +91,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </CardTitle>
             <CardDescription>
               {isSignup
-                ? "Start with the free plan and grow from there."
+                ? "We will email you a verification link before you can sign in or accept invites."
                 : "Sign in to manage your SocialBD workspaces."}
             </CardDescription>
           </div>
@@ -121,6 +137,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             />
           </label>
 
+          {notice ? (
+            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              {notice}
+            </p>
+          ) : null}
+
           {error ? (
             <p
               role="alert"
@@ -143,7 +165,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <p className="text-center text-sm text-muted">
           {isSignup ? "Already have an account?" : "New to SocialBD?"}{" "}
           <Link
-            href={isSignup ? "/login" : "/signup"}
+            href={
+              isSignup
+                ? nextPath
+                  ? `/login?next=${encodeURIComponent(nextPath)}`
+                  : "/login"
+                : nextPath
+                  ? `/signup?next=${encodeURIComponent(nextPath)}`
+                  : "/signup"
+            }
             className="font-medium text-primary underline-offset-2 hover:underline"
           >
             {isSignup ? "Sign in" : "Create an account"}

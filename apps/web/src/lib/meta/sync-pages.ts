@@ -1,4 +1,4 @@
-import { debugTokenScopes, upsertFacebookPageAccount } from "@socialbd/db";
+import { debugTokenScopes, upsertFacebookPageAccount, upsertInstagramAccount } from "@socialbd/db";
 
 import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";
 import { getMetaScopeString } from "./scopes";
@@ -16,6 +16,7 @@ export async function syncFacebookPagesForOrganization(input: {
 
   const pages = await fetchFacebookPages(longLived.access_token);
   const requestedScopes = getMetaScopeString();
+  let instagramCount = 0;
 
   for (const page of pages) {
     let scopes = requestedScopes;
@@ -36,7 +37,23 @@ export async function syncFacebookPagesForOrganization(input: {
       tokenExpiresAt,
       scopes,
     });
+
+    const ig = page.instagram_business_account;
+    if (ig?.id) {
+      instagramCount += 1;
+      await upsertInstagramAccount({
+        organizationId: input.organizationId,
+        igUserId: ig.id,
+        displayName: ig.username ? `@${ig.username}` : `${page.name} on Instagram`,
+        username: ig.username ?? null,
+        pictureUrl: ig.profile_picture_url ?? page.picture?.data?.url ?? null,
+        pageAccessToken: page.access_token,
+        linkedPageId: page.id,
+        tokenExpiresAt,
+        scopes,
+      });
+    }
   }
 
-  return pages.length;
+  return { pageCount: pages.length, instagramCount };
 }

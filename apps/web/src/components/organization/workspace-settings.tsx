@@ -5,7 +5,13 @@ import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { authClient } from "@/lib/auth-client";
 
-export function WorkspaceSettings() {
+import { WorkspaceTeamInvite } from "./workspace-team-invite";
+
+type WorkspaceSettingsProps = {
+  canInvite: boolean;
+};
+
+export function WorkspaceSettings({ canInvite }: WorkspaceSettingsProps) {
   const { data: organizations, isPending } = authClient.useListOrganizations();
   const { data: activeOrganization } = authClient.useActiveOrganization();
 
@@ -42,6 +48,10 @@ export function WorkspaceSettings() {
           </Link>
         </div>
       </Card>
+
+      {activeOrganization ? (
+        <WorkspaceTeamInvite organizationId={activeOrganization.id} canInvite={canInvite} />
+      ) : null}
     </div>
   );
 }

@@ -30,6 +30,7 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
     warnings.push("Connect a Facebook Page from Accounts to see analytics.");
   }
 
+  const pageScopeById = new Map<string, boolean>();
   let pagesMissingScope = 0;
   for (const account of facebookPages) {
     let hasScope = tokenHasScope(account.scopes, ANALYTICS_SCOPE);
@@ -39,6 +40,7 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
     } catch {
       // Fall back to stored scope list from last connect.
     }
+    pageScopeById.set(account.providerAccountId, hasScope);
     if (!hasScope) pagesMissingScope += 1;
   }
 
@@ -79,12 +81,19 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
   const posts: PostAnalytics[] = [];
   let permissionFailures = 0;
   let expiredFailures = 0;
+  const permissionFailurePages = new Set<string>();
 
   for (const row of publishedPosts) {
     if (row.platform !== "facebook_page") continue;
 
+    const hasEngagementScope = pageScopeById.get(row.pageId) ?? false;
+
     try {
-      const metrics = await fetchPostEngagement(row.externalPostId, row.pageAccessToken);
+      const metrics = await fetchPostEngagement(
+        row.externalPostId,
+        row.pageAccessToken,
+        row.pageId,
+      );
       const engagement = metrics.reactions + metrics.comments + metrics.shares;
 
       posts.push({
@@ -101,7 +110,12 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
       });
     } catch (error) {
       if (error instanceof MetaApiError) {
-        if (error.kind === "permission") permissionFailures += 1;
+        if (error.kind === "permission") {
+          if (!hasEngagementScope) {
+            permissionFailures += 1;
+            permissionFailurePages.add(row.channelName);
+          }
+        }
         if (error.kind === "expired") expiredFailures += 1;
       }
 
@@ -116,7 +130,10 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         shares: 0,
         impressions: null,
         engagement: 0,
-        error: userMessageForMetaError(error),
+        error: userMessageForMetaError(error, {
+          hasEngagementScope,
+          channelName: row.channelName,
+        }),
       });
     }
   }
@@ -128,8 +145,9 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
   }
 
   if (permissionFailures > 0 && !warnings.some((w) => w.includes("pages_read_engagement"))) {
+    const pageList = [...permissionFailurePages].join(", ");
     warnings.push(
-      `${permissionFailures} post(s) failed: Page token is missing pages_read_engagement. Reconnect the Page under Accounts after updating your Meta Login configuration.`,
+      `${permissionFailures} post(s) on ${pageList}: Page token is missing pages_read_engagement. Reconnect that Page under Accounts after updating your Meta Login configuration.`,
     );
   }
 

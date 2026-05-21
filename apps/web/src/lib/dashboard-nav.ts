@@ -31,6 +31,11 @@ export const dashboardNav: DashboardNavItem[] = [
     description: "Performance insights",
   },
   {
+    href: "/dashboard/approvals",
+    label: "Approvals",
+    description: "Review posts before publishing",
+  },
+  {
     href: "/dashboard/settings",
     label: "Settings",
     description: "Profile and workspace preferences",

@@ -1,14 +1,21 @@
-import { and, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
 import { post } from "./schema/post";
 
-export type PostStatus = "draft" | "scheduled" | "published" | "failed";
+export type PostStatus =
+  | "draft"
+  | "pending_approval"
+  | "scheduled"
+  | "published"
+  | "failed"
+  | "rejected";
 
 export type PostWithChannel = {
   id: string;
   body: string;
+  hasMedia: boolean;
   status: PostStatus;
   scheduledAt: Date | null;
   publishedAt: Date | null;
@@ -26,17 +33,29 @@ export async function createPost(input: {
   connectedAccountId: string;
   createdByUserId: string;
   body: string;
+  mediaPath?: string | null;
+  mediaMimeType?: string | null;
   scheduledAt?: Date | null;
+  /** When true, saves as pending_approval (for members) instead of publishing/scheduling. */
+  submitForApproval?: boolean;
 }) {
   const now = new Date();
   const trimmedBody = input.body.trim();
-  if (!trimmedBody) {
-    throw new Error("Post body is required.");
+  if (!trimmedBody && !input.mediaPath) {
+    throw new Error("Add a caption or an image.");
   }
 
   const scheduledAt = input.scheduledAt ?? null;
-  const status: PostStatus =
-    scheduledAt && scheduledAt.getTime() > now.getTime() ? "scheduled" : "draft";
+  let status: PostStatus = "draft";
+
+  if (input.submitForApproval) {
+    if (scheduledAt && scheduledAt.getTime() <= now.getTime()) {
+      throw new Error("Schedule time must be in the future.");
+    }
+    status = "pending_approval";
+  } else if (scheduledAt && scheduledAt.getTime() > now.getTime()) {
+    status = "scheduled";
+  }
 
   const [row] = await db
     .insert(post)
@@ -46,6 +65,8 @@ export async function createPost(input: {
       connectedAccountId: input.connectedAccountId,
       createdByUserId: input.createdByUserId,
       body: trimmedBody,
+      mediaPath: input.mediaPath ?? null,
+      mediaMimeType: input.mediaMimeType ?? null,
       status,
       scheduledAt: status === "scheduled" ? scheduledAt : null,
       publishedAt: null,
@@ -63,6 +84,7 @@ export async function listPostsForOrganization(organizationId: string, limit = 2
     .select({
       id: post.id,
       body: post.body,
+      hasMedia: sql<boolean>`(${post.mediaPath} IS NOT NULL)`,
       status: post.status,
       scheduledAt: post.scheduledAt,
       publishedAt: post.publishedAt,
@@ -93,7 +115,7 @@ export async function getConnectedAccountForOrganization(
   organizationId: string,
 ) {
   const [row] = await db
-    .select({ id: connectedAccount.id })
+    .select({ id: connectedAccount.id, platform: connectedAccount.platform })
     .from(connectedAccount)
     .where(
       and(
@@ -110,6 +132,8 @@ export async function getConnectedAccountForOrganization(
 export type PostForPublish = {
   id: string;
   body: string;
+  mediaPath: string | null;
+  mediaMimeType: string | null;
   status: string;
   scheduledAt: Date | null;
   platform: string;
@@ -127,6 +151,8 @@ export async function getPostForPublish(postId: string, organizationId?: string)
     .select({
       id: post.id,
       body: post.body,
+      mediaPath: post.mediaPath,
+      mediaMimeType: post.mediaMimeType,
       status: post.status,
       scheduledAt: post.scheduledAt,
       platform: connectedAccount.platform,
@@ -174,6 +200,7 @@ export async function listCalendarPosts(
     .select({
       id: post.id,
       body: post.body,
+      hasMedia: sql<boolean>`(${post.mediaPath} IS NOT NULL)`,
       status: post.status,
       scheduledAt: post.scheduledAt,
       publishedAt: post.publishedAt,
@@ -202,6 +229,20 @@ export async function listCalendarPosts(
             gte(post.scheduledAt, rangeStart),
             lte(post.scheduledAt, rangeEnd),
           ),
+          and(
+            eq(post.status, "pending_approval"),
+            or(
+              and(
+                isNotNull(post.scheduledAt),
+                gte(post.scheduledAt, rangeStart),
+                lte(post.scheduledAt, rangeEnd),
+              ),
+              and(
+                gte(post.createdAt, rangeStart),
+                lte(post.createdAt, rangeEnd),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -209,7 +250,11 @@ export async function listCalendarPosts(
   const calendarPosts = rows
     .map((row) => {
       const displayAt =
-        row.status === "published" ? row.publishedAt : (row.scheduledAt ?? row.createdAt);
+        row.status === "published"
+          ? row.publishedAt
+          : row.status === "pending_approval"
+            ? (row.scheduledAt ?? row.createdAt)
+            : (row.scheduledAt ?? row.createdAt);
       if (!displayAt) return null;
       return { ...row, status: row.status as PostStatus, displayAt };
     })
@@ -260,4 +305,99 @@ export async function listDueScheduledPostIds(limit = 50) {
     .limit(limit);
 
   return rows.map((row) => row.id);
+}
+
+export async function countPendingApprovalPosts(organizationId: string) {
+  const [result] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(post)
+    .where(
+      and(eq(post.organizationId, organizationId), eq(post.status, "pending_approval")),
+    );
+
+  return result?.count ?? 0;
+}
+
+export async function listPendingApprovalPosts(organizationId: string, limit = 30) {
+  const rows = await db
+    .select({
+      id: post.id,
+      body: post.body,
+      hasMedia: sql<boolean>`(${post.mediaPath} IS NOT NULL)`,
+      status: post.status,
+      scheduledAt: post.scheduledAt,
+      publishedAt: post.publishedAt,
+      createdAt: post.createdAt,
+      channelName: connectedAccount.displayName,
+      platform: connectedAccount.platform,
+    })
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(
+      and(eq(post.organizationId, organizationId), eq(post.status, "pending_approval")),
+    )
+    .orderBy(desc(post.createdAt))
+    .limit(limit);
+
+  return rows as PostWithChannel[];
+}
+
+export async function approvePost(postId: string, organizationId: string) {
+  const [row] = await db
+    .select({
+      id: post.id,
+      status: post.status,
+      scheduledAt: post.scheduledAt,
+    })
+    .from(post)
+    .where(and(eq(post.id, postId), eq(post.organizationId, organizationId)))
+    .limit(1);
+
+  if (!row || row.status !== "pending_approval") {
+    throw new Error("Post not found or not awaiting approval.");
+  }
+
+  const now = new Date();
+  const scheduledAt = row.scheduledAt;
+  const hasFutureSchedule = Boolean(scheduledAt && scheduledAt.getTime() > now.getTime());
+
+  const [updated] = await db
+    .update(post)
+    .set({
+      status: hasFutureSchedule ? "scheduled" : "draft",
+      scheduledAt: hasFutureSchedule ? scheduledAt : null,
+      updatedAt: now,
+    })
+    .where(eq(post.id, postId))
+    .returning();
+
+  return {
+    post: updated,
+    publishNow: !hasFutureSchedule,
+    scheduledAt: hasFutureSchedule ? scheduledAt : null,
+  };
+}
+
+export async function rejectPost(postId: string, organizationId: string) {
+  const now = new Date();
+  const [updated] = await db
+    .update(post)
+    .set({
+      status: "rejected",
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(post.id, postId),
+        eq(post.organizationId, organizationId),
+        eq(post.status, "pending_approval"),
+      ),
+    )
+    .returning();
+
+  if (!updated) {
+    throw new Error("Post not found or not awaiting approval.");
+  }
+
+  return updated;
 }

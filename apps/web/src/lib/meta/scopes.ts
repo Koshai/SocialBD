@@ -10,11 +10,18 @@ export const META_PAGE_SCOPES_REQUIRED = ["pages_show_list", "business_managemen
  */
 export const META_PAGE_SCOPES_EXTENDED = ["pages_read_engagement", "pages_manage_posts"] as const;
 
+/** Enable with META_OAUTH_INSTAGRAM=true after adding to Meta app / Login configuration. */
+export const META_INSTAGRAM_SCOPES = ["instagram_basic", "instagram_content_publish"] as const;
+
 export function getMetaScopeString() {
   const scopes: string[] = [...META_PAGE_SCOPES_REQUIRED];
 
   if (process.env.META_OAUTH_EXTENDED_SCOPES === "true") {
     scopes.push(...META_PAGE_SCOPES_EXTENDED);
+  }
+
+  if (process.env.META_OAUTH_INSTAGRAM === "true") {
+    scopes.push(...META_INSTAGRAM_SCOPES);
   }
 
   return scopes.join(",");

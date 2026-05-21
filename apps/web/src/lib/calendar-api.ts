@@ -4,6 +4,7 @@ export type CalendarSnapshotJson = {
   posts: Array<{
     id: string;
     body: string;
+    hasMedia: boolean;
     status: string;
     scheduledAt: string | null;
     publishedAt: string | null;
@@ -21,6 +22,7 @@ export function serializeCalendarPosts(posts: CalendarPost[], scheduledCount: nu
     posts: posts.map((post) => ({
       id: post.id,
       body: post.body,
+      hasMedia: post.hasMedia,
       status: post.status,
       scheduledAt: post.scheduledAt?.toISOString() ?? null,
       publishedAt: post.publishedAt?.toISOString() ?? null,
@@ -41,6 +43,7 @@ export function parseCalendarPosts(json: CalendarSnapshotJson): {
     posts: json.posts.map((post) => ({
       id: post.id,
       body: post.body,
+      hasMedia: post.hasMedia ?? false,
       status: post.status as CalendarPost["status"],
       scheduledAt: post.scheduledAt ? new Date(post.scheduledAt) : null,
       publishedAt: post.publishedAt ? new Date(post.publishedAt) : null,

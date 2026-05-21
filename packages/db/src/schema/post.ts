@@ -16,6 +16,8 @@ export const post = pgTable("post", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   body: text("body").notNull(),
+  mediaPath: text("media_path"),
+  mediaMimeType: text("media_mime_type"),
   status: text("status").notNull().default("draft"),
   scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
   publishedAt: timestamp("published_at", { withTimezone: true }),

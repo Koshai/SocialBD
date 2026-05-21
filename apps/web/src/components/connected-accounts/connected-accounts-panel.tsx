@@ -39,12 +39,18 @@ export function ConnectedAccountsPanel({
 
   const banner = useMemo(() => {
     const connected = searchParams.get("connected");
+    const instagram = searchParams.get("instagram");
     const error = searchParams.get("error");
 
     if (connected) {
+      const pagePart = `Connected ${connected} Facebook Page${connected === "1" ? "" : "s"}`;
+      const igPart =
+        instagram && instagram !== "0"
+          ? ` and ${instagram} Instagram account${instagram === "1" ? "" : "s"}`
+          : "";
       return {
         type: "success" as const,
-        message: `Connected ${connected} Facebook Page${connected === "1" ? "" : "s"}.`,
+        message: `${pagePart}${igPart}.`,
       };
     }
 
@@ -96,7 +102,8 @@ export function ConnectedAccountsPanel({
       <Card>
         <CardTitle>Facebook Pages</CardTitle>
         <CardDescription>
-          Connect Pages you manage on Facebook. Instagram and LinkedIn will follow in a later release.
+          Connect Facebook Pages you manage. Instagram appears when a Page has a linked Business or
+          Creator account. LinkedIn is planned next.
         </CardDescription>
         <div className="mt-4 flex flex-wrap gap-3">
           {metaConfigured ? (

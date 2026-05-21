@@ -5,6 +5,7 @@ export const POST_TEMPLATE_CATEGORY_ORDER = [
   "ecommerce",
   "engagement",
   "general",
+  "bangla",
 ] as const;
 
 export type PostTemplateCategory = (typeof POST_TEMPLATE_CATEGORY_ORDER)[number];
@@ -39,6 +40,10 @@ export const POST_TEMPLATE_CATEGORIES: Record<
   general: {
     label: "Everyday business",
     description: "Hours, location, hiring, and thank-yous.",
+  },
+  bangla: {
+    label: "বাংলা (Bangla captions)",
+    description: "Bangla script templates — use Avro or your Bengali keyboard to edit.",
   },
 };
 
@@ -262,6 +267,50 @@ export const POST_TEMPLATES: PostTemplate[] = [
     category: "general",
     caption:
       "Ramadan schedule for [Your business name]:\n\nOpen [iftar/sehri hours]. Closed during [Jummah if applicable].\n\nRamadan Mubarak to you and your family.",
+  },
+
+  // —— বাংলা (Bangla script) ——
+  {
+    id: "bn-eid",
+    name: "ঈদের শুভেচ্ছা",
+    category: "bangla",
+    caption:
+      "[আপনার ব্যবসার নাম] থেকে ঈদ মোবারক!\n\nআপনার পরিবারের জন্য শান্তি, আনন্দ ও বরকত কামনা করছি। আমাদের সঙ্গে থাকার জন্য ধন্যবাদ।\n\n#ঈদমোবারক #বাংলাদেশ",
+  },
+  {
+    id: "bn-noboborsho",
+    name: "পহেলা বৈশাখ",
+    category: "bangla",
+    caption:
+      "শুভ নববর্ষ!\n\n[আপনার ব্যবসার নাম] রঙিন বাংলা নববর্ষের শুভেচ্ছা জানাচ্ছে। [অফার/ইভেন্ট বিবরণ]।\n\nঠিকানা: [লোকেশন/লিংক]\n\n#পহেলাবৈশাখ #নববর্ষ #বাংলাদেশ",
+  },
+  {
+    id: "bn-sale",
+    name: "অফার / সেল",
+    category: "bangla",
+    caption:
+      "[আপনার ব্যবসার নাম]-এ বিশেষ অফার!\n\n[পণ্য/ক্যাটাগরি]-এ [ছাড়ার পরিমাণ] — শেষ তারিখ [তারিখ]।\n\nঅর্ডার করতে ইনবক্স করুন বা কল করুন [ফোন]।\n\n#অফার #বাংলাদেশ",
+  },
+  {
+    id: "bn-thank-you",
+    name: "ধন্যবাদ",
+    category: "bangla",
+    caption:
+      "[আপনার ব্যবসার নাম] বেছে নেওয়ার জন্য আপনাকে অনেক ধন্যবাদ!\n\nআপনার বিশ্বাস আমাদের অনুপ্রেরণা। আবার দেখা হবে।\n\n#ধন্যবাদ #গ্রাহকপ্রেম",
+  },
+  {
+    id: "bn-cod",
+    name: "ক্যাশ অন ডেলিভারি",
+    category: "bangla",
+    caption:
+      "[আপনার ব্যবসার নাম] — ক্যাশ অন ডেলিভারিতে অর্ডার করুন!\n\n১) ইনবক্সে নাম, ফোন ও ঠিকানা পাঠান\n২) অর্ডার কনফার্ম করুন\n৩) পণ্য পেয়ে টাকা দিন\n\nডেলিভারি: [এলাকা/সময়]।",
+  },
+  {
+    id: "bn-hours",
+    name: "খোলার সময়",
+    category: "bangla",
+    caption:
+      "[আপনার ব্যবসার নাম] — সময়সূচি:\n\n[সপ্তাহের দিন]: [সময়]। [ছুটি/বিশেষ সময় থাকলে লিখুন]।\n\nকোনো প্রশ্ন থাকলে মেসেজ করুন।",
   },
 ];
 

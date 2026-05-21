@@ -9,6 +9,7 @@ import { TemplatePicker } from "@/components/composer/template-picker";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
 import type { CaptionTone } from "@/lib/openai-caption";
 import { getPlatformLabel } from "@/lib/platform-labels";
+import { bengaliTextClassName } from "@/lib/bengali-text";
 import type { PostTemplate } from "@/lib/post-templates";
 
 type ComposerFormProps = {
@@ -274,9 +275,16 @@ export function ComposerForm({ channels, canPublishDirectly }: ComposerFormProps
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={6}
+            lang={bengaliTextClassName(body) ? "bn" : undefined}
             placeholder="Write your post, or describe it briefly and use Generate caption…"
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className={`w-full rounded-lg border border-border bg-background px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${bengaliTextClassName(body)}`}
           />
+          <p className="text-xs text-muted">
+            Bangla typing: enable Avro (or Windows Bengali IME) with{" "}
+            <kbd className="rounded border border-border px-1 font-mono text-[10px]">Win</kbd> +{" "}
+            <kbd className="rounded border border-border px-1 font-mono text-[10px]">Space</kbd> to
+            switch keyboards. Captions render in Noto Sans Bengali automatically.
+          </p>
         </label>
 
         <div className="flex flex-wrap items-end gap-3">

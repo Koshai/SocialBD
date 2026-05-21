@@ -1,3 +1,4 @@
+import { bengaliTextClassName } from "@/lib/bengali-text";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
 type PostPreviewProps = {
@@ -18,6 +19,7 @@ function PreviewPlaceholder() {
 
 function FacebookPreview({ displayName, body, mediaPreviewUrl }: PostPreviewProps) {
   const caption = body.trim() || "Your caption will appear here…";
+  const captionClass = bengaliTextClassName(caption);
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-surface text-sm shadow-sm">
@@ -33,7 +35,7 @@ function FacebookPreview({ displayName, body, mediaPreviewUrl }: PostPreviewProp
           <p className="text-xs text-muted">Just now · Public</p>
         </div>
       </div>
-      <p className="whitespace-pre-wrap px-3 py-2 text-[13px] leading-snug">{caption}</p>
+      <p className={`whitespace-pre-wrap px-3 py-2 text-[13px] leading-snug ${captionClass}`}>{caption}</p>
       {mediaPreviewUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={mediaPreviewUrl} alt="" className="max-h-72 w-full object-cover" />
@@ -54,6 +56,7 @@ function FacebookPreview({ displayName, body, mediaPreviewUrl }: PostPreviewProp
 function InstagramPreview({ displayName, username, body, mediaPreviewUrl }: PostPreviewProps) {
   const handle = username ? `@${username.replace(/^@/, "")}` : displayName;
   const caption = body.trim() || "Caption preview…";
+  const captionClass = bengaliTextClassName(caption);
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-surface text-sm shadow-sm">
@@ -74,7 +77,7 @@ function InstagramPreview({ displayName, username, body, mediaPreviewUrl }: Post
       )}
       <div className="space-y-1 px-3 py-2">
         <p className="text-xs text-muted">♥ 💬 ↗</p>
-        <p className="whitespace-pre-wrap text-[13px] leading-snug">
+        <p className={`whitespace-pre-wrap text-[13px] leading-snug ${captionClass}`}>
           <span className="font-semibold">{handle} </span>
           {caption}
         </p>

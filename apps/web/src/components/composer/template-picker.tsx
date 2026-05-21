@@ -26,7 +26,8 @@ export function TemplatePicker({ disabled, onApply }: TemplatePickerProps) {
       <div>
         <p className="text-sm font-medium">Caption templates</p>
         <p className="text-xs text-muted">
-          Bangladesh-focused starters. Replace text in [brackets] before you publish.
+          Bangladesh-focused starters. Choose a category, then a template. Replace [brackets] or
+          [বাংলা প্লেসহোল্ডার] before you publish.
         </p>
       </div>
 

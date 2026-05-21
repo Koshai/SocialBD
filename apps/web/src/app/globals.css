@@ -14,6 +14,7 @@
   --color-surface: var(--sb-surface);
   --color-border: var(--sb-border);
   --font-sans: var(--font-geist-sans);
+  --font-bengali: var(--font-noto-bengali);
   --font-mono: var(--font-geist-mono);
   --radius-lg: var(--sb-radius);
 }
@@ -21,7 +22,14 @@
 body {
   background: var(--sb-background);
   color: var(--sb-foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), var(--font-noto-bengali), system-ui, sans-serif;
+}
+
+/* Bengali / Bangla script (composer, previews, templates) */
+.font-bengali,
+[lang="bn"],
+.bengali-text {
+  font-family: var(--font-noto-bengali), var(--font-geist-sans), system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {

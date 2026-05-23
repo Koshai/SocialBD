@@ -4,6 +4,7 @@ import { Card, CardDescription, CardTitle } from "@socialbd/ui";
 import type { PostWithChannel } from "@socialbd/db";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
+import { FacebookBoostLink } from "@/components/composer/facebook-boost-link";
 import { getPostStatusLabel } from "@/lib/i18n/post-status";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
@@ -110,6 +111,12 @@ export function PostListView({
             {item.status === "failed" ? (
               <p className="mt-2 text-xs text-red-600">{t("posts.failedHint")}</p>
             ) : null}
+            <FacebookBoostLink
+              platform={item.platform}
+              status={item.status}
+              externalPostId={item.externalPostId}
+              pageId={item.pageId}
+            />
           </li>
         ))}
       </ul>

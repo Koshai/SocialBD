@@ -32,6 +32,8 @@ export type PostSnapshotJson = {
     createdAt: string;
     channelName: string;
     platform: string;
+    externalPostId?: string | null;
+    pageId?: string | null;
   }>;
   scheduledCount: number;
   pendingApprovalCount: number;
@@ -53,6 +55,8 @@ function mapPostJson(
     createdAt: new Date(post.createdAt),
     channelName: post.channelName,
     platform: post.platform,
+    externalPostId: post.externalPostId ?? null,
+    pageId: post.pageId ?? "",
   };
 }
 
@@ -70,6 +74,8 @@ export function serializePostSnapshot(snapshot: PostSnapshot): PostSnapshotJson 
       createdAt: post.createdAt.toISOString(),
       channelName: post.channelName,
       platform: post.platform,
+      externalPostId: post.externalPostId,
+      pageId: post.pageId,
     })),
   };
 }

@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { getMemberRoleForUser } from "@/lib/organization-roles";
 import { serializeIdea } from "@/lib/ideas-api";
+import { parseIdeaGalleryPayload } from "@/lib/idea-gallery-payload";
 
 const VALID_STATUSES = new Set(["brainstorm", "ready", "archived"]);
 
@@ -71,6 +72,16 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
   if ("tagNames" in json && Array.isArray(json.tagNames)) {
     patch.tagNames = json.tagNames.map(String);
+  }
+  if ("galleryImageId" in json || "workspaceGalleryId" in json) {
+    try {
+      const galleryFields = await parseIdeaGalleryPayload(organizationId, json);
+      patch.galleryImageId = galleryFields.galleryImageId;
+      patch.workspaceGalleryId = galleryFields.workspaceGalleryId;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid gallery image.";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
   }
 
   try {

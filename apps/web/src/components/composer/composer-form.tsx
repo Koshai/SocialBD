@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { PostPreview } from "@/components/composer/post-preview";
@@ -39,6 +39,45 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
   const [uploading, setUploading] = useState(false);
   const [aiPending, setAiPending] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (promoteIdea?.promoteMedia) {
+      setMedia({
+        mediaPath: promoteIdea.promoteMedia.mediaPath,
+        mediaMimeType: promoteIdea.promoteMedia.mediaMimeType,
+        previewUrl: promoteIdea.promoteMedia.previewUrl,
+      });
+      return;
+    }
+
+    if (!promoteIdea?.galleryImageId) return;
+
+    let cancelled = false;
+    void (async () => {
+      setUploading(true);
+      const response = await fetch("/api/media/from-gallery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ galleryImageId: promoteIdea.galleryImageId }),
+      });
+      const data = (await response.json()) as UploadedMedia & { error?: string };
+      if (cancelled) return;
+      setUploading(false);
+      if (!response.ok) {
+        setError(data.error ?? t("ideas.galleryImportFailed"));
+        return;
+      }
+      setMedia({
+        mediaPath: data.mediaPath,
+        mediaMimeType: data.mediaMimeType,
+        previewUrl: data.previewUrl,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [promoteIdea?.galleryImageId, promoteIdea?.promoteMedia, t]);
 
   if (channels.length === 0) {
     return (

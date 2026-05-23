@@ -11,6 +11,8 @@ export type CalendarSnapshotJson = {
     createdAt: string;
     channelName: string;
     platform: string;
+    externalPostId?: string | null;
+    pageId?: string | null;
     displayAt: string;
   }>;
   scheduledCount: number;
@@ -29,6 +31,8 @@ export function serializeCalendarPosts(posts: CalendarPost[], scheduledCount: nu
       createdAt: post.createdAt.toISOString(),
       channelName: post.channelName,
       platform: post.platform,
+      externalPostId: post.externalPostId,
+      pageId: post.pageId,
       displayAt: post.displayAt.toISOString(),
     })),
   };
@@ -50,6 +54,8 @@ export function parseCalendarPosts(json: CalendarSnapshotJson): {
       createdAt: new Date(post.createdAt),
       channelName: post.channelName,
       platform: post.platform,
+      externalPostId: post.externalPostId ?? null,
+      pageId: post.pageId ?? "",
       displayAt: new Date(post.displayAt),
     })),
   };

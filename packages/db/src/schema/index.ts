@@ -4,5 +4,6 @@ export * from "./connected-account";
 export * from "./content-idea";
 export * from "./content-idea-tag";
 export * from "./content-tag";
+export * from "./workspace-gallery-image";
 export * from "./organization";
 export * from "./post";

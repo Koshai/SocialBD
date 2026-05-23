@@ -6,6 +6,7 @@ import { contentIdea } from "./schema/content-idea";
 import { contentIdeaTag } from "./schema/content-idea-tag";
 import { contentTag } from "./schema/content-tag";
 import { user } from "./schema/auth";
+import { workspaceGalleryImage } from "./schema/workspace-gallery-image";
 
 import { findOrCreateContentTags } from "./content-tags";
 import type { OrganizationRole } from "./members";
@@ -22,6 +23,10 @@ export type ContentIdeaWithMeta = {
   createdByUserId: string;
   authorName: string;
   promotedPostId: string | null;
+  galleryImageId: string | null;
+  workspaceGalleryId: string | null;
+  workspaceGalleryMediaPath: string | null;
+  workspaceGalleryMediaMimeType: string | null;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +63,48 @@ async function loadTagsForIdeas(ideaIds: string[]) {
   return map;
 }
 
+const ideaSelect = {
+  id: contentIdea.id,
+  title: contentIdea.title,
+  body: contentIdea.body,
+  status: contentIdea.status,
+  campaignId: contentIdea.campaignId,
+  campaignName: campaign.name,
+  createdByUserId: contentIdea.createdByUserId,
+  authorName: user.name,
+  promotedPostId: contentIdea.promotedPostId,
+  galleryImageId: contentIdea.galleryImageId,
+  workspaceGalleryId: contentIdea.workspaceGalleryId,
+  workspaceGalleryMediaPath: workspaceGalleryImage.mediaPath,
+  workspaceGalleryMediaMimeType: workspaceGalleryImage.mediaMimeType,
+  createdAt: contentIdea.createdAt,
+  updatedAt: contentIdea.updatedAt,
+};
+
+function applyIdeaGalleryFields(input: {
+  galleryImageId?: string | null;
+  workspaceGalleryId?: string | null;
+}) {
+  const hasStarter = input.galleryImageId !== undefined;
+  const hasWorkspace = input.workspaceGalleryId !== undefined;
+  if (!hasStarter && !hasWorkspace) return null;
+
+  const galleryImageId = hasStarter ? (input.galleryImageId ?? null) : null;
+  const workspaceGalleryId = hasWorkspace ? (input.workspaceGalleryId ?? null) : null;
+
+  if (galleryImageId && workspaceGalleryId) {
+    throw new Error("Choose either a starter or workspace image, not both.");
+  }
+
+  if (hasStarter && hasWorkspace) {
+    return { galleryImageId, workspaceGalleryId };
+  }
+  if (hasStarter) {
+    return { galleryImageId, workspaceGalleryId: null };
+  }
+  return { galleryImageId: null, workspaceGalleryId };
+}
+
 export async function listContentIdeas(input: {
   organizationId: string;
   status?: IdeaStatus | "all";
@@ -87,22 +134,11 @@ export async function listContentIdeas(input: {
   }
 
   const rows = await db
-    .select({
-      id: contentIdea.id,
-      title: contentIdea.title,
-      body: contentIdea.body,
-      status: contentIdea.status,
-      campaignId: contentIdea.campaignId,
-      campaignName: campaign.name,
-      createdByUserId: contentIdea.createdByUserId,
-      authorName: user.name,
-      promotedPostId: contentIdea.promotedPostId,
-      createdAt: contentIdea.createdAt,
-      updatedAt: contentIdea.updatedAt,
-    })
+    .select(ideaSelect)
     .from(contentIdea)
     .innerJoin(user, eq(contentIdea.createdByUserId, user.id))
     .leftJoin(campaign, eq(contentIdea.campaignId, campaign.id))
+    .leftJoin(workspaceGalleryImage, eq(contentIdea.workspaceGalleryId, workspaceGalleryImage.id))
     .where(and(...conditions))
     .orderBy(desc(contentIdea.updatedAt));
 
@@ -117,22 +153,11 @@ export async function listContentIdeas(input: {
 
 export async function getContentIdea(ideaId: string, organizationId: string) {
   const [row] = await db
-    .select({
-      id: contentIdea.id,
-      title: contentIdea.title,
-      body: contentIdea.body,
-      status: contentIdea.status,
-      campaignId: contentIdea.campaignId,
-      campaignName: campaign.name,
-      createdByUserId: contentIdea.createdByUserId,
-      authorName: user.name,
-      promotedPostId: contentIdea.promotedPostId,
-      createdAt: contentIdea.createdAt,
-      updatedAt: contentIdea.updatedAt,
-    })
+    .select(ideaSelect)
     .from(contentIdea)
     .innerJoin(user, eq(contentIdea.createdByUserId, user.id))
     .leftJoin(campaign, eq(contentIdea.campaignId, campaign.id))
+    .leftJoin(workspaceGalleryImage, eq(contentIdea.workspaceGalleryId, workspaceGalleryImage.id))
     .where(and(eq(contentIdea.id, ideaId), eq(contentIdea.organizationId, organizationId)))
     .limit(1);
 
@@ -169,11 +194,17 @@ export async function createContentIdea(input: {
   status?: IdeaStatus;
   campaignId?: string | null;
   tagNames?: string[];
+  galleryImageId?: string | null;
+  workspaceGalleryId?: string | null;
 }) {
   const title = input.title.trim() || "Untitled idea";
   const body = input.body.trim();
   const now = new Date();
   const id = crypto.randomUUID();
+  const galleryFields = applyIdeaGalleryFields(input) ?? {
+    galleryImageId: null,
+    workspaceGalleryId: null,
+  };
 
   await db.insert(contentIdea).values({
     id,
@@ -184,6 +215,8 @@ export async function createContentIdea(input: {
     body,
     status: input.status ?? "brainstorm",
     promotedPostId: null,
+    galleryImageId: galleryFields.galleryImageId,
+    workspaceGalleryId: galleryFields.workspaceGalleryId,
     createdAt: now,
     updatedAt: now,
   });
@@ -207,6 +240,8 @@ export async function updateContentIdea(input: {
   status?: IdeaStatus;
   campaignId?: string | null;
   tagNames?: string[];
+  galleryImageId?: string | null;
+  workspaceGalleryId?: string | null;
 }) {
   const now = new Date();
   const patch: Partial<typeof contentIdea.$inferInsert> = { updatedAt: now };
@@ -215,6 +250,12 @@ export async function updateContentIdea(input: {
   if (input.body !== undefined) patch.body = input.body.trim();
   if (input.status !== undefined) patch.status = input.status;
   if (input.campaignId !== undefined) patch.campaignId = input.campaignId;
+
+  const galleryFields = applyIdeaGalleryFields(input);
+  if (galleryFields) {
+    patch.galleryImageId = galleryFields.galleryImageId;
+    patch.workspaceGalleryId = galleryFields.workspaceGalleryId;
+  }
 
   const [updated] = await db
     .update(contentIdea)

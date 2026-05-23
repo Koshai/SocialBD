@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { serializeIdea, serializeIdeaCounts } from "@/lib/ideas-api";
+import { parseIdeaGalleryPayload } from "@/lib/idea-gallery-payload";
 
 const VALID_STATUSES = new Set(["all", "brainstorm", "ready", "archived"]);
 
@@ -62,6 +63,15 @@ export async function POST(request: Request) {
     "tagNames" in json && Array.isArray(json.tagNames)
       ? json.tagNames.map(String)
       : [];
+  let galleryFields = { galleryImageId: null as string | null, workspaceGalleryId: null as string | null };
+  if ("galleryImageId" in json || "workspaceGalleryId" in json) {
+    try {
+      galleryFields = await parseIdeaGalleryPayload(organizationId, json);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid gallery image.";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+  }
 
   try {
     const idea = await createContentIdea({
@@ -72,6 +82,8 @@ export async function POST(request: Request) {
       status,
       campaignId,
       tagNames,
+      galleryImageId: galleryFields.galleryImageId,
+      workspaceGalleryId: galleryFields.workspaceGalleryId,
     });
     return NextResponse.json({ idea: serializeIdea(idea) });
   } catch (error) {

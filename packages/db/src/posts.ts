@@ -22,6 +22,8 @@ export type PostWithChannel = {
   createdAt: Date;
   channelName: string;
   platform: string;
+  externalPostId: string | null;
+  pageId: string;
 };
 
 export type CalendarPost = PostWithChannel & {
@@ -89,6 +91,8 @@ const postListSelect = {
   createdAt: post.createdAt,
   channelName: connectedAccount.displayName,
   platform: connectedAccount.platform,
+  externalPostId: post.externalPostId,
+  pageId: connectedAccount.providerAccountId,
 };
 
 export type PostListQuery = {
@@ -314,6 +318,8 @@ export async function listCalendarPosts(
       createdAt: post.createdAt,
       channelName: connectedAccount.displayName,
       platform: connectedAccount.platform,
+      externalPostId: post.externalPostId,
+      pageId: connectedAccount.providerAccountId,
     })
     .from(post)
     .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
@@ -437,6 +443,8 @@ export async function listPendingApprovalPosts(organizationId: string, limit = 3
       createdAt: post.createdAt,
       channelName: connectedAccount.displayName,
       platform: connectedAccount.platform,
+      externalPostId: post.externalPostId,
+      pageId: connectedAccount.providerAccountId,
     })
     .from(post)
     .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))

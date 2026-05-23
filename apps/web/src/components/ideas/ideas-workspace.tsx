@@ -6,8 +6,14 @@ import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 import type { IdeaStatus } from "@socialbd/db";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
+import { IdeaGalleryPicker } from "@/components/ideas/idea-gallery-picker";
 import type { IdeaJson } from "@/lib/ideas-api";
 import { serializeIdeaCounts } from "@/lib/ideas-api";
+import {
+  emptyGallerySelection,
+  selectionFromIdea,
+  type IdeaGallerySelection,
+} from "@/lib/idea-gallery-selection";
 import type { CaptionTone } from "@/lib/openai-client";
 
 type CampaignJson = { id: string; name: string };
@@ -62,6 +68,9 @@ export function IdeasWorkspace({
   const [brainstormResults, setBrainstormResults] = useState<
     Array<{ title: string; body: string; tagNames: string[] }> | null
   >(null);
+  const [gallerySelection, setGallerySelection] = useState<IdeaGallerySelection>(
+    emptyGallerySelection(),
+  );
 
   const statusTabs = useMemo(
     () =>
@@ -100,6 +109,18 @@ export function IdeasWorkspace({
     setEditorStatus("brainstorm");
     setEditorCampaignId("");
     setTagInput("");
+    setGallerySelection(emptyGallerySelection());
+    setEditor({ mode: "create" });
+    setError(null);
+  }
+
+  function openCreateWithGallery(selection: IdeaGallerySelection) {
+    setTitle("");
+    setBody("");
+    setEditorStatus("brainstorm");
+    setEditorCampaignId("");
+    setTagInput("");
+    setGallerySelection(selection);
     setEditor({ mode: "create" });
     setError(null);
   }
@@ -110,6 +131,7 @@ export function IdeasWorkspace({
     setEditorStatus(idea.status);
     setEditorCampaignId(idea.campaignId ?? "");
     setTagInput(idea.tags.join(", "));
+    setGallerySelection(selectionFromIdea(idea));
     setEditor({ mode: "edit", idea });
     setError(null);
   }
@@ -233,6 +255,8 @@ export function IdeasWorkspace({
       status: editorStatus,
       campaignId: editorCampaignId || null,
       tagNames,
+      galleryImageId: gallerySelection.starterId,
+      workspaceGalleryId: gallerySelection.workspaceId,
     };
 
     const response =
@@ -371,6 +395,26 @@ export function IdeasWorkspace({
             </select>
           </label>
         </div>
+
+        <Card className="mt-6">
+          <CardTitle>{t("ideas.galleryTitle")}</CardTitle>
+          <CardDescription>{t("ideas.galleryBrowseDesc")}</CardDescription>
+          <div className="mt-4">
+            <IdeaGalleryPicker
+              selected={gallerySelection}
+              disabled={pending}
+              onSelect={(selection) => {
+                setGallerySelection(selection);
+                if (
+                  editor.mode === "closed" &&
+                  (selection.starterId || selection.workspaceId)
+                ) {
+                  openCreateWithGallery(selection);
+                }
+              }}
+            />
+          </div>
+        </Card>
 
         <div className="mt-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
           <p className="text-sm font-medium text-foreground">{t("ideas.aiBrainstorm")}</p>
@@ -594,6 +638,14 @@ export function IdeasWorkspace({
             <li key={idea.id}>
               <Card>
                 <div className="flex flex-wrap items-start justify-between gap-3">
+                  {idea.galleryPreviewUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={idea.galleryPreviewUrl}
+                      alt=""
+                      className="size-20 shrink-0 rounded-lg border border-border object-cover"
+                    />
+                  ) : null}
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{idea.title}</p>
                     <p className="mt-1 text-xs text-muted">

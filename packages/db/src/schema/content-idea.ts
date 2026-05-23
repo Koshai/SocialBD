@@ -4,6 +4,7 @@ import { user } from "./auth";
 import { campaign } from "./campaign";
 import { organization } from "./organization";
 import { post } from "./post";
+import { workspaceGalleryImage } from "./workspace-gallery-image";
 
 export const contentIdea = pgTable("content_idea", {
   id: text("id").primaryKey(),
@@ -18,6 +19,10 @@ export const contentIdea = pgTable("content_idea", {
   body: text("body").notNull(),
   status: text("status").notNull().default("brainstorm"),
   promotedPostId: text("promoted_post_id").references(() => post.id, { onDelete: "set null" }),
+  galleryImageId: text("gallery_image_id"),
+  workspaceGalleryId: text("workspace_gallery_id").references(() => workspaceGalleryImage.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 });

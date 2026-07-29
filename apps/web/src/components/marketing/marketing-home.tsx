@@ -77,7 +77,12 @@ export function MarketingHome() {
       </main>
 
       <footer className="border-t border-border py-6 text-center text-sm text-muted">
-        © {new Date().getFullYear()} SocialBD
+        <p>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy Policy
+          </Link>
+        </p>
+        <p className="mt-2">© {new Date().getFullYear()} SocialBD</p>
       </footer>
     </div>
   );

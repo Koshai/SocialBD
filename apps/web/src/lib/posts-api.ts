@@ -1,5 +1,7 @@
 import type { PostStatus, PostStatusCounts, PostWithChannel } from "@socialbd/db";
 
+import { postHistoryPlatformOptions } from "@/lib/features/linkedin";
+
 export type PostSnapshot = {
   posts: PostWithChannel[];
   scheduledCount: number;
@@ -125,7 +127,7 @@ export function parsePostHistoryFilter(searchParams: URLSearchParams): PostHisto
     "failed",
     "rejected",
   ];
-  const platforms = ["all", "facebook_page", "instagram", "linkedin_organization"];
+  const platforms: string[] = [...postHistoryPlatformOptions()];
 
   return {
     status: statuses.includes(statusRaw as PostStatus | "all")

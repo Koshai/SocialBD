@@ -1,4 +1,8 @@
-import { upsertLinkedInOrganizationAccount } from "@socialbd/db";
+import {
+  assertChannelCapacity,
+  countNewLinkedInConnections,
+  upsertLinkedInOrganizationAccount,
+} from "@socialbd/db";
 
 import {
   fetchAdministeredOrganizations,
@@ -19,6 +23,15 @@ export async function syncLinkedInOrganizationsForOrganization(input: {
       : null;
 
   const orgUrns = await fetchAdministeredOrganizations(input.accessToken);
+  const orgIds = orgUrns
+    .map((urn) => parseOrganizationUrn(urn))
+    .filter((id): id is string => Boolean(id));
+
+  await assertChannelCapacity(
+    input.organizationId,
+    await countNewLinkedInConnections(input.organizationId, orgIds),
+  );
+
   const scopes = getLinkedInScopeString();
   let synced = 0;
 

@@ -2,6 +2,7 @@ import { approvePost } from "@socialbd/db";
 import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
+import { notifyPostApproved } from "@/lib/approval-notifications";
 import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
 import { enqueuePublishPost } from "@/lib/publish-queue";
 
@@ -26,6 +27,15 @@ export async function POST(_request: Request, context: RouteContext) {
     } else if (result.scheduledAt) {
       await enqueuePublishPost(id, result.scheduledAt);
     }
+
+    void notifyPostApproved({
+      postId: id,
+      organizationId,
+      publishNow: result.publishNow,
+      scheduledAt: result.scheduledAt,
+    }).catch((error) => {
+      console.error("[SocialBD email:approval_approved] Failed to send:", error);
+    });
 
     return NextResponse.json({ ok: true, post: result.post });
   } catch (error) {

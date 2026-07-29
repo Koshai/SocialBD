@@ -19,11 +19,16 @@ import { MetaSetupCard } from "./meta-setup-card";
 type ConnectedAccountsPanelProps = {
   accounts: PublicConnectedAccount[];
   metaConfigured: boolean;
+  linkedInEnabled: boolean;
   linkedInConfigured: boolean;
   usesLoginConfig: boolean;
+  atChannelLimit: boolean;
 };
 
 function resolveConnectError(error: string, t: TranslateFn) {
+  if (error === "channel_limit") {
+    return t("accounts.channelLimitError");
+  }
   if (error.startsWith("linkedin_")) {
     return getLinkedInErrorMessage(error, t);
   }
@@ -36,8 +41,10 @@ function resolveConnectError(error: string, t: TranslateFn) {
 export function ConnectedAccountsPanel({
   accounts,
   metaConfigured,
+  linkedInEnabled,
   linkedInConfigured,
   usesLoginConfig,
+  atChannelLimit,
 }: ConnectedAccountsPanelProps) {
   const router = useRouter();
   const { t } = usePreferences();
@@ -50,7 +57,7 @@ export function ConnectedAccountsPanel({
     const linkedInConnected = searchParams.get("linkedin_connected");
     const error = searchParams.get("error");
 
-    if (linkedInConnected) {
+    if (linkedInConnected && linkedInEnabled) {
       return {
         type: "success" as const,
         message: t("accounts.connectedLinkedIn", {
@@ -76,6 +83,9 @@ export function ConnectedAccountsPanel({
     }
 
     if (error) {
+      if (!linkedInEnabled && error.startsWith("linkedin_")) {
+        return null;
+      }
       return {
         type: "error" as const,
         message: resolveConnectError(error, t),
@@ -83,7 +93,7 @@ export function ConnectedAccountsPanel({
     }
 
     return null;
-  }, [searchParams, t]);
+  }, [searchParams, t, linkedInEnabled]);
 
   async function handleDisconnect(accountId: string) {
     setPendingId(accountId);
@@ -98,7 +108,7 @@ export function ConnectedAccountsPanel({
   return (
     <div className="space-y-6">
       {!metaConfigured ? <MetaSetupCard /> : null}
-      {!linkedInConfigured ? <LinkedInSetupCard /> : null}
+      {linkedInEnabled && !linkedInConfigured ? <LinkedInSetupCard /> : null}
 
       {metaConfigured &&
       accounts.some(
@@ -125,7 +135,7 @@ export function ConnectedAccountsPanel({
         <CardTitle>{t("accounts.facebookPages")}</CardTitle>
         <CardDescription>{t("accounts.connectHint")}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-3">
-          {metaConfigured ? (
+          {metaConfigured && !atChannelLimit ? (
             <Button
               type="button"
               onClick={() => {
@@ -138,29 +148,34 @@ export function ConnectedAccountsPanel({
             <Button disabled>{t("accounts.connectFacebook")}</Button>
           )}
         </div>
+        {atChannelLimit ? (
+          <p className="mt-3 text-sm text-amber-800">{t("accounts.channelLimitConnectBlocked")}</p>
+        ) : null}
       </Card>
 
-      <Card>
-        <CardTitle>{t("accounts.linkedinPages")}</CardTitle>
-        <CardDescription>{t("accounts.connectHintLinkedIn")}</CardDescription>
-        <div className="mt-4 flex flex-wrap gap-3">
-          {linkedInConfigured ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                window.location.href = "/api/linkedin/connect";
-              }}
-            >
-              {t("accounts.connectLinkedIn")}
-            </Button>
-          ) : (
-            <Button variant="secondary" disabled>
-              {t("accounts.connectLinkedIn")}
-            </Button>
-          )}
-        </div>
-      </Card>
+      {linkedInEnabled ? (
+        <Card>
+          <CardTitle>{t("accounts.linkedinPages")}</CardTitle>
+          <CardDescription>{t("accounts.connectHintLinkedIn")}</CardDescription>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {linkedInConfigured && !atChannelLimit ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  window.location.href = "/api/linkedin/connect";
+                }}
+              >
+                {t("accounts.connectLinkedIn")}
+              </Button>
+            ) : (
+              <Button variant="secondary" disabled>
+                {t("accounts.connectLinkedIn")}
+              </Button>
+            )}
+          </div>
+        </Card>
+      ) : null}
 
       {accounts.length > 0 ? (
         <ul className="space-y-3">

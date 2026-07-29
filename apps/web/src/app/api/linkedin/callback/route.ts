@@ -2,7 +2,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { appUrl, getLinkedInRedirectUri } from "@/lib/app-url";
+import { isChannelLimitError } from "@socialbd/db";
 import { requireDashboardSession } from "@/lib/dashboard-session";
+import { isLinkedInFeatureEnabled } from "@/lib/features/linkedin";
 import { exchangeLinkedInCode } from "@/lib/linkedin/client";
 import {
   getLinkedInOAuthStateCookieName,
@@ -11,6 +13,10 @@ import {
 import { syncLinkedInOrganizationsForOrganization } from "@/lib/linkedin/sync-organizations";
 
 export async function GET(request: Request) {
+  if (!isLinkedInFeatureEnabled()) {
+    return NextResponse.redirect(appUrl(request, "/dashboard/accounts"));
+  }
+
   const session = await requireDashboardSession();
   const redirectUri = getLinkedInRedirectUri(request);
   const { searchParams } = new URL(request.url);
@@ -66,6 +72,11 @@ export async function GET(request: Request) {
     );
   } catch (cause) {
     console.error("[linkedin/callback]", cause);
+    if (isChannelLimitError(cause)) {
+      return NextResponse.redirect(
+        appUrl(request, "/dashboard/accounts", { error: "channel_limit" }),
+      );
+    }
     return NextResponse.redirect(
       appUrl(request, "/dashboard/accounts", { error: "linkedin_sync_failed" }),
     );

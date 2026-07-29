@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { appUrl, getLinkedInRedirectUri } from "@/lib/app-url";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
+import { isLinkedInFeatureEnabled } from "@/lib/features/linkedin";
 import { buildLinkedInAuthorizeUrl } from "@/lib/linkedin/client";
 import { isLinkedInConfigured } from "@/lib/linkedin/config";
 import {
@@ -11,6 +12,10 @@ import {
 } from "@/lib/linkedin/oauth-state";
 
 export async function GET(request: Request) {
+  if (!isLinkedInFeatureEnabled()) {
+    return NextResponse.redirect(appUrl(request, "/dashboard/accounts"));
+  }
+
   if (!isLinkedInConfigured()) {
     return NextResponse.redirect(
       appUrl(request, "/dashboard/accounts", { error: "linkedin_not_configured" }),

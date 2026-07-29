@@ -4,7 +4,7 @@ export type AppEmailInput = {
   html: string;
   text?: string;
   /** Label for dev console logs (e.g. invitation, verification). */
-  kind: "invitation" | "verification";
+  kind: "invitation" | "verification" | "approval_request" | "approval_approved" | "approval_rejected";
 };
 
 export function isEmailSendingConfigured() {

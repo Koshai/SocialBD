@@ -4,6 +4,7 @@ export * from "./connected-accounts";
 export * from "./content-ideas";
 export * from "./content-tags";
 export * from "./members";
+export * from "./plan-limits";
 export * from "./workspace-gallery";
 export * from "./invitations";
 export * from "./analytics";

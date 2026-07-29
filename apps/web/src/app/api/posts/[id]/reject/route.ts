@@ -2,6 +2,7 @@ import { rejectPost } from "@socialbd/db";
 import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
+import { notifyPostRejected } from "@/lib/approval-notifications";
 import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -19,6 +20,11 @@ export async function POST(_request: Request, context: RouteContext) {
 
   try {
     const post = await rejectPost(id, organizationId);
+
+    void notifyPostRejected({ postId: id, organizationId }).catch((error) => {
+      console.error("[SocialBD email:approval_rejected] Failed to send:", error);
+    });
+
     return NextResponse.json({ ok: true, post });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not reject post.";

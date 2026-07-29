@@ -1,7 +1,9 @@
 import { and, desc, eq, gte, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
 
 import { db } from "./db";
+import { user } from "./schema/auth";
 import { connectedAccount } from "./schema/connected-account";
+import { organization } from "./schema/organization";
 import { post } from "./schema/post";
 
 export type PostStatus =
@@ -515,4 +517,28 @@ export async function rejectPost(postId: string, organizationId: string) {
   }
 
   return updated;
+}
+
+export async function getPostApprovalNotificationContext(postId: string, organizationId: string) {
+  const [row] = await db
+    .select({
+      id: post.id,
+      body: post.body,
+      hasMedia: sql<boolean>`(${post.mediaPath} IS NOT NULL)`,
+      scheduledAt: post.scheduledAt,
+      channelName: connectedAccount.displayName,
+      platform: connectedAccount.platform,
+      creatorUserId: post.createdByUserId,
+      creatorEmail: user.email,
+      creatorName: user.name,
+      organizationName: organization.name,
+    })
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .innerJoin(user, eq(post.createdByUserId, user.id))
+    .innerJoin(organization, eq(post.organizationId, organization.id))
+    .where(and(eq(post.id, postId), eq(post.organizationId, organizationId)))
+    .limit(1);
+
+  return row ?? null;
 }

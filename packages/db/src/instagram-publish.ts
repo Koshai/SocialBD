@@ -2,8 +2,41 @@ const GRAPH_VERSION = "v21.0";
 
 type GraphResponse = {
   id?: string;
+  status_code?: string;
   error?: { message: string; code?: number };
 };
+
+const CONTAINER_POLL_MS = 2_000;
+const CONTAINER_POLL_MAX_ATTEMPTS = 30;
+
+async function waitForInstagramContainerReady(containerId: string, accessToken: string) {
+  const statusUrl = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/${containerId}`);
+  statusUrl.searchParams.set("fields", "status_code");
+  statusUrl.searchParams.set("access_token", accessToken);
+
+  for (let attempt = 0; attempt < CONTAINER_POLL_MAX_ATTEMPTS; attempt++) {
+    const response = await fetch(statusUrl);
+    const json = (await response.json()) as GraphResponse;
+
+    if (!response.ok || json.error) {
+      throw new Error(
+        json.error?.message ?? `Instagram container status failed (${response.status}).`,
+      );
+    }
+
+    if (json.status_code === "FINISHED") {
+      return;
+    }
+
+    if (json.status_code === "ERROR" || json.status_code === "EXPIRED") {
+      throw new Error(`Instagram media container is ${json.status_code}.`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, CONTAINER_POLL_MS));
+  }
+
+  throw new Error("Instagram media was not ready to publish in time. Try again.");
+}
 
 export async function publishInstagramPost(input: {
   igUserId: string;
@@ -26,6 +59,8 @@ export async function publishInstagramPost(input: {
       createJson.error?.message ?? `Instagram media create failed (${createResponse.status}).`,
     );
   }
+
+  await waitForInstagramContainerReady(createJson.id, input.pageAccessToken);
 
   const publishUrl = new URL(
     `https://graph.facebook.com/${GRAPH_VERSION}/${input.igUserId}/media_publish`,

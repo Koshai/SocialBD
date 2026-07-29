@@ -8,6 +8,7 @@ import {
 
 import { ComposerForm } from "@/components/composer/composer-form";
 import { PostListLive } from "@/components/composer/post-list-live";
+import { withoutLinkedInAccounts } from "@/lib/features/linkedin";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { serializeIdea } from "@/lib/ideas-api";
 import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
@@ -34,7 +35,7 @@ export default async function ComposerPage({ searchParams }: ComposerPageProps) 
   return (
     <div className="space-y-6">
       <ComposerForm
-        channels={channels}
+        channels={withoutLinkedInAccounts(channels)}
         canPublishDirectly={canPublishDirectly(role)}
         promoteIdea={promoteIdea ? serializeIdea(promoteIdea) : null}
       />

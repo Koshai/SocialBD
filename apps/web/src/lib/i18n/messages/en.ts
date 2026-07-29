@@ -161,6 +161,10 @@ export const en = {
     banglaDesc: "Bangla script templates — use Avro or your Bengali keyboard to edit.",
   },
   accounts: {
+    channelLimitError:
+      "Channel limit reached on your current plan. Disconnect a channel or wait for paid plans (coming soon).",
+    channelLimitConnectBlocked:
+      "You have reached the channel limit for your plan. Disconnect a channel before connecting another.",
     connectHint:
       "Connect Facebook Pages you manage. Instagram appears when a Page has a linked Business or Creator account.",
     connectHintLinkedIn:
@@ -462,10 +466,17 @@ export const en = {
     almostThere: "Almost there",
     redirecting: "Redirecting you to the workspace…",
   },
+  plan: {
+    title: "{planName} plan",
+    channelsUsage: "{count} of {max} channels connected",
+    placeholderNote:
+      "Paid plans with BDT billing are coming soon. This free channel limit applies during early access.",
+    atLimit: "Channel limit reached. Disconnect a channel to connect another.",
+  },
   home: {
     featuresHeading: "Platform features",
     scheduleTitle: "Schedule everywhere",
-    scheduleBody: "Facebook, Instagram, LinkedIn — calendar and queue.",
+    scheduleBody: "Facebook and Instagram — calendar and queue.",
     teamsTitle: "Teams",
     teamsBody: "Workspaces, roles, and approvals.",
     pricingTitle: "BDT pricing",

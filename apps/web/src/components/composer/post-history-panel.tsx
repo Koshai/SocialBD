@@ -6,7 +6,7 @@ import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 import type { PostStatus, PostWithChannel } from "@socialbd/db";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
-import { getPlatformLabel } from "@/lib/platform-labels";
+import { postHistoryPlatformOptions } from "@/lib/features/linkedin";
 import {
   parsePostHistoryResponse,
   type PostHistoryCounts,
@@ -24,12 +24,19 @@ const STATUS_TABS: Array<{ id: PostHistoryFilter["status"]; labelKey: string }> 
   { id: "failed", labelKey: "posts.filterFailed" },
 ];
 
-const PLATFORM_OPTIONS: Array<{ id: PostHistoryFilter["platform"]; labelKey: string }> = [
-  { id: "all", labelKey: "posts.platformAll" },
-  { id: "facebook_page", labelKey: "platform.facebookPage" },
-  { id: "instagram", labelKey: "platform.instagram" },
-  { id: "linkedin_organization", labelKey: "platform.linkedin" },
-];
+const PLATFORM_LABEL_KEYS: Record<string, string> = {
+  all: "posts.platformAll",
+  facebook_page: "platform.facebookPage",
+  instagram: "platform.instagram",
+  linkedin_organization: "platform.linkedin",
+};
+
+function buildPlatformOptions() {
+  return postHistoryPlatformOptions().map((id) => ({
+    id,
+    labelKey: PLATFORM_LABEL_KEYS[id] ?? "posts.platformAll",
+  }));
+}
 
 type PostHistoryPanelProps = {
   initialPosts: PostWithChannel[];
@@ -141,9 +148,9 @@ export function PostHistoryPanel({
             onChange={(e) => changePlatform(e.target.value as PostHistoryFilter["platform"])}
             className="h-9 rounded-lg border border-border bg-background px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            {PLATFORM_OPTIONS.map((option) => (
+            {buildPlatformOptions().map((option) => (
               <option key={option.id} value={option.id}>
-                {option.id === "all" ? t(option.labelKey) : getPlatformLabel(option.id, t)}
+                {t(option.labelKey)}
               </option>
             ))}
           </select>

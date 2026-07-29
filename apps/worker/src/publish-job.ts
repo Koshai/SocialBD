@@ -60,6 +60,12 @@ export async function processPublishJob(postId: string) {
       }
 
       const imageUrl = createSignedMediaUrl(row.mediaPath);
+      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(imageUrl)) {
+        console.warn(
+          "[worker] Instagram image URL is localhost — Meta cannot fetch it. " +
+            "Set PUBLIC_MEDIA_BASE_URL to your tunnel URL (see .env.example) and restart.",
+        );
+      }
       const { externalPostId } = await publishInstagramPost({
         igUserId: row.pageId,
         pageAccessToken: row.pageAccessToken,

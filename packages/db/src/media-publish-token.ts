@@ -12,17 +12,37 @@ export function getAppBaseUrlFromEnv() {
   return (
     process.env.NEXT_PUBLIC_APP_URL ??
     process.env.BETTER_AUTH_URL ??
+<<<<<<< HEAD
     "http://localhost:3000"
   ).replace(/\/$/, "");
 }
 
+=======
+    "http://localhost:3001"
+  ).replace(/\/$/, "");
+}
+
+/** Public origin for Instagram image URLs only (tunnel); falls back to app URL. */
+export function getPublicMediaBaseUrlFromEnv() {
+  const mediaBase = process.env.PUBLIC_MEDIA_BASE_URL?.trim();
+  if (mediaBase) {
+    return mediaBase.replace(/\/$/, "");
+  }
+  return getAppBaseUrlFromEnv();
+}
+
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 /** Short-lived public URL so Meta can fetch images for Instagram publishing. */
 export function createSignedMediaUrl(relativePath: string, ttlMs = 15 * 60 * 1000) {
   const expiresAt = Date.now() + ttlMs;
   const payload = `${relativePath}|${expiresAt}`;
   const signature = createHmac("sha256", getSigningSecret()).update(payload).digest("base64url");
   const token = Buffer.from(`${payload}|${signature}`).toString("base64url");
+<<<<<<< HEAD
   return `${getAppBaseUrlFromEnv()}/api/media/publish/${token}`;
+=======
+  return `${getPublicMediaBaseUrlFromEnv()}/api/media/publish/${token}`;
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 }
 
 export function verifySignedMediaToken(token: string) {

@@ -17,7 +17,11 @@ export function getAppBaseUrl(request?: Request) {
   return (
     process.env.NEXT_PUBLIC_APP_URL ??
     process.env.BETTER_AUTH_URL ??
+<<<<<<< HEAD
     "http://localhost:3000"
+=======
+    "http://localhost:3001"
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   ).replace(/\/$/, "");
 }
 

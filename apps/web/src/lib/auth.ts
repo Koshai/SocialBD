@@ -8,7 +8,11 @@ import { buildInvitationAcceptUrl, sendOrganizationInvitationEmail } from "@/lib
 import { sendEmailVerificationMessage } from "@/lib/verification-email";
 
 const baseURL =
+<<<<<<< HEAD
   process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+=======
+  process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 if (!process.env.BETTER_AUTH_SECRET) {
   throw new Error("BETTER_AUTH_SECRET is required. See .env.example");

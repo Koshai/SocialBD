@@ -2,7 +2,13 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { appUrl, getLinkedInRedirectUri } from "@/lib/app-url";
+<<<<<<< HEAD
 import { requireDashboardSession } from "@/lib/dashboard-session";
+=======
+import { isChannelLimitError } from "@socialbd/db";
+import { requireDashboardSession } from "@/lib/dashboard-session";
+import { isLinkedInFeatureEnabled } from "@/lib/features/linkedin";
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 import { exchangeLinkedInCode } from "@/lib/linkedin/client";
 import {
   getLinkedInOAuthStateCookieName,
@@ -11,6 +17,13 @@ import {
 import { syncLinkedInOrganizationsForOrganization } from "@/lib/linkedin/sync-organizations";
 
 export async function GET(request: Request) {
+<<<<<<< HEAD
+=======
+  if (!isLinkedInFeatureEnabled()) {
+    return NextResponse.redirect(appUrl(request, "/dashboard/accounts"));
+  }
+
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   const session = await requireDashboardSession();
   const redirectUri = getLinkedInRedirectUri(request);
   const { searchParams } = new URL(request.url);
@@ -66,6 +79,14 @@ export async function GET(request: Request) {
     );
   } catch (cause) {
     console.error("[linkedin/callback]", cause);
+<<<<<<< HEAD
+=======
+    if (isChannelLimitError(cause)) {
+      return NextResponse.redirect(
+        appUrl(request, "/dashboard/accounts", { error: "channel_limit" }),
+      );
+    }
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     return NextResponse.redirect(
       appUrl(request, "/dashboard/accounts", { error: "linkedin_sync_failed" }),
     );

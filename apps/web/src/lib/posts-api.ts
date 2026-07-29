@@ -1,5 +1,10 @@
 import type { PostStatus, PostStatusCounts, PostWithChannel } from "@socialbd/db";
 
+<<<<<<< HEAD
+=======
+import { postHistoryPlatformOptions } from "@/lib/features/linkedin";
+
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 export type PostSnapshot = {
   posts: PostWithChannel[];
   scheduledCount: number;
@@ -32,6 +37,11 @@ export type PostSnapshotJson = {
     createdAt: string;
     channelName: string;
     platform: string;
+<<<<<<< HEAD
+=======
+    externalPostId?: string | null;
+    pageId?: string | null;
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   }>;
   scheduledCount: number;
   pendingApprovalCount: number;
@@ -53,6 +63,11 @@ function mapPostJson(
     createdAt: new Date(post.createdAt),
     channelName: post.channelName,
     platform: post.platform,
+<<<<<<< HEAD
+=======
+    externalPostId: post.externalPostId ?? null,
+    pageId: post.pageId ?? "",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   };
 }
 
@@ -70,6 +85,11 @@ export function serializePostSnapshot(snapshot: PostSnapshot): PostSnapshotJson 
       createdAt: post.createdAt.toISOString(),
       channelName: post.channelName,
       platform: post.platform,
+<<<<<<< HEAD
+=======
+      externalPostId: post.externalPostId,
+      pageId: post.pageId,
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     })),
   };
 }
@@ -119,7 +139,11 @@ export function parsePostHistoryFilter(searchParams: URLSearchParams): PostHisto
     "failed",
     "rejected",
   ];
+<<<<<<< HEAD
   const platforms = ["all", "facebook_page", "instagram", "linkedin_organization"];
+=======
+  const platforms: string[] = [...postHistoryPlatformOptions()];
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
   return {
     status: statuses.includes(statusRaw as PostStatus | "all")

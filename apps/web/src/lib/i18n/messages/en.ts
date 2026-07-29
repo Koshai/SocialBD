@@ -161,6 +161,13 @@ export const en = {
     banglaDesc: "Bangla script templates — use Avro or your Bengali keyboard to edit.",
   },
   accounts: {
+<<<<<<< HEAD
+=======
+    channelLimitError:
+      "Channel limit reached on your current plan. Disconnect a channel or wait for paid plans (coming soon).",
+    channelLimitConnectBlocked:
+      "You have reached the channel limit for your plan. Disconnect a channel before connecting another.",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     connectHint:
       "Connect Facebook Pages you manage. Instagram appears when a Page has a linked Business or Creator account.",
     connectHintLinkedIn:
@@ -365,6 +372,52 @@ export const en = {
     aiBrainstormHint: "Generate multiple drafts from one theme, then save or edit.",
     aiConfirmReplace: "Replace your current title and caption with the AI result?",
     confirmSaveAll: "Save all {count} AI ideas to your library?",
+<<<<<<< HEAD
+=======
+    galleryTitle: "Image gallery",
+    galleryHint: "Pick a starter image for this idea. It carries over when you turn the idea into a post.",
+    galleryBrowseDesc: "Browse by category and select an image for your next idea.",
+    galleryCategory: "Category",
+    gallerySelected: "Selected: {name}",
+    galleryClear: "Remove image",
+    galleryImportFailed: "Could not attach gallery image to the post.",
+    galleryTabLabel: "Gallery source",
+    galleryTabStarter: "Starter library",
+    galleryTabMine: "My images",
+    galleryUploadTitle: "Upload to your gallery",
+    galleryUploadName: "Label (optional)",
+    galleryUploadNamePlaceholder: "e.g. Eid shop banner",
+    galleryUploadHint:
+      "Add a label, choose a file, then click Upload. Pick an image from the grid below to attach it to your idea.",
+    galleryUploadButton: "Upload to gallery",
+    galleryUploadFile: "Image file",
+    galleryUploadPickFile: "Choose an image file before uploading.",
+    galleryUploadSelectedFile: "Selected file: {name}",
+    galleryUploadNoFile: "No file chosen yet.",
+    gallerySearchLabel: "Search by label",
+    gallerySearchPlaceholder: "Search your images…",
+    gallerySearchEmpty: "No images match that label in this category.",
+    galleryWorkspaceEmpty: "No images in this category yet. Upload one above.",
+    galleryLoadFailed: "Could not load your gallery.",
+    galleryConfirmDelete: "Remove this image from your workspace gallery?",
+    galleryDeleteFailed: "Could not delete image.",
+    galleryImages: {
+      "eid-gold": "Eid Mubarak",
+      "puja-lights": "Durga Puja",
+      "pohela-red": "Pohela Boishakh",
+      "flash-red": "Flash sale",
+      "weekend-blue": "Weekend deal",
+      "new-drop": "New arrival",
+      "cod-delivery": "Cash on delivery",
+      "bkash-wallet": "Mobile payment",
+      "giveaway": "Giveaway",
+      "poll": "Poll / vote",
+      "open-hours": "Shop hours",
+      "visit-us": "Visit us",
+      "bn-eid": "ঈদ মোবারক",
+      "bn-nobo": "শুভ নববর্ষ",
+    },
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   },
   posts: {
     recentTitle: "Recent posts",
@@ -390,6 +443,11 @@ export const en = {
     publishedAt: "Published {when}",
     failedHint:
       "Publishing failed — check worker logs and channel permissions.",
+<<<<<<< HEAD
+=======
+    boostOnFacebook: "Boost on Facebook",
+    boostOnFacebookHint: "Opens your post on Facebook — use Boost there to set budget and audience.",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     linkedinCaptionRequired: "LinkedIn posts require a caption or an image.",
     status: {
       draft: "draft",
@@ -417,10 +475,24 @@ export const en = {
     almostThere: "Almost there",
     redirecting: "Redirecting you to the workspace…",
   },
+<<<<<<< HEAD
   home: {
     featuresHeading: "Platform features",
     scheduleTitle: "Schedule everywhere",
     scheduleBody: "Facebook, Instagram, LinkedIn — calendar and queue.",
+=======
+  plan: {
+    title: "{planName} plan",
+    channelsUsage: "{count} of {max} channels connected",
+    placeholderNote:
+      "Paid plans with BDT billing are coming soon. This free channel limit applies during early access.",
+    atLimit: "Channel limit reached. Disconnect a channel to connect another.",
+  },
+  home: {
+    featuresHeading: "Platform features",
+    scheduleTitle: "Schedule everywhere",
+    scheduleBody: "Facebook and Instagram — calendar and queue.",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     teamsTitle: "Teams",
     teamsBody: "Workspaces, roles, and approvals.",
     pricingTitle: "BDT pricing",

@@ -164,6 +164,13 @@ export const bn: Messages = {
     banglaDesc: "বাংলা টেমপ্লেট — Avro বা বাংলা কীবোর্ড দিয়ে সম্পাদনা করুন।",
   },
   accounts: {
+<<<<<<< HEAD
+=======
+    channelLimitError:
+      "বর্তমান প্ল্যানে চ্যানেল সীমা পূর্ণ। একটি চ্যানেল বিচ্ছিন্ন করুন বা পেইড প্ল্যানের জন্য অপেক্ষা করুন।",
+    channelLimitConnectBlocked:
+      "প্ল্যানের চ্যানেল সীমায় পৌঁছেছেন। নতুন সংযোগের আগে একটি চ্যানেল বিচ্ছিন্ন করুন।",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     connectHint:
       "আপনার ফেসবুক পেজ সংযুক্ত করুন। পেজের সাথে ইনস্টাগ্রাম ব্যবসা/ক্রিয়েটর লিংক থাকলে ইনস্টাগ্রাম দেখা যাবে।",
     connectHintLinkedIn:
@@ -368,6 +375,52 @@ export const bn: Messages = {
     aiBrainstormHint: "এক থিম থেকে একাধিক খসড়া তৈরি করুন, তারপর সংরক্ষণ বা সম্পাদনা করুন।",
     aiConfirmReplace: "বর্তমান শিরোনাম ও ক্যাপশন AI ফলাফল দিয়ে বদলাবেন?",
     confirmSaveAll: "সব {count}টি AI আইডিয়া লাইব্রেরিতে সংরক্ষণ করবেন?",
+<<<<<<< HEAD
+=======
+    galleryTitle: "ছবির গ্যালারি",
+    galleryHint: "আইডিয়ার জন্য একটি ছবি বেছে নিন। পোস্টে রূপান্তর করলে ছবিটি যাবে।",
+    galleryBrowseDesc: "ক্যাটাগরি অনুযায়ী ব্রাউজ করুন এবং আপনার আইডিয়ার জন্য ছবি বেছে নিন।",
+    galleryCategory: "ক্যাটাগরি",
+    gallerySelected: "নির্বাচিত: {name}",
+    galleryClear: "ছবি সরান",
+    galleryImportFailed: "গ্যালারি ছবি পোস্টে যোগ করা যায়নি।",
+    galleryTabLabel: "গ্যালারি উৎস",
+    galleryTabStarter: "স্টার্টার লাইব্রেরি",
+    galleryTabMine: "আমার ছবি",
+    galleryUploadTitle: "আপনার গ্যালারিতে আপলোড",
+    galleryUploadName: "লেবেল (ঐচ্ছিক)",
+    galleryUploadNamePlaceholder: "যেমন: ঈদ শপ ব্যানার",
+    galleryUploadHint:
+      "লেবেল দিন, ফাইল বেছে নিন, তারপর আপলোড ক্লিক করুন। আইডিয়ায় যোগ করতে নিচের গ্রিড থেকে ছবি বেছে নিন।",
+    galleryUploadButton: "গ্যালারিতে আপলোড",
+    galleryUploadFile: "ছবির ফাইল",
+    galleryUploadPickFile: "আপলোডের আগে একটি ছবির ফাইল বেছে নিন।",
+    galleryUploadSelectedFile: "নির্বাচিত ফাইল: {name}",
+    galleryUploadNoFile: "এখনো কোনো ফাইল বেছে নেওয়া হয়নি।",
+    gallerySearchLabel: "লেবেল দিয়ে খুঁজুন",
+    gallerySearchPlaceholder: "আপনার ছবি খুঁজুন…",
+    gallerySearchEmpty: "এই ক্যাটাগরিতে লেবেলের সাথে কোনো ছবি মিলেনি।",
+    galleryWorkspaceEmpty: "এই ক্যাটাগরিতে এখনো ছবি নেই। উপরে আপলোড করুন।",
+    galleryLoadFailed: "আপনার গ্যালারি লোড করা যায়নি।",
+    galleryConfirmDelete: "ওয়ার্কস্পেস গ্যালারি থেকে এই ছবি মুছবেন?",
+    galleryDeleteFailed: "ছবি মুছে ফেলা যায়নি।",
+    galleryImages: {
+      "eid-gold": "ঈদ মোবারক",
+      "puja-lights": "দুর্গা পূজা",
+      "pohela-red": "পহেলা বৈশাখ",
+      "flash-red": "ফ্ল্যাশ সেল",
+      "weekend-blue": "সাপ্তাহিক অফার",
+      "new-drop": "নতুন আগমন",
+      "cod-delivery": "ক্যাশ অন ডেলিভারি",
+      "bkash-wallet": "মোবাইল পেমেন্ট",
+      "giveaway": "গিভঅ্যাওয়ে",
+      "poll": "ভোট / পোল",
+      "open-hours": "খোলার সময়",
+      "visit-us": "আমাদের দেখুন",
+      "bn-eid": "ঈদ মোবারক",
+      "bn-nobo": "শুভ নববর্ষ",
+    },
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   },
   posts: {
     recentTitle: "সাম্প্রতিক পোস্ট",
@@ -393,6 +446,12 @@ export const bn: Messages = {
     scheduledAt: "শিডিউল {when}",
     publishedAt: "প্রকাশ {when}",
     failedHint: "প্রকাশ ব্যর্থ — worker লগ ও চ্যানেল অনুমতি দেখুন।",
+<<<<<<< HEAD
+=======
+    boostOnFacebook: "ফেসবুকে বুস্ট",
+    boostOnFacebookHint:
+      "ফেসবুকে পোস্ট খুলবে — বাজেট ও অডিয়েন্স সেখানে বুস্ট দিয়ে সেট করুন।",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     status: {
       draft: "ড্রাফট",
       scheduled: "শিডিউল",
@@ -419,10 +478,24 @@ export const bn: Messages = {
     almostThere: "প্রায় হয়ে গেছে",
     redirecting: "ওয়ার্কস্পেসে নিয়ে যাওয়া হচ্ছে…",
   },
+<<<<<<< HEAD
   home: {
     featuresHeading: "প্ল্যাটফর্ম বৈশিষ্ট্য",
     scheduleTitle: "সব জায়গায় শিডিউল",
     scheduleBody: "ফেসবুক, ইনস্টাগ্রাম, লিংকডইন — ক্যালেন্ডার ও কিউ।",
+=======
+  plan: {
+    title: "{planName} প্ল্যান",
+    channelsUsage: "{count}/{max}টি চ্যানেল সংযুক্ত",
+    placeholderNote:
+      "BDT বিলিং সহ পেইড প্ল্যান শীঘ্রই আসছে। প্রাথমিক অ্যাক্সেসে এই বিনামূল্যে সীমা প্রযোজ্য।",
+    atLimit: "চ্যানেল সীমা পূর্ণ। অন্য চ্যানেল সংযুক্ত করতে একটি বিচ্ছিন্ন করুন।",
+  },
+  home: {
+    featuresHeading: "প্ল্যাটফর্ম বৈশিষ্ট্য",
+    scheduleTitle: "সব জায়গায় শিডিউল",
+    scheduleBody: "ফেসবুক ও ইনস্টাগ্রাম — ক্যালেন্ডার ও কিউ।",
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     teamsTitle: "টিম",
     teamsBody: "ওয়ার্কস্পেস, ভূমিকা ও অনুমোদন।",
     pricingTitle: "বিডিটি মূল্য",

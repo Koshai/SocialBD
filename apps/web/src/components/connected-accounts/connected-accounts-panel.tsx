@@ -19,11 +19,24 @@ import { MetaSetupCard } from "./meta-setup-card";
 type ConnectedAccountsPanelProps = {
   accounts: PublicConnectedAccount[];
   metaConfigured: boolean;
+<<<<<<< HEAD
   linkedInConfigured: boolean;
   usesLoginConfig: boolean;
 };
 
 function resolveConnectError(error: string, t: TranslateFn) {
+=======
+  linkedInEnabled: boolean;
+  linkedInConfigured: boolean;
+  usesLoginConfig: boolean;
+  atChannelLimit: boolean;
+};
+
+function resolveConnectError(error: string, t: TranslateFn) {
+  if (error === "channel_limit") {
+    return t("accounts.channelLimitError");
+  }
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   if (error.startsWith("linkedin_")) {
     return getLinkedInErrorMessage(error, t);
   }
@@ -36,8 +49,15 @@ function resolveConnectError(error: string, t: TranslateFn) {
 export function ConnectedAccountsPanel({
   accounts,
   metaConfigured,
+<<<<<<< HEAD
   linkedInConfigured,
   usesLoginConfig,
+=======
+  linkedInEnabled,
+  linkedInConfigured,
+  usesLoginConfig,
+  atChannelLimit,
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 }: ConnectedAccountsPanelProps) {
   const router = useRouter();
   const { t } = usePreferences();
@@ -50,7 +70,11 @@ export function ConnectedAccountsPanel({
     const linkedInConnected = searchParams.get("linkedin_connected");
     const error = searchParams.get("error");
 
+<<<<<<< HEAD
     if (linkedInConnected) {
+=======
+    if (linkedInConnected && linkedInEnabled) {
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
       return {
         type: "success" as const,
         message: t("accounts.connectedLinkedIn", {
@@ -76,6 +100,12 @@ export function ConnectedAccountsPanel({
     }
 
     if (error) {
+<<<<<<< HEAD
+=======
+      if (!linkedInEnabled && error.startsWith("linkedin_")) {
+        return null;
+      }
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
       return {
         type: "error" as const,
         message: resolveConnectError(error, t),
@@ -83,7 +113,11 @@ export function ConnectedAccountsPanel({
     }
 
     return null;
+<<<<<<< HEAD
   }, [searchParams, t]);
+=======
+  }, [searchParams, t, linkedInEnabled]);
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
   async function handleDisconnect(accountId: string) {
     setPendingId(accountId);
@@ -98,7 +132,11 @@ export function ConnectedAccountsPanel({
   return (
     <div className="space-y-6">
       {!metaConfigured ? <MetaSetupCard /> : null}
+<<<<<<< HEAD
       {!linkedInConfigured ? <LinkedInSetupCard /> : null}
+=======
+      {linkedInEnabled && !linkedInConfigured ? <LinkedInSetupCard /> : null}
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
       {metaConfigured &&
       accounts.some(
@@ -125,7 +163,11 @@ export function ConnectedAccountsPanel({
         <CardTitle>{t("accounts.facebookPages")}</CardTitle>
         <CardDescription>{t("accounts.connectHint")}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-3">
+<<<<<<< HEAD
           {metaConfigured ? (
+=======
+          {metaConfigured && !atChannelLimit ? (
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
             <Button
               type="button"
               onClick={() => {
@@ -138,6 +180,7 @@ export function ConnectedAccountsPanel({
             <Button disabled>{t("accounts.connectFacebook")}</Button>
           )}
         </div>
+<<<<<<< HEAD
       </Card>
 
       <Card>
@@ -161,6 +204,36 @@ export function ConnectedAccountsPanel({
           )}
         </div>
       </Card>
+=======
+        {atChannelLimit ? (
+          <p className="mt-3 text-sm text-amber-800">{t("accounts.channelLimitConnectBlocked")}</p>
+        ) : null}
+      </Card>
+
+      {linkedInEnabled ? (
+        <Card>
+          <CardTitle>{t("accounts.linkedinPages")}</CardTitle>
+          <CardDescription>{t("accounts.connectHintLinkedIn")}</CardDescription>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {linkedInConfigured && !atChannelLimit ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  window.location.href = "/api/linkedin/connect";
+                }}
+              >
+                {t("accounts.connectLinkedIn")}
+              </Button>
+            ) : (
+              <Button variant="secondary" disabled>
+                {t("accounts.connectLinkedIn")}
+              </Button>
+            )}
+          </div>
+        </Card>
+      ) : null}
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
       {accounts.length > 0 ? (
         <ul className="space-y-3">

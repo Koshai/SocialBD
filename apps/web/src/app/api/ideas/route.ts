@@ -8,6 +8,10 @@ import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { serializeIdea, serializeIdeaCounts } from "@/lib/ideas-api";
+<<<<<<< HEAD
+=======
+import { parseIdeaGalleryPayload } from "@/lib/idea-gallery-payload";
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 const VALID_STATUSES = new Set(["all", "brainstorm", "ready", "archived"]);
 
@@ -62,6 +66,18 @@ export async function POST(request: Request) {
     "tagNames" in json && Array.isArray(json.tagNames)
       ? json.tagNames.map(String)
       : [];
+<<<<<<< HEAD
+=======
+  let galleryFields = { galleryImageId: null as string | null, workspaceGalleryId: null as string | null };
+  if ("galleryImageId" in json || "workspaceGalleryId" in json) {
+    try {
+      galleryFields = await parseIdeaGalleryPayload(organizationId, json);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid gallery image.";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+  }
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
   try {
     const idea = await createContentIdea({
@@ -72,6 +88,11 @@ export async function POST(request: Request) {
       status,
       campaignId,
       tagNames,
+<<<<<<< HEAD
+=======
+      galleryImageId: galleryFields.galleryImageId,
+      workspaceGalleryId: galleryFields.workspaceGalleryId,
+>>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     });
     return NextResponse.json({ idea: serializeIdea(idea) });
   } catch (error) {

@@ -21,6 +21,14 @@ For each service → **Settings → Config-as-code**:
 
 Root directory for both: repo root (`/`).
 
+Also set on **both** services (Variables):
+
+```env
+NIXPACKS_NODE_VERSION=22
+```
+
+(`nixpacks.toml` already pins Node 22 — this is a backup if Nixpacks ignores the file.)
+
 ## 3. Shared variables
 
 In Railway, create a **shared variable group** (or copy to both web + worker):

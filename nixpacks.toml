@@ -1,0 +1,16 @@
+# Pin Node 22 — Node 24 + corepack/pnpm fails on Railway with:
+# ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING
+#
+# Install pnpm via npm (skip corepack) so it matches packageManager / lockfile.
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "openssl"]
+
+[phases.install]
+cmds = [
+  "npm install -g pnpm@11.1.2",
+  "pnpm install --frozen-lockfile"
+]
+
+[variables]
+NIXPACKS_NODE_VERSION = "22"

@@ -32,7 +32,7 @@
   },
   "packageManager": "pnpm@11.1.2",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=20.9.0 <23"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -2,11 +2,10 @@
 # Settings → Config-as-code → path: railway.web.toml
 
 [build]
-builder = "NIXPACKS"
-buildCommand = "pnpm --filter @socialbd/web build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.web"
 
 [deploy]
-startCommand = "pnpm --filter @socialbd/web start"
 healthcheckPath = "/"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 5

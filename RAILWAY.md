@@ -21,13 +21,7 @@ For each service → **Settings → Config-as-code**:
 
 Root directory for both: repo root (`/`).
 
-Also set on **both** services (Variables):
-
-```env
-NIXPACKS_NODE_VERSION=22
-```
-
-If install fails with `pnpm: command not found`, redeploy after pulling the latest `nixpacks.toml` (it symlinks pnpm into `/usr/local/bin`).
+Builds use **Dockerfiles** (`Dockerfile.web` / `Dockerfile.worker`) with Node 22 + pnpm 11 — more reliable than Nixpacks on Railway.
 
 ## 3. Shared variables
 

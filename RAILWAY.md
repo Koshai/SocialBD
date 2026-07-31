@@ -27,7 +27,7 @@ Also set on **both** services (Variables):
 NIXPACKS_NODE_VERSION=22
 ```
 
-(`nixpacks.toml` already pins Node 22 — this is a backup if Nixpacks ignores the file.)
+If install fails with `pnpm: command not found`, redeploy after pulling the latest `nixpacks.toml` (it symlinks pnpm into `/usr/local/bin`).
 
 ## 3. Shared variables
 

@@ -2,11 +2,6 @@ const GRAPH_VERSION = "v21.0";
 
 type GraphResponse = {
   id?: string;
-<<<<<<< HEAD
-  error?: { message: string; code?: number };
-};
-
-=======
   status_code?: string;
   error?: { message: string; code?: number };
 };
@@ -43,7 +38,6 @@ async function waitForInstagramContainerReady(containerId: string, accessToken: 
   throw new Error("Instagram media was not ready to publish in time. Try again.");
 }
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 export async function publishInstagramPost(input: {
   igUserId: string;
   pageAccessToken: string;
@@ -66,11 +60,8 @@ export async function publishInstagramPost(input: {
     );
   }
 
-<<<<<<< HEAD
-=======
   await waitForInstagramContainerReady(createJson.id, input.pageAccessToken);
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   const publishUrl = new URL(
     `https://graph.facebook.com/${GRAPH_VERSION}/${input.igUserId}/media_publish`,
   );

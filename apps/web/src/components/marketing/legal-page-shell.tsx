@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { SocialBDLogo } from "@socialbd/ui";
+import { QueueOraLogo } from "@socialbd/ui";
 
 type LegalPageShellProps = {
   title: string;
@@ -14,7 +14,7 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
       <header className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-4">
           <Link href="/" className="rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-            <SocialBDLogo showTagline={false} />
+            <QueueOraLogo showTagline={false} />
           </Link>
           <Link
             href="/login"
@@ -44,7 +44,7 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
             Home
           </Link>
         </p>
-        <p className="mt-2">© {new Date().getFullYear()} SocialBD</p>
+        <p className="mt-2">© {new Date().getFullYear()} QueueOra</p>
       </footer>
     </div>
   );

@@ -4,11 +4,7 @@ export type AppEmailInput = {
   html: string;
   text?: string;
   /** Label for dev console logs (e.g. invitation, verification). */
-<<<<<<< HEAD
-  kind: "invitation" | "verification";
-=======
   kind: "invitation" | "verification" | "approval_request" | "approval_approved" | "approval_rejected";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 };
 
 export function isEmailSendingConfigured() {
@@ -41,11 +37,15 @@ export async function sendAppEmail(input: AppEmailInput) {
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(`Email (${input.kind}) failed (${response.status}): ${body}`);
+      const usingResendDev = /@resend\.dev>?$/i.test(emailFrom) || emailFrom.includes("@resend.dev");
+      const hint = usingResendDev
+        ? " Tip: onboarding@resend.dev can only email the Resend account owner. Verify a domain at resend.com/domains and set EMAIL_FROM to an address on that domain."
+        : "";
+      throw new Error(`Email (${input.kind}) failed (${response.status}): ${body}${hint}`);
     }
 
     if (process.env.NODE_ENV === "development") {
-      console.info(`[SocialBD email:${input.kind}] Sent to ${input.to}`);
+      console.info(`[QueueOra email:${input.kind}] Sent to ${input.to}`);
     }
     return;
   }
@@ -60,7 +60,7 @@ export async function sendAppEmail(input: AppEmailInput) {
     console.info(
       [
         "",
-        `[SocialBD email:${input.kind}] Resend not configured — set RESEND_API_KEY and EMAIL_FROM`,
+        `[QueueOra email:${input.kind}] Resend not configured — set RESEND_API_KEY and EMAIL_FROM`,
         `  To: ${input.to}`,
         `  Subject: ${input.subject}`,
         `  Body: ${plain}`,

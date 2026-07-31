@@ -8,8 +8,8 @@ import {
 } from "@/lib/legal/site-legal";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — SocialBD",
-  description: "How SocialBD collects, uses, and protects your data.",
+  title: "Privacy Policy — QueueOra",
+  description: "How QueueOra collects, uses, and protects your data.",
 };
 
 const EFFECTIVE_DATE = "29 May 2026";
@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
 
       <Section title="1. Who we are">
         <p>
-          {entity} (“<strong className="text-foreground">SocialBD</strong>”, “we”, “us”) operates a
+          {entity} (“<strong className="text-foreground">QueueOra</strong>”, “we”, “us”) operates a
           social media management platform at{" "}
           <a href={siteUrl} className="text-primary underline-offset-2 hover:underline">
             {siteUrl}
@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
       <Section title="3. How we use information">
         <p>We use the information above to:</p>
         <ul className="list-disc space-y-2 pl-5">
-          <li>Provide, maintain, and improve SocialBD;</li>
+          <li>Provide, maintain, and improve QueueOra;</li>
           <li>Authenticate users and manage workspaces and team permissions;</li>
           <li>Schedule and publish content to connected social platforms on your instructions;</li>
           <li>Send transactional emails (verification, invitations, and service notices);</li>
@@ -108,7 +108,7 @@ export default function PrivacyPolicyPage() {
 
       <Section title="4. Third-party services">
         <p>
-          SocialBD integrates with third parties only as needed to provide the service. Depending on
+          QueueOra integrates with third parties only as needed to provide the service. Depending on
           features you use, data may be processed by:
         </p>
         <ul className="list-disc space-y-2 pl-5">
@@ -141,14 +141,14 @@ export default function PrivacyPolicyPage() {
 
       <Section title="5. LinkedIn and Meta data">
         <p>
-          If you authorize SocialBD to access LinkedIn or Meta accounts, we access only the scopes
+          If you authorize QueueOra to access LinkedIn or Meta accounts, we access only the scopes
           you approve (for example, permissions needed to list administered pages or organizations
-          and to publish content you create in SocialBD). We store access tokens securely to perform
+          and to publish content you create in QueueOra). We store access tokens securely to perform
           publishing until you disconnect the account or we no longer need the token to provide the
           service.
         </p>
         <p>
-          We use LinkedIn and Meta data solely to provide SocialBD features you request — such as
+          We use LinkedIn and Meta data solely to provide QueueOra features you request — such as
           displaying connected accounts, composing posts, and publishing on your behalf — and not
           for unrelated profiling or resale.
         </p>
@@ -192,7 +192,7 @@ export default function PrivacyPolicyPage() {
         </p>
         <p>
           You can disconnect social accounts at any time from the Accounts section of the dashboard.
-          Disconnecting stops future API access from SocialBD but may not delete content already
+          Disconnecting stops future API access from QueueOra but may not delete content already
           published on third-party platforms.
         </p>
       </Section>
@@ -207,7 +207,7 @@ export default function PrivacyPolicyPage() {
 
       <Section title="10. Children">
         <p>
-          SocialBD is not directed at children under 13 (or the minimum age required in your
+          QueueOra is not directed at children under 13 (or the minimum age required in your
           jurisdiction). We do not knowingly collect personal information from children. Contact us if
           you believe a child has provided us data.
         </p>
@@ -216,7 +216,7 @@ export default function PrivacyPolicyPage() {
       <Section title="11. Changes to this policy">
         <p>
           We may update this Privacy Policy from time to time. We will post the revised version on
-          this page and update the effective date. Continued use of SocialBD after changes means you
+          this page and update the effective date. Continued use of QueueOra after changes means you
           accept the updated policy.
         </p>
       </Section>

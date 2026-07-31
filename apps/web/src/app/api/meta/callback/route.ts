@@ -2,10 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { appUrl, getMetaRedirectUri } from "@/lib/app-url";
-<<<<<<< HEAD
-=======
 import { isChannelLimitError } from "@socialbd/db";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 import { requireDashboardSession } from "@/lib/dashboard-session";
 import { exchangeCodeForToken } from "@/lib/meta/client";
 import { getOAuthStateCookieName, verifyOAuthState } from "@/lib/meta/oauth-state";
@@ -68,14 +65,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(appUrl(request, "/dashboard/accounts", params));
   } catch (cause) {
     console.error("[meta/callback]", cause);
-<<<<<<< HEAD
-=======
     if (isChannelLimitError(cause)) {
       return NextResponse.redirect(
         appUrl(request, "/dashboard/accounts", { error: "channel_limit" }),
       );
     }
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     return NextResponse.redirect(
       appUrl(request, "/dashboard/accounts", { error: "meta_sync_failed" }),
     );

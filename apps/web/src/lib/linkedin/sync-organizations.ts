@@ -1,12 +1,8 @@
-<<<<<<< HEAD
-import { upsertLinkedInOrganizationAccount } from "@socialbd/db";
-=======
 import {
   assertChannelCapacity,
   countNewLinkedInConnections,
   upsertLinkedInOrganizationAccount,
 } from "@socialbd/db";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 import {
   fetchAdministeredOrganizations,
@@ -27,8 +23,6 @@ export async function syncLinkedInOrganizationsForOrganization(input: {
       : null;
 
   const orgUrns = await fetchAdministeredOrganizations(input.accessToken);
-<<<<<<< HEAD
-=======
   const orgIds = orgUrns
     .map((urn) => parseOrganizationUrn(urn))
     .filter((id): id is string => Boolean(id));
@@ -38,7 +32,6 @@ export async function syncLinkedInOrganizationsForOrganization(input: {
     await countNewLinkedInConnections(input.organizationId, orgIds),
   );
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   const scopes = getLinkedInScopeString();
   let synced = 0;
 

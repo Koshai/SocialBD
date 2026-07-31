@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SocialBDLogo } from "@socialbd/ui";
+import { QueueOraLogo } from "@socialbd/ui";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
 import { dashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
@@ -18,7 +18,7 @@ export function SidebarNav() {
           href="/dashboard"
           className="inline-flex rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <SocialBDLogo showTagline={false} />
+          <QueueOraLogo showTagline={false} />
         </Link>
       </div>
 

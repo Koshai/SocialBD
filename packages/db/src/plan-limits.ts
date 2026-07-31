@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { countConnectedAccounts } from "./connected-accounts";
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
+import { organization } from "./schema/organization";
 
 export class ChannelLimitError extends Error {
   readonly code = "channel_limit" as const;
@@ -22,12 +23,54 @@ export function isChannelLimitError(error: unknown): error is ChannelLimitError 
   return error instanceof ChannelLimitError;
 }
 
+type OrgPlanMetadata = {
+  planName?: string;
+  maxConnectedAccounts?: number;
+};
+
+function parseOrgPlanMetadata(raw: string | null | undefined): OrgPlanMetadata {
+  if (!raw?.trim()) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    const record = parsed as Record<string, unknown>;
+    const planName =
+      typeof record.planName === "string"
+        ? record.planName
+        : typeof record.plan === "string"
+          ? record.plan
+          : undefined;
+    const maxRaw = record.maxConnectedAccounts;
+    const maxConnectedAccounts =
+      typeof maxRaw === "number"
+        ? maxRaw
+        : typeof maxRaw === "string"
+          ? Number.parseInt(maxRaw, 10)
+          : undefined;
+    return {
+      planName: planName?.trim() || undefined,
+      maxConnectedAccounts:
+        maxConnectedAccounts !== undefined &&
+        Number.isFinite(maxConnectedAccounts) &&
+        maxConnectedAccounts > 0
+          ? maxConnectedAccounts
+          : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
 /** Placeholder plan label until BDT billing ships. */
-export function getPlanDisplayName() {
+export function getPlanDisplayName(orgMetadata?: string | null) {
+  const fromOrg = parseOrgPlanMetadata(orgMetadata).planName;
+  if (fromOrg) return fromOrg;
   return process.env.PLAN_DISPLAY_NAME?.trim() || "Free";
 }
 
-export function getMaxConnectedAccounts() {
+export function getMaxConnectedAccounts(orgMetadata?: string | null) {
+  const fromOrg = parseOrgPlanMetadata(orgMetadata).maxConnectedAccounts;
+  if (fromOrg) return fromOrg;
   const raw = process.env.MAX_CONNECTED_ACCOUNTS?.trim() ?? "5";
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 5;
@@ -40,12 +83,22 @@ export type PlanUsageSnapshot = {
   atLimit: boolean;
 };
 
+async function getOrganizationMetadata(organizationId: string) {
+  const [row] = await db
+    .select({ metadata: organization.metadata })
+    .from(organization)
+    .where(eq(organization.id, organizationId))
+    .limit(1);
+  return row?.metadata ?? null;
+}
+
 export async function getPlanUsageSnapshot(organizationId: string): Promise<PlanUsageSnapshot> {
-  const maxConnectedAccounts = getMaxConnectedAccounts();
+  const orgMetadata = await getOrganizationMetadata(organizationId);
+  const maxConnectedAccounts = getMaxConnectedAccounts(orgMetadata);
   const connectedCount = await countConnectedAccounts(organizationId);
 
   return {
-    planName: getPlanDisplayName(),
+    planName: getPlanDisplayName(orgMetadata),
     connectedCount,
     maxConnectedAccounts,
     atLimit: connectedCount >= maxConnectedAccounts,
@@ -105,7 +158,8 @@ export async function countNewLinkedInConnections(
 export async function assertChannelCapacity(organizationId: string, additionalNewAccounts: number) {
   if (additionalNewAccounts <= 0) return;
 
-  const max = getMaxConnectedAccounts();
+  const orgMetadata = await getOrganizationMetadata(organizationId);
+  const max = getMaxConnectedAccounts(orgMetadata);
   const current = await countConnectedAccounts(organizationId);
 
   if (current + additionalNewAccounts > max) {

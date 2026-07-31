@@ -1,11 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-<<<<<<< HEAD
-import { useState } from "react";
-=======
 import { useEffect, useState } from "react";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { PostPreview } from "@/components/composer/post-preview";
@@ -13,10 +9,13 @@ import { TemplatePicker } from "@/components/composer/template-picker";
 import { usePreferences } from "@/components/preferences/preferences-provider";
 import type { PublicConnectedAccount } from "@/lib/connected-accounts";
 import type { CaptionTone } from "@/lib/openai-client";
+import type { CaptionLanguage } from "@/lib/openai-caption";
+import { defaultCaptionBrief } from "@/lib/openai-caption";
 import { getPlatformLabel } from "@/lib/platform-labels";
 import { bengaliTextClassName } from "@/lib/bengali-text";
 import type { IdeaJson } from "@/lib/ideas-api";
 import type { PostTemplate } from "@/lib/post-templates";
+import type { Locale } from "@/lib/i18n/cookies";
 
 type ComposerFormProps = {
   channels: PublicConnectedAccount[];
@@ -32,20 +31,23 @@ type UploadedMedia = {
 
 export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: ComposerFormProps) {
   const router = useRouter();
-  const { t } = usePreferences();
+  const { t, locale } = usePreferences();
   const [connectedAccountId, setConnectedAccountId] = useState(channels[0]?.id ?? "");
   const [body, setBody] = useState(promoteIdea?.body ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
   const [media, setMedia] = useState<UploadedMedia | null>(null);
   const [tone, setTone] = useState<CaptionTone>("casual");
+  const [captionLanguage, setCaptionLanguage] = useState<CaptionLanguage>(locale);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [aiPending, setAiPending] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-<<<<<<< HEAD
-=======
+  useEffect(() => {
+    setCaptionLanguage(locale);
+  }, [locale]);
+
   useEffect(() => {
     if (promoteIdea?.promoteMedia) {
       setMedia({
@@ -85,7 +87,6 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
     };
   }, [promoteIdea?.galleryImageId, promoteIdea?.promoteMedia, t]);
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   if (channels.length === 0) {
     return (
       <Card>
@@ -146,10 +147,11 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
     setError(null);
     setAiPending(true);
 
+    const brief = body.trim() || defaultCaptionBrief(captionLanguage);
     const response = await fetch("/api/ai/caption", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ brief: body || "A product update for our Facebook Page", tone }),
+      body: JSON.stringify({ brief, tone, language: captionLanguage }),
     });
 
     const data = (await response.json()) as { caption?: string; error?: string };
@@ -358,6 +360,18 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
               <option value="casual">{t("composer.toneCasual")}</option>
               <option value="professional">{t("composer.toneProfessional")}</option>
               <option value="promotional">{t("composer.tonePromotional")}</option>
+            </select>
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">{t("composer.aiLanguage")}</span>
+            <select
+              value={captionLanguage}
+              onChange={(e) => setCaptionLanguage(e.target.value as Locale)}
+              disabled={busy}
+              className="h-10 rounded-lg border border-border bg-background px-3"
+            >
+              <option value="en">{t("composer.langEnglish")}</option>
+              <option value="bn">{t("composer.langBangla")}</option>
             </select>
           </label>
           <Button type="button" variant="outline" disabled={busy} onClick={() => void generateCaption()}>

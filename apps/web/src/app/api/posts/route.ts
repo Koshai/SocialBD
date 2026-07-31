@@ -12,11 +12,8 @@ import {
 import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
-<<<<<<< HEAD
-=======
 import { notifyPostSubmittedForApproval } from "@/lib/approval-notifications";
 import { isLinkedInFeatureEnabled, isLinkedInPlatform } from "@/lib/features/linkedin";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
 import { enqueuePublishPost } from "@/lib/publish-queue";
 import {
@@ -121,13 +118,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Channel not found." }, { status: 404 });
   }
 
-<<<<<<< HEAD
-=======
   if (!isLinkedInFeatureEnabled() && isLinkedInPlatform(account.platform)) {
     return NextResponse.json({ error: "LinkedIn is not available yet." }, { status: 400 });
   }
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   if (account.platform === "instagram" && !mediaPath) {
     return NextResponse.json({ error: "Instagram posts require an image." }, { status: 400 });
   }
@@ -204,19 +198,16 @@ export async function POST(request: Request) {
       });
     }
 
-<<<<<<< HEAD
-=======
     if (created.status === "pending_approval") {
       void notifyPostSubmittedForApproval({
         postId: created.id,
         organizationId,
         submitterUserId: userId,
       }).catch((error) => {
-        console.error("[SocialBD email:approval_request] Failed to send:", error);
+        console.error("[QueueOra email:approval_request] Failed to send:", error);
       });
     }
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     return NextResponse.json({
       post: created,
       publishing:

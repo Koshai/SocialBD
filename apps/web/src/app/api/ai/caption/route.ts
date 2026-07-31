@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { isCaptionTone } from "@/lib/openai-client";
-import { generatePostCaption } from "@/lib/openai-caption";
+import { generatePostCaption, isCaptionLanguage } from "@/lib/openai-caption";
 
 export async function POST(request: Request) {
   await requireActiveOrganization();
@@ -23,9 +23,14 @@ export async function POST(request: Request) {
       ? String((json as { tone: unknown }).tone)
       : "casual";
   const tone = isCaptionTone(toneRaw) ? toneRaw : "casual";
+  const languageRaw =
+    typeof json === "object" && json !== null && "language" in json
+      ? String((json as { language: unknown }).language)
+      : "en";
+  const language = isCaptionLanguage(languageRaw) ? languageRaw : "en";
 
   try {
-    const caption = await generatePostCaption({ brief, tone });
+    const caption = await generatePostCaption({ brief, tone, language });
     return NextResponse.json({ caption });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not generate caption.";

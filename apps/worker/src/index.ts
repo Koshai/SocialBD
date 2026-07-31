@@ -28,7 +28,7 @@ worker.on("failed", (job, err) => {
   console.error(`[worker] Failed job ${job?.id}`, err);
 });
 
-console.log(`[worker] SocialBD worker listening on queue "${queueName}"`);
+console.log(`[worker] QueueOra worker listening on queue "${queueName}"`);
 
 async function enqueuePublish(postId: string) {
   await queue.add(

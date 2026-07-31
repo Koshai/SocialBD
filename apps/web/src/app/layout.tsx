@@ -27,7 +27,7 @@ const notoSansBengali = Noto_Sans_Bengali({
 });
 
 export const metadata: Metadata = {
-  title: "SocialBD — Social media management for Bangladesh",
+  title: "QueueOra — Social media scheduling made simple",
   description:
     "Schedule posts, manage teams, and grow your brand — priced in BDT with local payments.",
 };

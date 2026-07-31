@@ -1,13 +1,9 @@
 import { and, desc, eq, gte, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
 
 import { db } from "./db";
-<<<<<<< HEAD
-import { connectedAccount } from "./schema/connected-account";
-=======
 import { user } from "./schema/auth";
 import { connectedAccount } from "./schema/connected-account";
 import { organization } from "./schema/organization";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 import { post } from "./schema/post";
 
 export type PostStatus =
@@ -28,11 +24,8 @@ export type PostWithChannel = {
   createdAt: Date;
   channelName: string;
   platform: string;
-<<<<<<< HEAD
-=======
   externalPostId: string | null;
   pageId: string;
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 };
 
 export type CalendarPost = PostWithChannel & {
@@ -100,11 +93,8 @@ const postListSelect = {
   createdAt: post.createdAt,
   channelName: connectedAccount.displayName,
   platform: connectedAccount.platform,
-<<<<<<< HEAD
-=======
   externalPostId: post.externalPostId,
   pageId: connectedAccount.providerAccountId,
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 };
 
 export type PostListQuery = {
@@ -330,11 +320,8 @@ export async function listCalendarPosts(
       createdAt: post.createdAt,
       channelName: connectedAccount.displayName,
       platform: connectedAccount.platform,
-<<<<<<< HEAD
-=======
       externalPostId: post.externalPostId,
       pageId: connectedAccount.providerAccountId,
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     })
     .from(post)
     .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
@@ -458,11 +445,8 @@ export async function listPendingApprovalPosts(organizationId: string, limit = 3
       createdAt: post.createdAt,
       channelName: connectedAccount.displayName,
       platform: connectedAccount.platform,
-<<<<<<< HEAD
-=======
       externalPostId: post.externalPostId,
       pageId: connectedAccount.providerAccountId,
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     })
     .from(post)
     .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
@@ -534,8 +518,6 @@ export async function rejectPost(postId: string, organizationId: string) {
 
   return updated;
 }
-<<<<<<< HEAD
-=======
 
 export async function getPostApprovalNotificationContext(postId: string, organizationId: string) {
   const [row] = await db
@@ -560,4 +542,3 @@ export async function getPostApprovalNotificationContext(postId: string, organiz
 
   return row ?? null;
 }
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8

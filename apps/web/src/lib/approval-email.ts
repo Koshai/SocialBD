@@ -40,7 +40,7 @@ export async function sendApprovalRequestEmails(input: {
 }) {
   if (input.recipients.length === 0) return;
 
-  const subject = `Approval needed — ${input.organizationName} on SocialBD`;
+  const subject = `Approval needed — ${input.organizationName} on QueueOra`;
   const summary = postSummary(input.post);
   const link = approvalsUrl();
 

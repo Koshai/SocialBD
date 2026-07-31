@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-import { debugTokenScopes, upsertFacebookPageAccount, upsertInstagramAccount } from "@socialbd/db";
-
-import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";
-import { getMetaScopeString } from "./scopes";
-=======
 import {
   assertChannelCapacity,
   countNewMetaConnections,
@@ -13,7 +7,6 @@ import {
 } from "@socialbd/db";
 
 import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";import { getMetaScopeString } from "./scopes";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 export async function syncFacebookPagesForOrganization(input: {
   organizationId: string;
@@ -27,10 +20,7 @@ export async function syncFacebookPagesForOrganization(input: {
       : null;
 
   const pages = await fetchFacebookPages(longLived.access_token);
-<<<<<<< HEAD
-=======
   await assertChannelCapacity(input.organizationId, await countNewMetaConnections(input.organizationId, pages));
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   const requestedScopes = getMetaScopeString();
   let instagramCount = 0;
 

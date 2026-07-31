@@ -4,11 +4,8 @@ export * from "./connected-accounts";
 export * from "./content-ideas";
 export * from "./content-tags";
 export * from "./members";
-<<<<<<< HEAD
-=======
 export * from "./plan-limits";
 export * from "./workspace-gallery";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 export * from "./invitations";
 export * from "./analytics";
 export * from "./meta-errors";

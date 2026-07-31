@@ -1,6 +1,6 @@
 /** Legal entity details for privacy policy and developer app review forms. */
 export function getLegalEntityName() {
-  return process.env.LEGAL_ENTITY_NAME?.trim() || "SocialBD";
+  return process.env.LEGAL_ENTITY_NAME?.trim() || "QueueOra";
 }
 
 export function getPrivacyContactEmail() {
@@ -14,7 +14,7 @@ export function getPrivacyContactEmail() {
     if (from.includes("@")) return from;
   }
 
-  return "privacy@socialbd.com";
+  return "privacy@queueora.com";
 }
 
 export function getPublicSiteUrl() {

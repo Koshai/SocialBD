@@ -1,6 +1,6 @@
 import { countScheduledPosts, listCalendarPosts } from "@socialbd/db";
 
-import { CalendarWeek } from "@/components/calendar/calendar-week";
+import { PublishingCalendar } from "@/components/calendar/publishing-calendar";
 import { endOfWeek, startOfWeek } from "@/lib/calendar";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 
@@ -15,7 +15,7 @@ export default async function CalendarPage() {
   ]);
 
   return (
-    <CalendarWeek
+    <PublishingCalendar
       initialWeekStart={weekStart.toISOString()}
       initialPosts={posts}
       initialScheduledCount={scheduledCount}

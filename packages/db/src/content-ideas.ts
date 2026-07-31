@@ -6,10 +6,7 @@ import { contentIdea } from "./schema/content-idea";
 import { contentIdeaTag } from "./schema/content-idea-tag";
 import { contentTag } from "./schema/content-tag";
 import { user } from "./schema/auth";
-<<<<<<< HEAD
-=======
 import { workspaceGalleryImage } from "./schema/workspace-gallery-image";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 import { findOrCreateContentTags } from "./content-tags";
 import type { OrganizationRole } from "./members";
@@ -26,13 +23,10 @@ export type ContentIdeaWithMeta = {
   createdByUserId: string;
   authorName: string;
   promotedPostId: string | null;
-<<<<<<< HEAD
-=======
   galleryImageId: string | null;
   workspaceGalleryId: string | null;
   workspaceGalleryMediaPath: string | null;
   workspaceGalleryMediaMimeType: string | null;
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -69,8 +63,6 @@ async function loadTagsForIdeas(ideaIds: string[]) {
   return map;
 }
 
-<<<<<<< HEAD
-=======
 const ideaSelect = {
   id: contentIdea.id,
   title: contentIdea.title,
@@ -113,7 +105,6 @@ function applyIdeaGalleryFields(input: {
   return { galleryImageId: null, workspaceGalleryId };
 }
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 export async function listContentIdeas(input: {
   organizationId: string;
   status?: IdeaStatus | "all";
@@ -143,30 +134,11 @@ export async function listContentIdeas(input: {
   }
 
   const rows = await db
-<<<<<<< HEAD
-    .select({
-      id: contentIdea.id,
-      title: contentIdea.title,
-      body: contentIdea.body,
-      status: contentIdea.status,
-      campaignId: contentIdea.campaignId,
-      campaignName: campaign.name,
-      createdByUserId: contentIdea.createdByUserId,
-      authorName: user.name,
-      promotedPostId: contentIdea.promotedPostId,
-      createdAt: contentIdea.createdAt,
-      updatedAt: contentIdea.updatedAt,
-    })
-    .from(contentIdea)
-    .innerJoin(user, eq(contentIdea.createdByUserId, user.id))
-    .leftJoin(campaign, eq(contentIdea.campaignId, campaign.id))
-=======
     .select(ideaSelect)
     .from(contentIdea)
     .innerJoin(user, eq(contentIdea.createdByUserId, user.id))
     .leftJoin(campaign, eq(contentIdea.campaignId, campaign.id))
     .leftJoin(workspaceGalleryImage, eq(contentIdea.workspaceGalleryId, workspaceGalleryImage.id))
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     .where(and(...conditions))
     .orderBy(desc(contentIdea.updatedAt));
 
@@ -181,30 +153,11 @@ export async function listContentIdeas(input: {
 
 export async function getContentIdea(ideaId: string, organizationId: string) {
   const [row] = await db
-<<<<<<< HEAD
-    .select({
-      id: contentIdea.id,
-      title: contentIdea.title,
-      body: contentIdea.body,
-      status: contentIdea.status,
-      campaignId: contentIdea.campaignId,
-      campaignName: campaign.name,
-      createdByUserId: contentIdea.createdByUserId,
-      authorName: user.name,
-      promotedPostId: contentIdea.promotedPostId,
-      createdAt: contentIdea.createdAt,
-      updatedAt: contentIdea.updatedAt,
-    })
-    .from(contentIdea)
-    .innerJoin(user, eq(contentIdea.createdByUserId, user.id))
-    .leftJoin(campaign, eq(contentIdea.campaignId, campaign.id))
-=======
     .select(ideaSelect)
     .from(contentIdea)
     .innerJoin(user, eq(contentIdea.createdByUserId, user.id))
     .leftJoin(campaign, eq(contentIdea.campaignId, campaign.id))
     .leftJoin(workspaceGalleryImage, eq(contentIdea.workspaceGalleryId, workspaceGalleryImage.id))
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     .where(and(eq(contentIdea.id, ideaId), eq(contentIdea.organizationId, organizationId)))
     .limit(1);
 
@@ -241,23 +194,17 @@ export async function createContentIdea(input: {
   status?: IdeaStatus;
   campaignId?: string | null;
   tagNames?: string[];
-<<<<<<< HEAD
-=======
   galleryImageId?: string | null;
   workspaceGalleryId?: string | null;
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 }) {
   const title = input.title.trim() || "Untitled idea";
   const body = input.body.trim();
   const now = new Date();
   const id = crypto.randomUUID();
-<<<<<<< HEAD
-=======
   const galleryFields = applyIdeaGalleryFields(input) ?? {
     galleryImageId: null,
     workspaceGalleryId: null,
   };
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
   await db.insert(contentIdea).values({
     id,
@@ -268,11 +215,8 @@ export async function createContentIdea(input: {
     body,
     status: input.status ?? "brainstorm",
     promotedPostId: null,
-<<<<<<< HEAD
-=======
     galleryImageId: galleryFields.galleryImageId,
     workspaceGalleryId: galleryFields.workspaceGalleryId,
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     createdAt: now,
     updatedAt: now,
   });
@@ -296,11 +240,8 @@ export async function updateContentIdea(input: {
   status?: IdeaStatus;
   campaignId?: string | null;
   tagNames?: string[];
-<<<<<<< HEAD
-=======
   galleryImageId?: string | null;
   workspaceGalleryId?: string | null;
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 }) {
   const now = new Date();
   const patch: Partial<typeof contentIdea.$inferInsert> = { updatedAt: now };
@@ -310,15 +251,12 @@ export async function updateContentIdea(input: {
   if (input.status !== undefined) patch.status = input.status;
   if (input.campaignId !== undefined) patch.campaignId = input.campaignId;
 
-<<<<<<< HEAD
-=======
   const galleryFields = applyIdeaGalleryFields(input);
   if (galleryFields) {
     patch.galleryImageId = galleryFields.galleryImageId;
     patch.workspaceGalleryId = galleryFields.workspaceGalleryId;
   }
 
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   const [updated] = await db
     .update(contentIdea)
     .set(patch)

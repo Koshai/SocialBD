@@ -329,7 +329,7 @@ export async function fetchPostEngagement(
     throw lastError;
   }
   throw new MetaApiError(
-    "Post was not found on the Page feed. If you published from SocialBD, try refreshing in a minute.",
+    "Post was not found on the Page feed. If you published from QueueOra, try refreshing in a minute.",
     "unknown",
   );
 }

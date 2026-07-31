@@ -1,15 +1,8 @@
-<<<<<<< HEAD
-import { and, eq } from "drizzle-orm";
-
-import { db } from "./db";
-import { member } from "./schema/organization";
-=======
 import { and, eq, inArray, ne } from "drizzle-orm";
 
 import { db } from "./db";
 import { user } from "./schema/auth";
 import { member, organization } from "./schema/organization";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 export type OrganizationRole = "owner" | "admin" | "member";
 
@@ -43,8 +36,6 @@ export async function getOrganizationMemberRole(
 export function canPublishWithoutApproval(role: OrganizationRole | null) {
   return role === "owner" || role === "admin";
 }
-<<<<<<< HEAD
-=======
 
 export async function getOrganizationName(organizationId: string) {
   const [row] = await db
@@ -101,4 +92,3 @@ export async function getUserEmailProfile(userId: string) {
   if (!row?.email) return null;
   return { email: row.email, name: row.name };
 }
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8

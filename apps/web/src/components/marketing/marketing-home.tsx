@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardDescription, CardTitle, SocialBDLogo } from "@socialbd/ui";
+import { Card, CardDescription, CardTitle, QueueOraLogo } from "@socialbd/ui";
 
 import { AppearanceControls } from "@/components/preferences/appearance-controls";
 import { usePreferences } from "@/components/preferences/preferences-provider";
@@ -19,7 +19,7 @@ export function MarketingHome() {
     <div className="flex flex-1 flex-col">
       <header className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <SocialBDLogo showTagline={false} />
+          <QueueOraLogo showTagline={false} />
           <div className="flex flex-wrap items-center gap-3">
             <AppearanceControls />
             <nav aria-label="Primary" className="flex gap-3">
@@ -77,16 +77,12 @@ export function MarketingHome() {
       </main>
 
       <footer className="border-t border-border py-6 text-center text-sm text-muted">
-<<<<<<< HEAD
-        © {new Date().getFullYear()} SocialBD
-=======
         <p>
           <Link href="/privacy" className="hover:text-foreground">
             Privacy Policy
           </Link>
         </p>
-        <p className="mt-2">© {new Date().getFullYear()} SocialBD</p>
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
+        <p className="mt-2">© {new Date().getFullYear()} QueueOra</p>
       </footer>
     </div>
   );

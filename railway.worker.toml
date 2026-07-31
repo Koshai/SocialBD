@@ -1,0 +1,12 @@
+# QueueOra — worker service (Railway)
+# In Railway: Settings → Config-as-code → set path to this file
+# OR paste the build/start commands from RAILWAY.md into the service settings.
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install --frozen-lockfile && pnpm --filter @socialbd/worker build"
+
+[deploy]
+startCommand = "pnpm --filter @socialbd/worker start"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

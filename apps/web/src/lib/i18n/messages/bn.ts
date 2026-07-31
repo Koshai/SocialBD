@@ -2,8 +2,8 @@ import type { Messages } from "./types";
 
 export const bn: Messages = {
   brand: {
-    taglineMvp: "সোশ্যালবিডি এমভিপি",
-    taglineBd: "বাংলাদেশের জন্য তৈরি",
+    taglineMvp: "QueueOra",
+    taglineBd: "সব জায়গার টিমের জন্য",
   },
   appearance: {
     language: "ভাষা",
@@ -46,14 +46,14 @@ export const bn: Messages = {
     createAccount: "অ্যাকাউন্ট তৈরি করুন",
     signupDesc:
       "সাইন ইন বা আমন্ত্রণ গ্রহণের আগে ইমেইলে যাচাইকরণ লিংক পাঠানো হবে।",
-    loginDesc: "সোশ্যালবিডি ওয়ার্কস্পেস পরিচালনা করতে সাইন ইন করুন।",
+    loginDesc: "QueueOra ওয়ার্কস্পেস পরিচালনা করতে সাইন ইন করুন।",
     name: "নাম",
     email: "ইমেইল",
     password: "পাসওয়ার্ড",
     pleaseWait: "অপেক্ষা করুন...",
     createAccountBtn: "অ্যাকাউন্ট তৈরি",
     alreadyHaveAccount: "ইতিমধ্যে অ্যাকাউন্ট আছে?",
-    newToSocialbd: "সোশ্যালবিডিতে নতুন?",
+    newToSocialbd: "QueueOra-তে নতুন?",
     createAnAccount: "অ্যাকাউন্ট তৈরি করুন",
     verifyNotice:
       "{email} ঠিকানায় যাচাইকরণ লিংক পাঠানো হয়েছে। খুলে সাইন ইন করুন{inviteSuffix}।",
@@ -118,6 +118,9 @@ export const bn: Messages = {
     banglaKeyboardHint:
       "বাংলা টাইপ: Avro বা উইন্ডোজ বাংলা IME চালু করুন, Win + Space দিয়ে কীবোর্ড বদলান। ক্যাপশন স্বয়ংক্রিয়ভাবে নোটো সান্স বাংলায় দেখাবে।",
     aiTone: "এআই টোন",
+    aiLanguage: "ক্যাপশনের ভাষা",
+    langEnglish: "English",
+    langBangla: "বাংলা",
     toneCasual: "আরামদায়ক",
     toneProfessional: "পেশাদার",
     tonePromotional: "প্রচারমূলক",
@@ -164,13 +167,10 @@ export const bn: Messages = {
     banglaDesc: "বাংলা টেমপ্লেট — Avro বা বাংলা কীবোর্ড দিয়ে সম্পাদনা করুন।",
   },
   accounts: {
-<<<<<<< HEAD
-=======
     channelLimitError:
       "বর্তমান প্ল্যানে চ্যানেল সীমা পূর্ণ। একটি চ্যানেল বিচ্ছিন্ন করুন বা পেইড প্ল্যানের জন্য অপেক্ষা করুন।",
     channelLimitConnectBlocked:
       "প্ল্যানের চ্যানেল সীমায় পৌঁছেছেন। নতুন সংযোগের আগে একটি চ্যানেল বিচ্ছিন্ন করুন।",
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     connectHint:
       "আপনার ফেসবুক পেজ সংযুক্ত করুন। পেজের সাথে ইনস্টাগ্রাম ব্যবসা/ক্রিয়েটর লিংক থাকলে ইনস্টাগ্রাম দেখা যাবে।",
     connectHintLinkedIn:
@@ -250,7 +250,7 @@ export const bn: Messages = {
     refresh: "রিফ্রেশ",
     refreshing: "রিফ্রেশ হচ্ছে…",
     published: "প্রকাশিত",
-    publishedDesc: "সোশ্যালবিডির মাধ্যমে পাঠানো পোস্ট",
+    publishedDesc: "QueueOra-এর মাধ্যমে পাঠানো পোস্ট",
     engagement: "এনগেজমেন্ট",
     engagementDesc: "রিঅ্যাকশন + মন্তব্য + শেয়ার (সাম্প্রতিক)",
     impressions: "ইমপ্রেশন",
@@ -267,9 +267,13 @@ export const bn: Messages = {
     title: "পাবলিশিং ক্যালেন্ডার",
     scheduledInQueue: " · কিউতে {count}টি শিডিউল",
     noScheduledInQueue: " · কিউতে শিডিউল পোস্ট নেই",
+    viewWeek: "সপ্তাহ",
+    viewMonth: "মাস",
     previous: "আগের",
     thisWeek: "এই সপ্তাহ",
+    thisMonth: "এই মাস",
     next: "পরের",
+    morePosts: "+আরও {count}",
     rescheduleTitle: "পোস্ট পুনঃশিডিউল",
     newTime: "নতুন সময়",
     saveNewTime: "নতুন সময় সংরক্ষণ",
@@ -284,7 +288,7 @@ export const bn: Messages = {
     workspaceName: "ওয়ার্কস্পেসের নাম",
     namePlaceholder: "যেমন: ঢাকা ডিজিটাল এজেন্সি",
     urlSlug: "URL স্লাগ",
-    slugHint: "socialbd.com/workspaces/{slug}",
+    slugHint: "queueora.com/workspaces/{slug}",
     creating: "তৈরি হচ্ছে...",
     needSlug: "URL স্লাগের জন্য ওয়ার্কস্পেসের নাম লিখুন।",
     slugTaken: "এই URL নেওয়া আছে। অন্য স্লাগ চেষ্টা করুন।",
@@ -375,8 +379,6 @@ export const bn: Messages = {
     aiBrainstormHint: "এক থিম থেকে একাধিক খসড়া তৈরি করুন, তারপর সংরক্ষণ বা সম্পাদনা করুন।",
     aiConfirmReplace: "বর্তমান শিরোনাম ও ক্যাপশন AI ফলাফল দিয়ে বদলাবেন?",
     confirmSaveAll: "সব {count}টি AI আইডিয়া লাইব্রেরিতে সংরক্ষণ করবেন?",
-<<<<<<< HEAD
-=======
     galleryTitle: "ছবির গ্যালারি",
     galleryHint: "আইডিয়ার জন্য একটি ছবি বেছে নিন। পোস্টে রূপান্তর করলে ছবিটি যাবে।",
     galleryBrowseDesc: "ক্যাটাগরি অনুযায়ী ব্রাউজ করুন এবং আপনার আইডিয়ার জন্য ছবি বেছে নিন।",
@@ -420,7 +422,6 @@ export const bn: Messages = {
       "bn-eid": "ঈদ মোবারক",
       "bn-nobo": "শুভ নববর্ষ",
     },
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   },
   posts: {
     recentTitle: "সাম্প্রতিক পোস্ট",
@@ -446,12 +447,9 @@ export const bn: Messages = {
     scheduledAt: "শিডিউল {when}",
     publishedAt: "প্রকাশ {when}",
     failedHint: "প্রকাশ ব্যর্থ — worker লগ ও চ্যানেল অনুমতি দেখুন।",
-<<<<<<< HEAD
-=======
     boostOnFacebook: "ফেসবুকে বুস্ট",
     boostOnFacebookHint:
       "ফেসবুকে পোস্ট খুলবে — বাজেট ও অডিয়েন্স সেখানে বুস্ট দিয়ে সেট করুন।",
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     status: {
       draft: "ড্রাফট",
       scheduled: "শিডিউল",
@@ -478,12 +476,6 @@ export const bn: Messages = {
     almostThere: "প্রায় হয়ে গেছে",
     redirecting: "ওয়ার্কস্পেসে নিয়ে যাওয়া হচ্ছে…",
   },
-<<<<<<< HEAD
-  home: {
-    featuresHeading: "প্ল্যাটফর্ম বৈশিষ্ট্য",
-    scheduleTitle: "সব জায়গায় শিডিউল",
-    scheduleBody: "ফেসবুক, ইনস্টাগ্রাম, লিংকডইন — ক্যালেন্ডার ও কিউ।",
-=======
   plan: {
     title: "{planName} প্ল্যান",
     channelsUsage: "{count}/{max}টি চ্যানেল সংযুক্ত",
@@ -495,14 +487,13 @@ export const bn: Messages = {
     featuresHeading: "প্ল্যাটফর্ম বৈশিষ্ট্য",
     scheduleTitle: "সব জায়গায় শিডিউল",
     scheduleBody: "ফেসবুক ও ইনস্টাগ্রাম — ক্যালেন্ডার ও কিউ।",
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     teamsTitle: "টিম",
     teamsBody: "ওয়ার্কস্পেস, ভূমিকা ও অনুমোদন।",
     pricingTitle: "বিডিটি মূল্য",
     pricingBody: "টাকায় প্ল্যান ও স্থানীয় পেমেন্ট (শীঘ্রই)।",
-    heroTitle: "বাংলাদেশের জন্য সোশ্যাল মিডিয়া ম্যানেজমেন্ট",
+    heroTitle: "সহজ সোশ্যাল মিডিয়া শিডিউলিং",
     heroBody:
-      "পোস্ট শিডিউল করুন, ক্লায়েন্ট ওয়ার্কস্পেস চালান, ব্র্যান্ড বাড়ান — দেশীয় মুহূর্তের টেমপ্লেট সহ।",
+      "ফেসবুক, ইনস্টাগ্রাম ও লিংকডইনে পরিকল্পনা, অনুমোদন ও প্রকাশ করুন — বাংলা-বান্ধব টুল ও প্রয়োজনে স্থানীয় টেমপ্লেট সহ।",
     startFree: "বিনামূল্যে শুরু",
     seeFeatures: "বৈশিষ্ট্য দেখুন",
   },

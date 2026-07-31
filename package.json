@@ -17,7 +17,12 @@
     "db:migrate:media": "pnpm --filter @socialbd/db db:migrate:media",
     "db:migrate:ideas": "pnpm --filter @socialbd/db db:migrate:ideas",
     "db:migrate:idea-gallery": "pnpm --filter @socialbd/db db:migrate:idea-gallery",
-    "db:migrate:workspace-gallery": "pnpm --filter @socialbd/db db:migrate:workspace-gallery"
+    "db:migrate:workspace-gallery": "pnpm --filter @socialbd/db db:migrate:workspace-gallery",
+    "db:migrate:all": "pnpm --filter @socialbd/db db:migrate:all",
+    "start:web": "pnpm --filter @socialbd/web start",
+    "start:worker": "pnpm --filter @socialbd/worker start",
+    "build:web": "pnpm --filter @socialbd/web build",
+    "build:worker": "pnpm --filter @socialbd/worker build"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

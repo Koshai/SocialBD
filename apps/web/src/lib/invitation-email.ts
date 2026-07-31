@@ -13,9 +13,9 @@ type InvitationEmailInput = {
 };
 
 export async function sendOrganizationInvitationEmail(input: InvitationEmailInput) {
-  const subject = `Join ${input.organizationName} on SocialBD`;
+  const subject = `Join ${input.organizationName} on QueueOra`;
   const html = `
-    <p>${escapeHtml(input.inviterName)} invited you to join <strong>${escapeHtml(input.organizationName)}</strong> on SocialBD.</p>
+    <p>${escapeHtml(input.inviterName)} invited you to join <strong>${escapeHtml(input.organizationName)}</strong> on QueueOra.</p>
     <p><a href="${input.inviteLink}">Accept invitation</a></p>
     <p style="color:#666;font-size:12px">If the link does not work, copy this URL:<br>${input.inviteLink}</p>
   `.trim();
@@ -25,6 +25,6 @@ export async function sendOrganizationInvitationEmail(input: InvitationEmailInpu
     to: input.email,
     subject,
     html,
-    text: `${input.inviterName} invited you to ${input.organizationName} on SocialBD. Accept: ${input.inviteLink}`,
+    text: `${input.inviterName} invited you to ${input.organizationName} on QueueOra. Accept: ${input.inviteLink}`,
   });
 }

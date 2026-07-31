@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Button, Card, CardDescription, CardTitle, SocialBDLogo } from "@socialbd/ui";
+import { Button, Card, CardDescription, CardTitle, QueueOraLogo } from "@socialbd/ui";
 
 import { AppearanceControls } from "@/components/preferences/appearance-controls";
 import { usePreferences } from "@/components/preferences/preferences-provider";
@@ -90,7 +90,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <Card className="w-full space-y-6">
         <div className="space-y-4 text-center">
           <div className="flex justify-center">
-            <SocialBDLogo showTagline={false} />
+            <QueueOraLogo showTagline={false} />
           </div>
           <div>
             <CardTitle className="text-2xl">

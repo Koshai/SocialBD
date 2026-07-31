@@ -1,7 +1,7 @@
 export const en = {
   brand: {
-    taglineMvp: "SocialBD MVP",
-    taglineBd: "Built for Bangladesh",
+    taglineMvp: "QueueOra",
+    taglineBd: "Built for teams everywhere",
   },
   appearance: {
     language: "Language",
@@ -44,14 +44,14 @@ export const en = {
     createAccount: "Create your account",
     signupDesc:
       "We will email you a verification link before you can sign in or accept invites.",
-    loginDesc: "Sign in to manage your SocialBD workspaces.",
+    loginDesc: "Sign in to manage your QueueOra workspaces.",
     name: "Name",
     email: "Email",
     password: "Password",
     pleaseWait: "Please wait...",
     createAccountBtn: "Create account",
     alreadyHaveAccount: "Already have an account?",
-    newToSocialbd: "New to SocialBD?",
+    newToSocialbd: "New to QueueOra?",
     createAnAccount: "Create an account",
     verifyNotice: "We sent a verification link to {email}. Open it, then sign in{inviteSuffix}.",
     verifyNoticeInviteSuffix: " to continue to your invitation",
@@ -115,6 +115,9 @@ export const en = {
     banglaKeyboardHint:
       "Bangla typing: enable Avro (or Windows Bengali IME) with Win + Space to switch keyboards. Captions render in Noto Sans Bengali automatically.",
     aiTone: "AI tone",
+    aiLanguage: "Caption language",
+    langEnglish: "English",
+    langBangla: "বাংলা (Bangla)",
     toneCasual: "Casual",
     toneProfessional: "Professional",
     tonePromotional: "Promotional",
@@ -161,13 +164,10 @@ export const en = {
     banglaDesc: "Bangla script templates — use Avro or your Bengali keyboard to edit.",
   },
   accounts: {
-<<<<<<< HEAD
-=======
     channelLimitError:
       "Channel limit reached on your current plan. Disconnect a channel or wait for paid plans (coming soon).",
     channelLimitConnectBlocked:
       "You have reached the channel limit for your plan. Disconnect a channel before connecting another.",
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     connectHint:
       "Connect Facebook Pages you manage. Instagram appears when a Page has a linked Business or Creator account.",
     connectHintLinkedIn:
@@ -247,7 +247,7 @@ export const en = {
     refresh: "Refresh",
     refreshing: "Refreshing…",
     published: "Published",
-    publishedDesc: "Posts sent through SocialBD",
+    publishedDesc: "Posts sent through QueueOra",
     engagement: "Engagement",
     engagementDesc: "Reactions + comments + shares (recent)",
     impressions: "Impressions",
@@ -264,9 +264,13 @@ export const en = {
     title: "Publishing calendar",
     scheduledInQueue: " · {count} scheduled in queue",
     noScheduledInQueue: " · No scheduled posts in queue",
+    viewWeek: "Week",
+    viewMonth: "Month",
     previous: "Previous",
     thisWeek: "This week",
+    thisMonth: "This month",
     next: "Next",
+    morePosts: "+{count} more",
     rescheduleTitle: "Reschedule post",
     newTime: "New time",
     saveNewTime: "Save new time",
@@ -281,7 +285,7 @@ export const en = {
     workspaceName: "Workspace name",
     namePlaceholder: "e.g. Dhaka Digital Agency",
     urlSlug: "URL slug",
-    slugHint: "socialbd.com/workspaces/{slug}",
+    slugHint: "queueora.com/workspaces/{slug}",
     creating: "Creating...",
     needSlug: "Enter a workspace name to generate a URL slug.",
     slugTaken: "That workspace URL is already taken. Try another slug.",
@@ -372,8 +376,6 @@ export const en = {
     aiBrainstormHint: "Generate multiple drafts from one theme, then save or edit.",
     aiConfirmReplace: "Replace your current title and caption with the AI result?",
     confirmSaveAll: "Save all {count} AI ideas to your library?",
-<<<<<<< HEAD
-=======
     galleryTitle: "Image gallery",
     galleryHint: "Pick a starter image for this idea. It carries over when you turn the idea into a post.",
     galleryBrowseDesc: "Browse by category and select an image for your next idea.",
@@ -417,7 +419,6 @@ export const en = {
       "bn-eid": "ঈদ মোবারক",
       "bn-nobo": "শুভ নববর্ষ",
     },
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
   },
   posts: {
     recentTitle: "Recent posts",
@@ -443,11 +444,8 @@ export const en = {
     publishedAt: "Published {when}",
     failedHint:
       "Publishing failed — check worker logs and channel permissions.",
-<<<<<<< HEAD
-=======
     boostOnFacebook: "Boost on Facebook",
     boostOnFacebookHint: "Opens your post on Facebook — use Boost there to set budget and audience.",
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     linkedinCaptionRequired: "LinkedIn posts require a caption or an image.",
     status: {
       draft: "draft",
@@ -475,12 +473,6 @@ export const en = {
     almostThere: "Almost there",
     redirecting: "Redirecting you to the workspace…",
   },
-<<<<<<< HEAD
-  home: {
-    featuresHeading: "Platform features",
-    scheduleTitle: "Schedule everywhere",
-    scheduleBody: "Facebook, Instagram, LinkedIn — calendar and queue.",
-=======
   plan: {
     title: "{planName} plan",
     channelsUsage: "{count} of {max} channels connected",
@@ -492,14 +484,13 @@ export const en = {
     featuresHeading: "Platform features",
     scheduleTitle: "Schedule everywhere",
     scheduleBody: "Facebook and Instagram — calendar and queue.",
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
     teamsTitle: "Teams",
     teamsBody: "Workspaces, roles, and approvals.",
     pricingTitle: "BDT pricing",
     pricingBody: "Plans in Taka with local payments (coming soon).",
-    heroTitle: "Social media management built for Bangladesh",
+    heroTitle: "Social media scheduling made simple",
     heroBody:
-      "Schedule posts, manage client workspaces, and grow your brand — with templates for the moments that matter locally.",
+      "Plan, approve, and publish across Facebook, Instagram, and LinkedIn — with Bangla-friendly tools and local templates when you need them.",
     startFree: "Start free",
     seeFeatures: "See features",
   },

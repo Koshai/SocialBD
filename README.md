@@ -1,6 +1,6 @@
-# SocialBD
+# QueueOra
 
-Bangladesh-first social media management platform — Turborepo monorepo.
+Social media scheduling platform — Turborepo monorepo (formerly SocialBD).
 
 ## Structure
 
@@ -45,3 +45,8 @@ pnpm dev
 
 - **Web:** http://localhost:3000 (`@socialbd/web`)
 - **Worker:** listens on BullMQ queue `publish` (requires Redis/Valkey)
+- **Brand domain:** https://queueora.com
+
+## Deploy
+
+See **[RAILWAY.md](./RAILWAY.md)** for Postgres + Redis + web + worker on Railway.

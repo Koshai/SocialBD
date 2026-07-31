@@ -10,10 +10,7 @@ import { NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { getMemberRoleForUser } from "@/lib/organization-roles";
 import { serializeIdea } from "@/lib/ideas-api";
-<<<<<<< HEAD
-=======
 import { parseIdeaGalleryPayload } from "@/lib/idea-gallery-payload";
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
 const VALID_STATUSES = new Set(["brainstorm", "ready", "archived"]);
 
@@ -76,8 +73,6 @@ export async function PATCH(request: Request, context: RouteContext) {
   if ("tagNames" in json && Array.isArray(json.tagNames)) {
     patch.tagNames = json.tagNames.map(String);
   }
-<<<<<<< HEAD
-=======
   if ("galleryImageId" in json || "workspaceGalleryId" in json) {
     try {
       const galleryFields = await parseIdeaGalleryPayload(organizationId, json);
@@ -88,7 +83,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
   }
->>>>>>> 4d6e2ef9950540f1b3bcc52875ef8b65928e1ff8
 
   try {
     const idea = await updateContentIdea(patch);

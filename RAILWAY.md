@@ -62,6 +62,7 @@ PRIVACY_CONTACT_EMAIL=privacy@queueora.com
 Notes:
 - Use Railway’s variable references for `DATABASE_URL` / `REDIS_URL` from the plugins.
 - Generate a **new** `BETTER_AUTH_SECRET` for production (don’t reuse local).
+- Set these on the **web** (and worker) service as **runtime** variables. The Docker build uses a throwaway placeholder for `BETTER_AUTH_SECRET` so `next build` can finish; your real secret is what the running app uses.
 
 ## 4. Media volume (important)
 

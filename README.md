@@ -49,4 +49,4 @@ pnpm dev
 
 ## Deploy
 
-See **[RAILWAY.md](./RAILWAY.md)** for Postgres + Redis + web + worker on Railway.
+Production runs on a Linode VPS. See **[DEPLOY-LINODE.md](./DEPLOY-LINODE.md)**.

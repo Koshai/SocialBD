@@ -7,16 +7,36 @@ import { organization } from "better-auth/plugins";
 import { buildInvitationAcceptUrl, sendOrganizationInvitationEmail } from "@/lib/invitation-email";
 import { sendEmailVerificationMessage } from "@/lib/verification-email";
 
-const baseURL =
-  process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
+const baseURL = (
+  process.env.BETTER_AUTH_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ??
+  "http://localhost:3001"
+).replace(/\/$/, "");
 
 if (!process.env.BETTER_AUTH_SECRET) {
   throw new Error("BETTER_AUTH_SECRET is required. See .env.example");
 }
 
+/** Apex + www variants so login works on either host. */
+function withWwwVariants(origin: string): string[] {
+  try {
+    const url = new URL(origin);
+    const host = url.hostname;
+    if (host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+      return [origin];
+    }
+    const altHost = host.startsWith("www.") ? host.slice(4) : `www.${host}`;
+    return [origin, `${url.protocol}//${altHost}`];
+  } catch {
+    return [origin];
+  }
+}
+
 const trustedOrigins = [
-  baseURL,
-  process.env.NEXT_PUBLIC_APP_URL,
+  ...withWwwVariants(baseURL),
+  ...(process.env.NEXT_PUBLIC_APP_URL
+    ? withWwwVariants(process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, ""))
+    : []),
   "http://localhost:3000",
   "http://localhost:3001",
 ].filter((origin, index, list): origin is string => Boolean(origin) && list.indexOf(origin) === index);

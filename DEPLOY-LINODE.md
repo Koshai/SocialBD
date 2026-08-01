@@ -160,7 +160,12 @@ nano /etc/caddy/Caddyfile
 ```
 
 ```caddy
-queueora.com, www.queueora.com {
+# Canonical host: redirect www → apex (avoids Better Auth "invalid origin")
+www.queueora.com {
+	redir https://queueora.com{uri} permanent
+}
+
+queueora.com {
 	encode gzip
 	reverse_proxy 127.0.0.1:3000
 }
@@ -220,7 +225,8 @@ Do **not** overwrite the server `.env` with your laptop `.env`. Keep production 
 |---------|-----|
 | Build runs out of memory | Use a 2GB Linode, or add swap |
 | Site HTTP only | DNS not pointing yet, or Caddyfile domain typo |
-| Auth / cookies wrong | `NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL` must be `https://queueora.com` |
+| Auth / cookies wrong | `NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL` must be `https://queueora.com` (no trailing slash) |
+| Login “invalid origin” | Use `https://queueora.com` (not www), or update Caddy to redirect www → apex, then `pm2 restart` |
 | Instagram media fetch fails | `PUBLIC_MEDIA_BASE_URL=https://queueora.com` |
 | Worker idle forever | `REDIS_URL` and both pm2 processes running |
 

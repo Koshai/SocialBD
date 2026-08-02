@@ -16,11 +16,14 @@ import { bengaliTextClassName } from "@/lib/bengali-text";
 import type { IdeaJson } from "@/lib/ideas-api";
 import type { PostTemplate } from "@/lib/post-templates";
 import type { Locale } from "@/lib/i18n/cookies";
+import type { EditPostFormData } from "@/lib/post-detail";
 
 type ComposerFormProps = {
   channels: PublicConnectedAccount[];
   canPublishDirectly: boolean;
   promoteIdea?: IdeaJson | null;
+  editPost?: EditPostFormData | null;
+  editError?: string | null;
 };
 
 type UploadedMedia = {
@@ -29,26 +32,50 @@ type UploadedMedia = {
   previewUrl: string;
 };
 
-export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: ComposerFormProps) {
+export function ComposerForm({
+  channels,
+  canPublishDirectly,
+  promoteIdea,
+  editPost = null,
+  editError = null,
+}: ComposerFormProps) {
   const router = useRouter();
   const { t, locale } = usePreferences();
-  const [connectedAccountId, setConnectedAccountId] = useState(channels[0]?.id ?? "");
-  const [body, setBody] = useState(promoteIdea?.body ?? "");
-  const [scheduledAt, setScheduledAt] = useState("");
-  const [media, setMedia] = useState<UploadedMedia | null>(null);
+  const [connectedAccountId, setConnectedAccountId] = useState(
+    editPost?.connectedAccountId || channels[0]?.id || "",
+  );
+  const [body, setBody] = useState(editPost?.body ?? promoteIdea?.body ?? "");
+  const [scheduledAt, setScheduledAt] = useState(editPost?.scheduledAtLocal ?? "");
+  const [media, setMedia] = useState<UploadedMedia | null>(
+    editPost?.mediaPath && editPost.previewUrl
+      ? {
+          mediaPath: editPost.mediaPath,
+          mediaMimeType: editPost.mediaMimeType ?? "image/jpeg",
+          previewUrl: editPost.previewUrl,
+        }
+      : null,
+  );
   const [tone, setTone] = useState<CaptionTone>("casual");
   const [captionLanguage, setCaptionLanguage] = useState<CaptionLanguage>(locale);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    editError === "not_editable"
+      ? t("posts.notEditable")
+      : editError === "not_found"
+        ? t("posts.couldNotLoadDetail")
+        : null,
+  );
   const [pending, setPending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [aiPending, setAiPending] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const isEditing = Boolean(editPost);
 
   useEffect(() => {
     setCaptionLanguage(locale);
   }, [locale]);
 
   useEffect(() => {
+    if (editPost) return;
     if (promoteIdea?.promoteMedia) {
       setMedia({
         mediaPath: promoteIdea.promoteMedia.mediaPath,
@@ -85,13 +112,24 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
     return () => {
       cancelled = true;
     };
-  }, [promoteIdea?.galleryImageId, promoteIdea?.promoteMedia, t]);
+  }, [editPost, promoteIdea?.galleryImageId, promoteIdea?.promoteMedia, t]);
 
   if (channels.length === 0) {
     return (
       <Card>
         <CardTitle>{t("composer.noChannelsTitle")}</CardTitle>
         <CardDescription>{t("composer.noChannelsDesc")}</CardDescription>
+      </Card>
+    );
+  }
+
+  if (editError && !editPost) {
+    return (
+      <Card>
+        <CardTitle>{t("posts.editingTitle")}</CardTitle>
+        <CardDescription>
+          {editError === "not_editable" ? t("posts.notEditable") : t("posts.couldNotLoadDetail")}
+        </CardDescription>
       </Card>
     );
   }
@@ -192,6 +230,39 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
 
     setPending(true);
 
+    if (isEditing && editPost) {
+      const scheduleIso =
+        scheduledAt && (options.schedule || options.publishNow !== true)
+          ? new Date(scheduledAt).toISOString()
+          : scheduledAt
+            ? new Date(scheduledAt).toISOString()
+            : null;
+
+      const response = await fetch(`/api/posts/${editPost.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          connectedAccountId,
+          body,
+          mediaPath: media?.mediaPath ?? null,
+          mediaMimeType: media?.mediaMimeType ?? null,
+          scheduledAt: options.publishNow ? null : scheduleIso,
+        }),
+      });
+
+      const data = (await response.json()) as { error?: string };
+      setPending(false);
+
+      if (!response.ok) {
+        setError(data.error ?? t("posts.couldNotUpdate"));
+        return;
+      }
+
+      router.push("/dashboard/calendar");
+      router.refresh();
+      return;
+    }
+
     const scheduleIso =
       scheduledAt && (options.submitForApproval || options.schedule)
         ? new Date(scheduledAt).toISOString()
@@ -234,12 +305,16 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
 
   return (
     <Card>
-      <CardTitle>{t("composer.title")}</CardTitle>
+      <CardTitle>{isEditing ? t("posts.editingTitle") : t("composer.title")}</CardTitle>
       <CardDescription>
-        {canPublishDirectly ? t("composer.descPublish") : t("composer.descApproval")}
+        {isEditing
+          ? t("posts.editingDesc")
+          : canPublishDirectly
+            ? t("composer.descPublish")
+            : t("composer.descApproval")}
       </CardDescription>
 
-      {promoteIdea ? (
+      {promoteIdea && !isEditing ? (
         <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
           <p className="font-medium text-primary">
             {t("composer.fromIdeaBanner", { title: promoteIdea.title })}
@@ -397,6 +472,16 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
         ) : null}
 
         <div className="flex flex-wrap gap-3">
+          {isEditing ? (
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void savePost({ schedule: Boolean(scheduledAt) })}
+            >
+              {pending ? t("composer.saving") : t("posts.saveChanges")}
+            </Button>
+          ) : (
+            <>
           <Button type="submit" variant="outline" disabled={busy || (canPublishDirectly && hasSchedule)}>
             {pending ? t("composer.saving") : t("composer.saveDraft")}
           </Button>
@@ -430,6 +515,8 @@ export function ComposerForm({ channels, canPublishDirectly, promoteIdea }: Comp
                   ? t("composer.submitApprovalScheduled")
                   : t("composer.submitApproval")}
             </Button>
+          )}
+            </>
           )}
         </div>
         </form>

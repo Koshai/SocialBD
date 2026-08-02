@@ -15,17 +15,23 @@ import {
   isSameCalendarMonth,
   startOfMonth,
   startOfWeek,
-  toDateInputValue,
 } from "@/lib/calendar";
+import {
+  filterPostsForCopy,
+  toClipboardItems,
+  type CalendarClipboard,
+} from "@/lib/calendar-clipboard";
 import {
   parseCalendarPosts,
   type CalendarSnapshotJson,
 } from "@/lib/calendar-api";
 import { usePreferences } from "@/components/preferences/preferences-provider";
+import { PostDetailModal, type PostDetailJson } from "@/components/posts/post-detail-modal";
 import { getPostStatusLabel } from "@/lib/i18n/post-status";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
 const POLL_INTERVAL_MS = 4_000;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 type CalendarView = "week" | "month";
 
@@ -82,10 +88,12 @@ export function PublishingCalendar({
   const [posts, setPosts] = useState(initialPosts);
   const [scheduledCount, setScheduledCount] = useState(initialScheduledCount);
   const [isPolling, setIsPolling] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
-  const [rescheduleAt, setRescheduleAt] = useState("");
+  const [viewPostId, setViewPostId] = useState<string | null>(null);
+  const [excludeWeekends, setExcludeWeekends] = useState(false);
+  const [clipboard, setClipboard] = useState<CalendarClipboard | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pastePending, setPastePending] = useState(false);
 
   const range = useMemo(() => {
     if (view === "week") {
@@ -156,37 +164,94 @@ export function PublishingCalendar({
     };
   }, [hasScheduled, fetchRange]);
 
-  function openReschedule(post: CalendarPost) {
-    if (post.status !== "scheduled" && post.status !== "failed") return;
-    setSelectedPost(post);
-    setRescheduleAt(toDateInputValue(post.scheduledAt ?? post.displayAt));
+  function copyPosts(sourcePosts: CalendarPost[], sourceView: CalendarView) {
+    const items = toClipboardItems(sourcePosts);
+    setClipboard({ items, sourceView });
+    setBanner(
+      items.length === 1
+        ? t("calendar.pasteOnDayHint")
+        : t("calendar.copiedCount", { count: items.length }),
+    );
     setError(null);
   }
 
-  async function handleReschedule(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selectedPost) return;
+  function copyCurrentPeriod() {
+    const selected = filterPostsForCopy(posts, range, excludeWeekends);
+    copyPosts(selected, view);
+  }
 
-    setPending(true);
+  function copySingleFromDetail(post: PostDetailJson) {
+    const displayAt = post.scheduledAt ?? post.publishedAt ?? post.createdAt;
+    setClipboard({
+      items: [{ postId: post.id, displayAt }],
+      sourceView: view,
+    });
+    setBanner(t("calendar.pasteOnDayHint"));
+    setError(null);
+    setViewPostId(null);
+  }
+
+  async function pasteToDay(day: Date) {
+    if (!clipboard || clipboard.items.length !== 1) return;
+
+    setPastePending(true);
     setError(null);
 
-    const response = await fetch(`/api/posts/${selectedPost.id}`, {
-      method: "PATCH",
+    const response = await fetch("/api/posts/duplicate", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scheduledAt: new Date(rescheduleAt).toISOString() }),
+      body: JSON.stringify({
+        postIds: clipboard.items.map((item) => item.postId),
+        targetDate: day.toISOString(),
+      }),
     });
-
-    const data = (await response.json()) as { error?: string };
-    setPending(false);
+    const data = (await response.json()) as { createdCount?: number; error?: string };
+    setPastePending(false);
 
     if (!response.ok) {
-      setError(data.error ?? t("calendar.couldNotReschedule"));
+      setError(data.error ?? t("calendar.couldNotPaste"));
       return;
     }
 
-    setSelectedPost(null);
+    setBanner(t("calendar.pastedCount", { count: data.createdCount ?? 0 }));
+    setClipboard(null);
     await fetchRange();
   }
+
+  async function pasteToNextPeriod() {
+    if (!clipboard || clipboard.items.length === 0) {
+      setError(t("calendar.clipboardEmpty"));
+      return;
+    }
+
+    setPastePending(true);
+    setError(null);
+
+    const payload =
+      view === "week"
+        ? { postIds: clipboard.items.map((item) => item.postId), shiftMs: WEEK_MS }
+        : { postIds: clipboard.items.map((item) => item.postId), shiftMonths: 1 };
+
+    const response = await fetch("/api/posts/duplicate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = (await response.json()) as { createdCount?: number; error?: string };
+    setPastePending(false);
+
+    if (!response.ok) {
+      setError(data.error ?? t("calendar.couldNotPaste"));
+      return;
+    }
+
+    setBanner(t("calendar.pastedCount", { count: data.createdCount ?? 0 }));
+    setClipboard(null);
+    setAnchor((current) => (view === "week" ? addWeeks(current, 1) : addMonths(current, 1)));
+    await fetchRange();
+  }
+
+  const canPasteOnDay = Boolean(clipboard?.items.length === 1) && !pastePending;
 
   function goPrevious() {
     setAnchor((current) => (view === "week" ? addWeeks(current, -1) : addMonths(current, -1)));
@@ -213,13 +278,11 @@ export function PublishingCalendar({
     return (
       <button
         type="button"
-        onClick={() => openReschedule(post)}
-        disabled={post.status !== "scheduled" && post.status !== "failed"}
-        className={`w-full rounded-lg border px-2 py-1.5 text-left text-xs transition-colors ${statusColor(post.status)} ${
-          post.status === "scheduled" || post.status === "failed"
-            ? "hover:opacity-90 cursor-pointer"
-            : "cursor-default"
-        }`}
+        onClick={(event) => {
+          event.stopPropagation();
+          setViewPostId(post.id);
+        }}
+        className={`w-full cursor-pointer rounded-lg border px-2 py-1.5 text-left text-xs transition-colors hover:opacity-90 ${statusColor(post.status)}`}
       >
         <span className="block font-medium">{getPostStatusLabel(post.status, t)}</span>
         <span className="block text-muted">{formatTime(post.displayAt)}</span>
@@ -229,6 +292,64 @@ export function PublishingCalendar({
         </span>
         {compact ? <span className="mt-0.5 line-clamp-1">{post.body}</span> : null}
       </button>
+    );
+  }
+
+  function renderDayCell(day: Date, options: { compact?: boolean; inMonth?: boolean; isToday?: boolean }) {
+    const dayPosts = postsForDay(day);
+    const { compact = false, inMonth = true, isToday = false } = options;
+    const pasteable = canPasteOnDay;
+
+    return (
+      <div
+        key={day.toISOString()}
+        role={pasteable ? "button" : undefined}
+        tabIndex={pasteable ? 0 : undefined}
+        onClick={() => {
+          if (pasteable) void pasteToDay(day);
+        }}
+        onKeyDown={(event) => {
+          if (!pasteable) return;
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            void pasteToDay(day);
+          }
+        }}
+        title={pasteable ? t("calendar.pasteOnDay") : undefined}
+        className={`min-h-[7.5rem] rounded-xl border p-2 transition-colors ${
+          inMonth ? "border-border bg-background/50" : "border-border/60 bg-muted/20 opacity-60"
+        } ${isToday ? "ring-1 ring-primary/40" : ""} ${
+          pasteable
+            ? "cursor-pointer hover:border-primary/50 hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            : ""
+        } ${compact ? "" : "min-h-[8rem]"}`}
+      >
+        <p className={`mb-2 text-xs font-semibold ${isToday ? "text-primary" : "text-muted"}`}>
+          {compact ? formatMonthDayNumber(day) : formatWeekDayHeader(day)}
+          {pasteable ? (
+            <span className="ml-1 font-normal text-primary">{t("calendar.pasteOnDay")}</span>
+          ) : null}
+        </p>
+        <ul className={compact ? "space-y-1.5" : "space-y-2"}>
+          {compact ? (
+            <>
+              {dayPosts.slice(0, 3).map((post) => (
+                <li key={post.id}>{renderPostButton(post, true)}</li>
+              ))}
+              {dayPosts.length > 3 ? (
+                <li className="text-[10px] font-medium text-muted">
+                  {t("calendar.morePosts", { count: dayPosts.length - 3 })}
+                </li>
+              ) : null}
+              {dayPosts.length === 0 ? <li className="text-xs text-muted">—</li> : null}
+            </>
+          ) : dayPosts.length === 0 ? (
+            <li className="text-xs text-muted">—</li>
+          ) : (
+            dayPosts.map((post) => <li key={post.id}>{renderPostButton(post)}</li>)
+          )}
+        </ul>
+      </div>
     );
   }
 
@@ -287,26 +408,53 @@ export function PublishingCalendar({
           </div>
         </div>
 
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={excludeWeekends}
+              onChange={(e) => setExcludeWeekends(e.target.checked)}
+              className="rounded border-border"
+            />
+            <span>{t("calendar.excludeWeekends")}</span>
+          </label>
+          <Button type="button" variant="outline" size="sm" onClick={copyCurrentPeriod}>
+            {view === "week" ? t("calendar.copyWeek") : t("calendar.copyMonth")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!clipboard?.items.length || pastePending}
+            onClick={() => void pasteToNextPeriod()}
+          >
+            {pastePending
+              ? t("composer.saving")
+              : view === "week"
+                ? t("calendar.pasteNextWeek")
+                : t("calendar.pasteNextMonth")}
+          </Button>
+          {clipboard?.items.length ? (
+            <span className="text-xs text-muted">
+              {t("calendar.copiedCount", { count: clipboard.items.length })}
+            </span>
+          ) : null}
+        </div>
+
+        {banner ? (
+          <p className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary" aria-live="polite">
+            {banner}
+          </p>
+        ) : null}
+        {error ? (
+          <p role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </p>
+        ) : null}
+
         {view === "week" ? (
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
-            {weekDays.map((day) => {
-              const dayPosts = postsForDay(day);
-              return (
-                <div
-                  key={day.toISOString()}
-                  className="min-h-[8rem] rounded-xl border border-border bg-background/50 p-2"
-                >
-                  <p className="mb-2 text-xs font-semibold text-muted">{formatWeekDayHeader(day)}</p>
-                  <ul className="space-y-2">
-                    {dayPosts.length === 0 ? (
-                      <li className="text-xs text-muted">—</li>
-                    ) : (
-                      dayPosts.map((post) => <li key={post.id}>{renderPostButton(post)}</li>)
-                    )}
-                  </ul>
-                </div>
-              );
-            })}
+            {weekDays.map((day) => renderDayCell(day, { compact: false, inMonth: true }))}
           </div>
         ) : (
           <div className="mt-6 overflow-x-auto">
@@ -316,70 +464,26 @@ export function PublishingCalendar({
                   {formatWeekdayLabel(day)}
                 </p>
               ))}
-              {monthDays.map((day) => {
-                const inMonth = isSameCalendarMonth(day, anchor);
-                const isToday = isSameCalendarDay(day, new Date());
-                const dayPosts = postsForDay(day);
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`min-h-[7.5rem] rounded-xl border p-2 ${
-                      inMonth ? "border-border bg-background/50" : "border-border/60 bg-muted/20 opacity-60"
-                    } ${isToday ? "ring-1 ring-primary/40" : ""}`}
-                  >
-                    <p className={`mb-2 text-xs font-semibold ${isToday ? "text-primary" : "text-muted"}`}>
-                      {formatMonthDayNumber(day)}
-                    </p>
-                    <ul className="space-y-1.5">
-                      {dayPosts.slice(0, 3).map((post) => (
-                        <li key={post.id}>{renderPostButton(post, true)}</li>
-                      ))}
-                      {dayPosts.length > 3 ? (
-                        <li className="text-[10px] font-medium text-muted">
-                          {t("calendar.morePosts", { count: dayPosts.length - 3 })}
-                        </li>
-                      ) : null}
-                      {dayPosts.length === 0 ? <li className="text-xs text-muted">—</li> : null}
-                    </ul>
-                  </div>
-                );
-              })}
+              {monthDays.map((day) =>
+                renderDayCell(day, {
+                  compact: true,
+                  inMonth: isSameCalendarMonth(day, anchor),
+                  isToday: isSameCalendarDay(day, new Date()),
+                }),
+              )}
             </div>
           </div>
         )}
       </Card>
 
-      {selectedPost ? (
-        <Card>
-          <CardTitle>{t("calendar.rescheduleTitle")}</CardTitle>
-          <CardDescription className="line-clamp-2">{selectedPost.body}</CardDescription>
-          <form className="mt-4 space-y-4" onSubmit={handleReschedule}>
-            <label className="block space-y-1 text-sm">
-              <span className="font-medium">{t("calendar.newTime")}</span>
-              <input
-                type="datetime-local"
-                value={rescheduleAt}
-                onChange={(e) => setRescheduleAt(e.target.value)}
-                required
-                className="h-10 w-full max-w-xs rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              />
-            </label>
-            {error ? (
-              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error}
-              </p>
-            ) : null}
-            <div className="flex gap-3">
-              <Button type="submit" disabled={pending}>
-                {pending ? t("composer.saving") : t("calendar.saveNewTime")}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setSelectedPost(null)}>
-                {t("common.cancel")}
-              </Button>
-            </div>
-          </form>
-        </Card>
-      ) : null}
+      <PostDetailModal
+        postId={viewPostId}
+        onClose={() => setViewPostId(null)}
+        onCopy={copySingleFromDetail}
+        onRescheduled={() => {
+          void fetchRange();
+        }}
+      />
     </div>
   );
 }

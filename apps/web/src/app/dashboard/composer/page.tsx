@@ -2,6 +2,7 @@ import {
   countPendingApprovalPosts,
   countScheduledPosts,
   getContentIdea,
+  getPostDetail,
   listConnectedAccounts,
   listPostsForOrganization,
 } from "@socialbd/db";
@@ -12,18 +13,32 @@ import { withoutLinkedInAccounts } from "@/lib/features/linkedin";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { serializeIdea } from "@/lib/ideas-api";
 import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
+import { toEditPostFormData } from "@/lib/post-detail";
 
 type ComposerPageProps = {
-  searchParams: Promise<{ ideaId?: string }>;
+  searchParams: Promise<{ ideaId?: string; postId?: string }>;
 };
 
 export default async function ComposerPage({ searchParams }: ComposerPageProps) {
   const { organizationId, userId } = await requireActiveOrganization();
-  const { ideaId } = await searchParams;
+  const { ideaId, postId } = await searchParams;
   const role = await getMemberRoleForUser(userId, organizationId);
 
   const promoteIdea =
     ideaId && ideaId.trim() ? await getContentIdea(ideaId.trim(), organizationId) : null;
+
+  let editPost = null;
+  let editError: string | null = null;
+  if (postId?.trim()) {
+    const detail = await getPostDetail(postId.trim(), organizationId);
+    if (!detail) {
+      editError = "not_found";
+    } else if (!detail.canEdit) {
+      editError = "not_editable";
+    } else {
+      editPost = toEditPostFormData(detail);
+    }
+  }
 
   const [channels, posts, scheduledCount, pendingApprovalCount] = await Promise.all([
     listConnectedAccounts(organizationId),
@@ -37,7 +52,9 @@ export default async function ComposerPage({ searchParams }: ComposerPageProps) 
       <ComposerForm
         channels={withoutLinkedInAccounts(channels)}
         canPublishDirectly={canPublishDirectly(role)}
-        promoteIdea={promoteIdea ? serializeIdea(promoteIdea) : null}
+        promoteIdea={promoteIdea && !editPost ? serializeIdea(promoteIdea) : null}
+        editPost={editPost}
+        editError={editError}
       />
       <PostListLive initial={{ posts, scheduledCount, pendingApprovalCount }} />
     </div>

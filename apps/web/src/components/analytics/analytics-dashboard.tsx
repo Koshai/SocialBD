@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
+import { PlatformPostLink } from "@/components/posts/platform-post-link";
 import type { AnalyticsSnapshot } from "@/lib/analytics-types";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
@@ -29,6 +30,9 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot | null>(initial);
   const [error, setError] = useState(initialError ?? null);
   const [pending, setPending] = useState(false);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(
+    initial?.channels[0]?.id ?? null,
+  );
 
   const refresh = useCallback(async () => {
     setPending(true);
@@ -45,6 +49,10 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
     }
 
     setSnapshot(data);
+    setSelectedChannelId((current) => {
+      if (current && data.channels.some((channel) => channel.id === current)) return current;
+      return data.channels[0]?.id ?? null;
+    });
   }, [t]);
 
   useEffect(() => {
@@ -52,6 +60,16 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
       void refresh();
     }
   }, [initial, refresh]);
+
+  const selectedChannel = useMemo(() => {
+    if (!snapshot || !selectedChannelId) return null;
+    return snapshot.channels.find((channel) => channel.id === selectedChannelId) ?? null;
+  }, [snapshot, selectedChannelId]);
+
+  const channelPosts = useMemo(() => {
+    if (!snapshot || !selectedChannel) return [];
+    return snapshot.posts.filter((post) => post.pageId === selectedChannel.pageId);
+  }, [snapshot, selectedChannel]);
 
   if (error && !snapshot) {
     return (
@@ -69,7 +87,7 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
     return <p className="text-sm text-muted">{t("analytics.loading")}</p>;
   }
 
-  const { channels, posts, totals, warnings } = snapshot;
+  const { channels, totals, warnings } = snapshot;
 
   return (
     <div className="space-y-6">
@@ -85,100 +103,101 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">{t("analytics.sourceNote")}</p>
+        <p className="text-sm text-muted">{t("analytics.sourceNoteHandoff")}</p>
         <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => void refresh()}>
           {pending ? t("analytics.refreshing") : t("analytics.refresh")}
         </Button>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardTitle className="text-base">{t("analytics.published")}</CardTitle>
-          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.publishedPosts)}</p>
-          <CardDescription>{t("analytics.publishedDesc")}</CardDescription>
-        </Card>
-        <Card>
-          <CardTitle className="text-base">{t("analytics.engagement")}</CardTitle>
-          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.engagement)}</p>
-          <CardDescription>{t("analytics.engagementDesc")}</CardDescription>
-        </Card>
-        <Card>
-          <CardTitle className="text-base">{t("analytics.impressions")}</CardTitle>
-          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.impressions)}</p>
-          <CardDescription>{t("analytics.impressionsDesc")}</CardDescription>
-        </Card>
-        <Card>
-          <CardTitle className="text-base">{t("analytics.commentsCard")}</CardTitle>
-          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.comments)}</p>
-          <CardDescription>{t("analytics.commentsDesc")}</CardDescription>
-        </Card>
-      </section>
+      <Card>
+        <CardTitle className="text-base">{t("analytics.published")}</CardTitle>
+        <p className="mt-2 text-3xl font-bold">{formatNumber(totals.publishedPosts)}</p>
+        <CardDescription>{t("analytics.publishedDesc")}</CardDescription>
+      </Card>
 
-      {channels.length > 0 ? (
+      {channels.length === 0 ? (
         <Card>
           <CardTitle>{t("analytics.channelsTitle")}</CardTitle>
-          <CardDescription>{t("analytics.channelsDesc")}</CardDescription>
-          <ul className="mt-4 space-y-3">
-            {channels.map((channel) => (
-              <li
-                key={channel.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
-              >
-                <span>
-                  <span className="font-medium">{channel.displayName}</span>
-                  <span className="ml-2 text-muted">{getPlatformLabel(channel.platform, t)}</span>
-                </span>
-                <span className="text-muted">
-                  {channel.error
-                    ? channel.error
-                    : `${formatNumber(channel.followers)} ${t("common.followers")} · ${channel.publishedPosts} ${t("common.publishedCount")}`}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <CardDescription>{t("analytics.emptyPosts")}</CardDescription>
         </Card>
-      ) : null}
+      ) : (
+        <>
+          <Card>
+            <CardTitle>{t("analytics.channelsTitle")}</CardTitle>
+            <CardDescription>{t("analytics.selectChannel")}</CardDescription>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {channels.map((channel) => {
+                const selected = channel.id === selectedChannelId;
+                return (
+                  <button
+                    key={channel.id}
+                    type="button"
+                    onClick={() => setSelectedChannelId(channel.id)}
+                    className={`min-w-[12rem] flex-1 rounded-xl border px-4 py-3 text-left transition-colors sm:flex-none ${
+                      selected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                        : "border-border bg-background hover:border-primary/40"
+                    }`}
+                  >
+                    <p className="font-medium">{channel.displayName}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {getPlatformLabel(channel.platform, t)}
+                    </p>
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs text-muted">{t("analytics.publishedOnChannel")}</dt>
+                        <dd className="font-semibold">{formatNumber(channel.publishedPosts)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted">{t("analytics.followersLabel")}</dt>
+                        <dd className="font-semibold">{formatNumber(channel.followers)}</dd>
+                      </div>
+                    </dl>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
 
-      <Card>
-        <CardTitle>{t("analytics.recentTitle")}</CardTitle>
-        <CardDescription>{t("analytics.recentDesc", { count: posts.length })}</CardDescription>
-        {posts.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">{t("analytics.emptyPosts")}</p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {posts.map((post) => (
-              <li key={post.id} className="rounded-lg border border-border px-3 py-3 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium">{post.channelName}</span>
-                  <span className="text-xs text-muted">{formatWhen(post.publishedAt)}</span>
-                </div>
-                <p className="mt-2 line-clamp-2 whitespace-pre-wrap">{post.body}</p>
-                {post.error ? (
-                  <p className="mt-2 text-xs text-red-600">{post.error}</p>
-                ) : (
-                  <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
-                    <span>
-                      {formatNumber(post.reactions)} {t("common.reactions")}
-                    </span>
-                    <span>
-                      {formatNumber(post.comments)} {t("common.comments")}
-                    </span>
-                    <span>
-                      {formatNumber(post.shares)} {t("common.shares")}
-                    </span>
-                    <span>
-                      {formatNumber(post.impressions)} {t("common.impressions")}
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {formatNumber(post.engagement)} {t("common.totalEngagement")}
-                    </span>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+          {selectedChannel ? (
+            <Card>
+              <CardTitle>{selectedChannel.displayName}</CardTitle>
+              <CardDescription>
+                {getPlatformLabel(selectedChannel.platform, t)}
+                {" · "}
+                {formatNumber(selectedChannel.publishedPosts)} {t("analytics.publishedOnChannel").toLowerCase()}
+                {" · "}
+                {selectedChannel.followers == null
+                  ? t("analytics.followersUnavailable")
+                  : `${formatNumber(selectedChannel.followers)} ${t("analytics.followersLabel").toLowerCase()}`}
+              </CardDescription>
+
+              <h3 className="mt-6 text-sm font-semibold">{t("analytics.channelPostsTitle")}</h3>
+              {channelPosts.length === 0 ? (
+                <p className="mt-3 text-sm text-muted">{t("analytics.channelPostsEmpty")}</p>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {channelPosts.map((post) => (
+                    <li key={post.id} className="rounded-lg border border-border px-3 py-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs text-muted">{formatWhen(post.publishedAt)}</span>
+                      </div>
+                      <p className="mt-2 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
+                      <PlatformPostLink
+                        postId={post.id}
+                        platform={post.platform}
+                        status="published"
+                        externalPostId={post.externalPostId}
+                        pageId={post.pageId}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

@@ -280,6 +280,27 @@ export async function getPostForPublish(postId: string, organizationId?: string)
   return row ?? null;
 }
 
+export async function getPublishedPostPlatformContext(
+  postId: string,
+  organizationId: string,
+) {
+  const [row] = await db
+    .select({
+      id: post.id,
+      status: post.status,
+      externalPostId: post.externalPostId,
+      platform: connectedAccount.platform,
+      pageId: connectedAccount.providerAccountId,
+      pageAccessToken: connectedAccount.accessToken,
+    })
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(and(eq(post.id, postId), eq(post.organizationId, organizationId)))
+    .limit(1);
+
+  return row ?? null;
+}
+
 export async function markPostPublished(postId: string, externalPostId: string) {
   const now = new Date();
   await db
@@ -409,6 +430,198 @@ export async function reschedulePost(input: {
   }
 
   return updated;
+}
+
+export type PostDetail = {
+  id: string;
+  body: string;
+  mediaPath: string | null;
+  mediaMimeType: string | null;
+  status: PostStatus;
+  scheduledAt: Date | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+  connectedAccountId: string;
+  channelName: string;
+  platform: string;
+  externalPostId: string | null;
+  pageId: string;
+  canEdit: boolean;
+  canReschedule: boolean;
+};
+
+const EDITABLE_STATUSES: PostStatus[] = ["draft", "scheduled"];
+const RESCHEDULE_STATUSES: PostStatus[] = ["scheduled", "failed"];
+
+export async function getPostDetail(
+  postId: string,
+  organizationId: string,
+): Promise<PostDetail | null> {
+  const [row] = await db
+    .select({
+      id: post.id,
+      body: post.body,
+      mediaPath: post.mediaPath,
+      mediaMimeType: post.mediaMimeType,
+      status: post.status,
+      scheduledAt: post.scheduledAt,
+      publishedAt: post.publishedAt,
+      createdAt: post.createdAt,
+      connectedAccountId: post.connectedAccountId,
+      channelName: connectedAccount.displayName,
+      platform: connectedAccount.platform,
+      externalPostId: post.externalPostId,
+      pageId: connectedAccount.providerAccountId,
+    })
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(and(eq(post.id, postId), eq(post.organizationId, organizationId)))
+    .limit(1);
+
+  if (!row) return null;
+
+  const status = row.status as PostStatus;
+  return {
+    ...row,
+    status,
+    canEdit: EDITABLE_STATUSES.includes(status),
+    canReschedule: RESCHEDULE_STATUSES.includes(status),
+  };
+}
+
+export async function updateEditablePost(input: {
+  postId: string;
+  organizationId: string;
+  connectedAccountId: string;
+  body: string;
+  mediaPath?: string | null;
+  mediaMimeType?: string | null;
+  scheduledAt?: Date | null;
+}) {
+  const trimmedBody = input.body.trim();
+  if (!trimmedBody && !input.mediaPath) {
+    throw new Error("Add a caption or an image.");
+  }
+
+  const now = new Date();
+  const scheduledAt = input.scheduledAt ?? null;
+  let status: PostStatus = "draft";
+  let nextScheduledAt: Date | null = null;
+
+  if (scheduledAt && scheduledAt.getTime() > now.getTime()) {
+    status = "scheduled";
+    nextScheduledAt = scheduledAt;
+  } else if (scheduledAt && scheduledAt.getTime() <= now.getTime()) {
+    throw new Error("Schedule time must be in the future.");
+  }
+
+  const [updated] = await db
+    .update(post)
+    .set({
+      connectedAccountId: input.connectedAccountId,
+      body: trimmedBody,
+      mediaPath: input.mediaPath ?? null,
+      mediaMimeType: input.mediaMimeType ?? null,
+      status,
+      scheduledAt: nextScheduledAt,
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(post.id, input.postId),
+        eq(post.organizationId, input.organizationId),
+        inArray(post.status, EDITABLE_STATUSES),
+      ),
+    )
+    .returning();
+
+  if (!updated) {
+    throw new Error("Post not found or cannot be edited.");
+  }
+
+  return updated;
+}
+
+export async function listPostsByIds(postIds: string[], organizationId: string) {
+  if (postIds.length === 0) return [];
+
+  return db
+    .select({
+      id: post.id,
+      body: post.body,
+      mediaPath: post.mediaPath,
+      mediaMimeType: post.mediaMimeType,
+      status: post.status,
+      scheduledAt: post.scheduledAt,
+      createdAt: post.createdAt,
+      connectedAccountId: post.connectedAccountId,
+      createdByUserId: post.createdByUserId,
+    })
+    .from(post)
+    .where(and(eq(post.organizationId, organizationId), inArray(post.id, postIds)));
+}
+
+export async function duplicatePosts(input: {
+  organizationId: string;
+  createdByUserId: string;
+  sourcePostIds: string[];
+  /** Absolute target scheduledAt per source post id (already shifted by caller). */
+  scheduledAtByPostId: Record<string, Date>;
+}) {
+  const sources = await listPostsByIds(input.sourcePostIds, input.organizationId);
+  if (sources.length === 0) {
+    throw new Error("No posts found to duplicate.");
+  }
+
+  const now = new Date();
+  const created: Array<{ id: string; status: PostStatus; scheduledAt: Date | null }> = [];
+
+  for (const source of sources) {
+    const targetAt = input.scheduledAtByPostId[source.id];
+    if (!targetAt || Number.isNaN(targetAt.getTime())) {
+      continue;
+    }
+
+    let status: PostStatus = "draft";
+    let scheduledAt: Date | null = null;
+    if (targetAt.getTime() > now.getTime()) {
+      status = "scheduled";
+      scheduledAt = targetAt;
+    }
+
+    const [row] = await db
+      .insert(post)
+      .values({
+        id: crypto.randomUUID(),
+        organizationId: input.organizationId,
+        connectedAccountId: source.connectedAccountId,
+        createdByUserId: input.createdByUserId,
+        body: source.body,
+        mediaPath: source.mediaPath,
+        mediaMimeType: source.mediaMimeType,
+        status,
+        scheduledAt,
+        publishedAt: null,
+        externalPostId: null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning({
+        id: post.id,
+        status: post.status,
+        scheduledAt: post.scheduledAt,
+      });
+
+    if (row) {
+      created.push({
+        id: row.id,
+        status: row.status as PostStatus,
+        scheduledAt: row.scheduledAt,
+      });
+    }
+  }
+
+  return created;
 }
 
 export async function listDueScheduledPostIds(limit = 50) {

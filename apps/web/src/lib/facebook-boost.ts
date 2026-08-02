@@ -17,6 +17,15 @@ export function buildFacebookPostPermalink(externalPostId: string, pageId: strin
   return `https://www.facebook.com/${encodeURIComponent(fbPageId)}/posts/${encodeURIComponent(storyFbid)}`;
 }
 
+/**
+ * Open the published Page post itself (reliable per-post link).
+ * From the post, Page admins can open Insights in Meta.
+ * Prefer this over Business Suite “view” URLs, which often land on the Page home.
+ */
+export function buildFacebookPostInsightsUrl(externalPostId: string, pageId: string) {
+  return buildFacebookPostPermalink(externalPostId, pageId);
+}
+
 export function canBoostFacebookPost(input: {
   platform: string;
   status: string;
@@ -30,9 +39,44 @@ export function canBoostFacebookPost(input: {
   );
 }
 
+export function canOpenPlatformPost(input: {
+  platform: string;
+  status: string;
+  externalPostId: string | null | undefined;
+  pageId: string | null | undefined;
+}) {
+  if (input.status !== "published" || !input.externalPostId?.trim()) return false;
+  if (input.platform === "facebook_page") {
+    return Boolean(input.pageId?.trim());
+  }
+  if (input.platform === "instagram") {
+    return true;
+  }
+  return false;
+}
+
 export function buildFacebookBoostHandoffUrl(
   externalPostId: string,
   pageId: string,
 ): string | null {
   return buildFacebookPostPermalink(externalPostId, pageId);
+}
+
+const GRAPH_VERSION = "v21.0";
+
+/** Resolve Instagram media permalink via Graph (needs a valid Page token). */
+export async function resolveInstagramPermalink(
+  mediaId: string,
+  accessToken: string,
+): Promise<string | null> {
+  const url = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}`);
+  url.searchParams.set("fields", "permalink");
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url);
+  const json = (await response.json()) as { permalink?: string; error?: { message?: string } };
+  if (!response.ok || json.error || !json.permalink) {
+    return null;
+  }
+  return json.permalink;
 }

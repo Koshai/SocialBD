@@ -183,7 +183,23 @@ Caddy gets Let’s Encrypt certificates automatically once DNS points here.
 |---------|--------|
 | Resend | Verify `queueora.com`, use `noreply@queueora.com` |
 | Meta | OAuth redirect `https://queueora.com/api/meta/callback` |
+| Meta webhooks (agents) | Callback `https://queueora.com/api/meta/webhook` + verify token matching `META_WEBHOOK_VERIFY_TOKEN` |
 | LinkedIn | OAuth redirect `https://queueora.com/api/linkedin/callback` |
+
+### AI reply agents (optional)
+
+1. In Meta Developer → your app → Webhooks, add callback `https://queueora.com/api/meta/webhook` and your verify token.
+2. Subscribe to Page fields: `messages`, `feed`, `mention` (plus Instagram messaging fields if used).
+3. On the Linode `.env` set:
+   - `NEXT_PUBLIC_AGENTS_ENABLED=true`
+   - `META_OAUTH_MESSAGING=true`
+   - `META_WEBHOOK_VERIFY_TOKEN=...` (same as Meta)
+   - `OPENAI_API_KEY=...`
+4. Rebuild/restart web + worker, run `pnpm db:migrate:all` (includes `0008_reply_agents.sql`).
+5. Reconnect Facebook in QueueOra Accounts so messaging scopes are granted and Pages subscribe to the app.
+6. Open **Agents** in the dashboard, pick a template, enable the agent.
+
+Production messaging scopes usually need Meta App Review (`pages_messaging`, `pages_manage_engagement`, Instagram message/comment permissions).
 
 ## 11. Smoke test
 

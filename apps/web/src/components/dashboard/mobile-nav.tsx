@@ -4,18 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
-import { dashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
+import { getDashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
 
-export function MobileNav() {
+type MobileNavProps = {
+  agentsEnabled?: boolean;
+};
+
+export function MobileNav({ agentsEnabled = false }: MobileNavProps) {
   const pathname = usePathname();
   const { t } = usePreferences();
+  const routes = getDashboardNavRoutes(agentsEnabled);
 
   return (
     <nav
       aria-label="Dashboard mobile"
       className="flex gap-2 overflow-x-auto border-b border-border bg-surface px-4 py-3 md:hidden"
     >
-      {dashboardNavRoutes.map((item) => {
+      {routes.map((item) => {
         const active = isNavActive(pathname, item.href);
         return (
           <Link

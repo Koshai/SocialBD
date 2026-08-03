@@ -11,10 +11,16 @@ export const dashboardNavRoutes: DashboardNavRoute[] = [
   { href: "/dashboard/posts", labelKey: "nav.posts", descriptionKey: "nav.postsDesc" },
   { href: "/dashboard/calendar", labelKey: "nav.calendar", descriptionKey: "nav.calendarDesc" },
   { href: "/dashboard/accounts", labelKey: "nav.accounts", descriptionKey: "nav.accountsDesc" },
+  { href: "/dashboard/agents", labelKey: "nav.agents", descriptionKey: "nav.agentsDesc" },
   { href: "/dashboard/analytics", labelKey: "nav.analytics", descriptionKey: "nav.analyticsDesc" },
   { href: "/dashboard/approvals", labelKey: "nav.approvals", descriptionKey: "nav.approvalsDesc" },
   { href: "/dashboard/settings", labelKey: "nav.settings", descriptionKey: "nav.settingsDesc" },
 ];
+
+export function getDashboardNavRoutes(agentsEnabled: boolean) {
+  if (agentsEnabled) return dashboardNavRoutes;
+  return dashboardNavRoutes.filter((route) => route.href !== "/dashboard/agents");
+}
 
 export function isNavActive(pathname: string, href: string) {
   if (href === "/dashboard") {

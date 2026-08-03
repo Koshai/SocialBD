@@ -2,11 +2,13 @@ import {
   assertChannelCapacity,
   countNewMetaConnections,
   debugTokenScopes,
+  subscribePageToApp,
   upsertFacebookPageAccount,
   upsertInstagramAccount,
 } from "@socialbd/db";
 
-import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";import { getMetaScopeString } from "./scopes";
+import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";
+import { getMetaScopeString, isMetaMessagingOAuthEnabled } from "./scopes";
 
 export async function syncFacebookPagesForOrganization(input: {
   organizationId: string;
@@ -43,6 +45,20 @@ export async function syncFacebookPagesForOrganization(input: {
       tokenExpiresAt,
       scopes,
     });
+
+    if (isMetaMessagingOAuthEnabled()) {
+      try {
+        await subscribePageToApp({
+          pageId: page.id,
+          pageAccessToken: page.access_token,
+        });
+      } catch (error) {
+        console.warn(
+          `[meta] Could not subscribe page ${page.id} to webhooks:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
 
     const ig = page.instagram_business_account;
     if (ig?.id) {

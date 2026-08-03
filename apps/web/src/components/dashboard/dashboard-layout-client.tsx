@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import { useDashboardPageMeta } from "@/lib/i18n/use-dashboard-page-meta";
 import { DashboardShell } from "./dashboard-shell";
 
@@ -11,14 +9,24 @@ type DashboardLayoutClientProps = {
     email: string;
     image?: string | null;
   };
+  agentsEnabled?: boolean;
   children: React.ReactNode;
 };
 
-export function DashboardLayoutClient({ user, children }: DashboardLayoutClientProps) {
+export function DashboardLayoutClient({
+  user,
+  agentsEnabled = false,
+  children,
+}: DashboardLayoutClientProps) {
   const { title, description } = useDashboardPageMeta();
 
   return (
-    <DashboardShell user={user} title={title} description={description}>
+    <DashboardShell
+      user={user}
+      title={title}
+      description={description}
+      agentsEnabled={agentsEnabled}
+    >
       {children}
     </DashboardShell>
   );

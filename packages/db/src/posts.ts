@@ -228,7 +228,11 @@ export async function getConnectedAccountForOrganization(
   organizationId: string,
 ) {
   const [row] = await db
-    .select({ id: connectedAccount.id, platform: connectedAccount.platform })
+    .select({
+      id: connectedAccount.id,
+      platform: connectedAccount.platform,
+      displayName: connectedAccount.displayName,
+    })
     .from(connectedAccount)
     .where(
       and(

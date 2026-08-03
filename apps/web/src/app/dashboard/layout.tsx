@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { DashboardLayoutClient } from "@/components/dashboard/dashboard-layout-client";
 import { auth } from "@/lib/auth";
+import { isAgentsFeatureEnabled } from "@/lib/features/agents";
 
 export default async function DashboardLayout({
   children,
@@ -18,6 +19,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <DashboardLayoutClient user={session.user}>{children}</DashboardLayoutClient>
+    <DashboardLayoutClient user={session.user} agentsEnabled={isAgentsFeatureEnabled()}>
+      {children}
+    </DashboardLayoutClient>
   );
 }

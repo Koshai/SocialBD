@@ -7,3 +7,4 @@ export * from "./content-tag";
 export * from "./workspace-gallery-image";
 export * from "./organization";
 export * from "./post";
+export * from "./reply-agent";

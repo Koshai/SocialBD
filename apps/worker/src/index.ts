@@ -3,35 +3,55 @@ import "@socialbd/db";
 import { Queue, Worker } from "bullmq";
 import { Redis } from "ioredis";
 
+import { processMetaInboxJob } from "./meta-inbox-job";
 import { processPublishJob, syncDueScheduledPosts } from "./publish-job";
 
 const redisUrl = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
 
-const queueName = "publish";
+const publishQueueName = "publish";
+const inboxQueueName = "meta-inbox";
 
-const queue = new Queue(queueName, { connection });
+const publishQueue = new Queue(publishQueueName, { connection });
 
-const worker = new Worker<{ postId: string }>(
-  queueName,
+const publishWorker = new Worker<{ postId: string }>(
+  publishQueueName,
   async (job) => {
     await processPublishJob(job.data.postId);
   },
   { connection },
 );
 
-worker.on("completed", (job) => {
-  console.log(`[worker] Completed job ${job.id}`);
+const inboxWorker = new Worker<{ eventId: string }>(
+  inboxQueueName,
+  async (job) => {
+    await processMetaInboxJob(job.data.eventId);
+  },
+  { connection },
+);
+
+publishWorker.on("completed", (job) => {
+  console.log(`[worker] Completed publish job ${job.id}`);
 });
 
-worker.on("failed", (job, err) => {
-  console.error(`[worker] Failed job ${job?.id}`, err);
+publishWorker.on("failed", (job, err) => {
+  console.error(`[worker] Failed publish job ${job?.id}`, err);
 });
 
-console.log(`[worker] QueueOra worker listening on queue "${queueName}"`);
+inboxWorker.on("completed", (job) => {
+  console.log(`[worker] Completed inbox job ${job.id}`);
+});
+
+inboxWorker.on("failed", (job, err) => {
+  console.error(`[worker] Failed inbox job ${job?.id}`, err);
+});
+
+console.log(
+  `[worker] QueueOra worker listening on queues "${publishQueueName}" and "${inboxQueueName}"`,
+);
 
 async function enqueuePublish(postId: string) {
-  await queue.add(
+  await publishQueue.add(
     "publish",
     { postId },
     { jobId: postId, removeOnComplete: true, removeOnFail: 100 },
@@ -52,8 +72,9 @@ setInterval(() => {
 
 async function shutdown() {
   console.log("[worker] Shutting down…");
-  await worker.close();
-  await queue.close();
+  await publishWorker.close();
+  await inboxWorker.close();
+  await publishQueue.close();
   await connection.quit();
   process.exit(0);
 }

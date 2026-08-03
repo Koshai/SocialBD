@@ -5,11 +5,16 @@ import { usePathname } from "next/navigation";
 import { QueueOraLogo } from "@socialbd/ui";
 
 import { usePreferences } from "@/components/preferences/preferences-provider";
-import { dashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
+import { getDashboardNavRoutes, isNavActive } from "@/lib/i18n/dashboard-nav";
 
-export function SidebarNav() {
+type SidebarNavProps = {
+  agentsEnabled?: boolean;
+};
+
+export function SidebarNav({ agentsEnabled = false }: SidebarNavProps) {
   const pathname = usePathname();
   const { t } = usePreferences();
+  const routes = getDashboardNavRoutes(agentsEnabled);
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border bg-surface">
@@ -23,7 +28,7 @@ export function SidebarNav() {
       </div>
 
       <nav aria-label="Dashboard" className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {dashboardNavRoutes.map((item) => {
+        {routes.map((item) => {
           const active = isNavActive(pathname, item.href);
           return (
             <Link

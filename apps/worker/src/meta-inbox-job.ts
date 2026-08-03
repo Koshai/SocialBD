@@ -3,6 +3,7 @@ import {
   getReplyAgentForAccount,
   getReplyAgentWithAccountById,
   replyToComment,
+  resolveMessengerSendPageId,
   sendMessengerText,
   updateInboxEventStatus,
 } from "@socialbd/db";
@@ -65,14 +66,22 @@ export async function processMetaInboxJob(eventId: string) {
         throw new Error("Messenger event missing sender id.");
       }
 
-      // Webhook entry id (Page or IG user) is the correct Send API actor.
-      const actorId = event.pageId ?? account.providerAccountId;
+      const isInstagram =
+        event.platform === "instagram" || account.platform === "instagram";
+
+      // IG webhooks use IG user id as entry.id; Send API needs linked Page id (or /me).
+      const pageId = await resolveMessengerSendPageId({
+        account,
+        eventPlatform: event.platform,
+        webhookEntryId: event.pageId,
+      });
 
       await sendMessengerText({
-        pageId: actorId,
+        pageId,
         recipientId: event.senderId,
         text: replyText,
         pageAccessToken: account.accessToken,
+        instagram: isInstagram,
       });
     } else if (event.eventType === "comment" || event.eventType === "mention") {
       let commentId: string | null = null;

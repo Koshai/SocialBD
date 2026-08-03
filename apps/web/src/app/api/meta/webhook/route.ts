@@ -230,6 +230,17 @@ export async function POST(request: Request) {
     console.error("[meta/webhook] Failed to process payload", error);
   }
 
+  if (objectType === "instagram") {
+    const entries = body.entry?.length ?? 0;
+    const msgCount =
+      body.entry?.reduce((n, e) => n + (e.messaging?.length ?? 0), 0) ?? 0;
+    if (entries > 0 && msgCount === 0) {
+      console.info(
+        "[meta/webhook] Instagram payload with no text messaging items (may be echo/attachment/comment).",
+      );
+    }
+  }
+
   // Always 200 quickly so Meta does not retry aggressively.
   return NextResponse.json({ ok: true });
 }

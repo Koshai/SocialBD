@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
 
 import { db } from "./db";
 import { user } from "./schema/auth";
@@ -648,6 +648,30 @@ export async function countPendingApprovalPosts(organizationId: string) {
     );
 
   return result?.count ?? 0;
+}
+
+export async function listUpcomingScheduledPosts(organizationId: string, limit = 5) {
+  const rows = await db
+    .select(postListSelect)
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(and(eq(post.organizationId, organizationId), eq(post.status, "scheduled")))
+    .orderBy(asc(post.scheduledAt), asc(post.id))
+    .limit(Math.min(Math.max(limit, 1), 20));
+
+  return rows as PostWithChannel[];
+}
+
+export async function listDraftPosts(organizationId: string, limit = 5) {
+  const rows = await db
+    .select(postListSelect)
+    .from(post)
+    .innerJoin(connectedAccount, eq(post.connectedAccountId, connectedAccount.id))
+    .where(and(eq(post.organizationId, organizationId), eq(post.status, "draft")))
+    .orderBy(desc(post.updatedAt), desc(post.id))
+    .limit(Math.min(Math.max(limit, 1), 20));
+
+  return rows as PostWithChannel[];
 }
 
 export async function listPendingApprovalPosts(organizationId: string, limit = 30) {

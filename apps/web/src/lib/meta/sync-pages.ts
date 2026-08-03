@@ -2,6 +2,7 @@ import {
   assertChannelCapacity,
   countNewMetaConnections,
   debugTokenScopes,
+  subscribeInstagramToApp,
   subscribePageToApp,
   upsertFacebookPageAccount,
   upsertInstagramAccount,
@@ -74,6 +75,20 @@ export async function syncFacebookPagesForOrganization(input: {
         tokenExpiresAt,
         scopes,
       });
+
+      if (isMetaMessagingOAuthEnabled()) {
+        try {
+          await subscribeInstagramToApp({
+            igUserId: ig.id,
+            pageAccessToken: page.access_token,
+          });
+        } catch (error) {
+          console.warn(
+            `[meta] Could not subscribe Instagram ${ig.id} to webhooks:`,
+            error instanceof Error ? error.message : error,
+          );
+        }
+      }
     }
   }
 

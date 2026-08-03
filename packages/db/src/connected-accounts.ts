@@ -99,6 +99,13 @@ export async function upsertFacebookPageAccount(input: {
     });
 }
 
+/** Keep handle + linked Page so agents/webhooks can resolve Page id for IG DMs. */
+function igUsernameWithLinkedPage(username: string | null | undefined, linkedPageId: string) {
+  const handle = username?.trim().replace(/^@/, "") || null;
+  if (handle) return `${handle}|page:${linkedPageId}`;
+  return `page:${linkedPageId}`;
+}
+
 export async function upsertInstagramAccount(input: {
   organizationId: string;
   igUserId: string;
@@ -112,6 +119,7 @@ export async function upsertInstagramAccount(input: {
 }) {
   const now = new Date();
   const id = crypto.randomUUID();
+  const username = igUsernameWithLinkedPage(input.username, input.linkedPageId);
 
   await db
     .insert(connectedAccount)
@@ -121,7 +129,7 @@ export async function upsertInstagramAccount(input: {
       platform: "instagram",
       providerAccountId: input.igUserId,
       displayName: input.displayName,
-      username: input.username ?? `page:${input.linkedPageId}`,
+      username,
       pictureUrl: input.pictureUrl ?? null,
       accessToken: input.pageAccessToken,
       tokenExpiresAt: input.tokenExpiresAt ?? null,
@@ -138,7 +146,7 @@ export async function upsertInstagramAccount(input: {
       ],
       set: {
         displayName: input.displayName,
-        username: input.username ?? `page:${input.linkedPageId}`,
+        username,
         pictureUrl: input.pictureUrl ?? null,
         accessToken: input.pageAccessToken,
         tokenExpiresAt: input.tokenExpiresAt ?? null,

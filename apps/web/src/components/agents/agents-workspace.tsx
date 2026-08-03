@@ -79,6 +79,7 @@ export function AgentsWorkspace() {
   const [replyComments, setReplyComments] = useState(true);
   const [requireMention, setRequireMention] = useState(true);
   const [enabled, setEnabled] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
 
   async function load() {
     setError(null);
@@ -158,6 +159,55 @@ export function AgentsWorkspace() {
     setRequireMention(agent.requireMention);
     setEnabled(agent.enabled);
     setMessage(null);
+    setError(null);
+  }
+
+  async function setAgentEnabled(agent: Agent, nextEnabled: boolean) {
+    setActionId(agent.id);
+    setError(null);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: nextEnabled }),
+      });
+      const json = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setError(json?.error ?? t("agents.actionError"));
+        return;
+      }
+      if (connectedAccountId === agent.connectedAccountId) {
+        setEnabled(nextEnabled);
+      }
+      setMessage(nextEnabled ? t("agents.enabledNow") : t("agents.disabled"));
+      await load();
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function deleteAgent(agent: Agent) {
+    if (!window.confirm(t("agents.deleteConfirm"))) return;
+    setActionId(agent.id);
+    setError(null);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}`, { method: "DELETE" });
+      const json = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setError(json?.error ?? t("agents.actionError"));
+        return;
+      }
+      if (connectedAccountId === agent.connectedAccountId) {
+        setEnabled(false);
+        setName("");
+      }
+      setMessage(t("agents.deleted"));
+      await load();
+    } finally {
+      setActionId(null);
+    }
   }
 
   async function save() {
@@ -217,6 +267,8 @@ export function AgentsWorkspace() {
         <CardTitle>{t("agents.title")}</CardTitle>
         <CardDescription>{t("agents.subtitle")}</CardDescription>
         <p className="mt-3 text-sm text-muted">{t("agents.setupHint")}</p>
+        {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
+        {message ? <p className="mt-3 text-sm text-emerald-700">{message}</p> : null}
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -381,7 +433,7 @@ export function AgentsWorkspace() {
               ) : (
                 data.agents.map((agent) => (
                   <li key={agent.id} className="rounded-xl border border-border px-3 py-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-medium">{agent.name}</p>
                         <p className="text-xs text-muted">
@@ -391,9 +443,30 @@ export function AgentsWorkspace() {
                           {agent.enabled ? t("agents.statusOn") : t("agents.statusOff")}
                         </p>
                       </div>
-                      <Button type="button" variant="secondary" onClick={() => editAgent(agent)}>
-                        {t("agents.edit")}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" size="sm" onClick={() => editAgent(agent)}>
+                          {t("agents.edit")}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={actionId === agent.id}
+                          onClick={() => void setAgentEnabled(agent, !agent.enabled)}
+                        >
+                          {agent.enabled ? t("agents.disable") : t("agents.enable")}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={actionId === agent.id}
+                          onClick={() => void deleteAgent(agent)}
+                          className="text-red-700 hover:text-red-800"
+                        >
+                          {t("agents.delete")}
+                        </Button>
+                      </div>
                     </div>
                   </li>
                 ))

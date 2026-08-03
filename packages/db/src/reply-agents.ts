@@ -1,4 +1,4 @@
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, like, or } from "drizzle-orm";
 
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
@@ -94,6 +94,64 @@ export async function getEnabledAgentByProviderAccountId(providerAccountId: stri
   return row ?? null;
 }
 
+/** Parse linked Facebook Page id from IG account username (`page:{id}` or `handle|page:{id}`). */
+export function parseLinkedPageIdFromIgUsername(username: string | null | undefined) {
+  if (!username) return null;
+  if (username.startsWith("page:")) return username.slice("page:".length) || null;
+  const marker = "|page:";
+  const idx = username.indexOf(marker);
+  if (idx >= 0) return username.slice(idx + marker.length) || null;
+  return null;
+}
+
+/**
+ * Facebook Page id used for Instagram Send API (Page-linked IG).
+ * Webhook entry id is the IG user id — never use that for POST .../messages.
+ */
+export async function resolveMessengerSendPageId(input: {
+  account: {
+    organizationId: string;
+    platform: string;
+    providerAccountId: string;
+    username: string | null;
+    accessToken: string;
+  };
+  eventPlatform: string;
+  webhookEntryId?: string | null;
+}) {
+  const isInstagram =
+    input.eventPlatform === "instagram" || input.account.platform === "instagram";
+
+  if (!isInstagram) {
+    return input.webhookEntryId ?? input.account.providerAccountId;
+  }
+
+  if (input.account.platform === "facebook_page") {
+    return input.account.providerAccountId;
+  }
+
+  const fromUsername = parseLinkedPageIdFromIgUsername(input.account.username);
+  if (fromUsername) return fromUsername;
+
+  const [pageAccount] = await db
+    .select()
+    .from(connectedAccount)
+    .where(
+      and(
+        eq(connectedAccount.organizationId, input.account.organizationId),
+        eq(connectedAccount.platform, "facebook_page"),
+        eq(connectedAccount.accessToken, input.account.accessToken),
+        eq(connectedAccount.status, "active"),
+      ),
+    )
+    .limit(1);
+
+  if (pageAccount) return pageAccount.providerAccountId;
+
+  // `/me/messages` with Page access token still works for IG.
+  return "me";
+}
+
 /**
  * Resolve FB Page id or IG user id to an enabled agent.
  * Messenger webhooks use Page id; IG messaging often uses IG user id.
@@ -104,6 +162,7 @@ export async function getEnabledAgentForMetaPageOrIg(pageOrIgId: string) {
   const direct = await getEnabledAgentByProviderAccountId(pageOrIgId);
   if (direct) return direct;
 
+  // Legacy `page:{pageId}` and current `handle|page:{pageId}` encodings.
   const byLinkedUsername = await db
     .select({
       agent: replyAgent,
@@ -114,7 +173,10 @@ export async function getEnabledAgentForMetaPageOrIg(pageOrIgId: string) {
     .where(
       and(
         eq(connectedAccount.platform, "instagram"),
-        eq(connectedAccount.username, `page:${pageOrIgId}`),
+        or(
+          eq(connectedAccount.username, `page:${pageOrIgId}`),
+          like(connectedAccount.username, `%|page:${pageOrIgId}`),
+        ),
         eq(connectedAccount.status, "active"),
         eq(replyAgent.enabled, true),
       ),
@@ -251,6 +313,36 @@ export async function upsertReplyAgent(input: {
     .returning();
 
   return created;
+}
+
+export async function getReplyAgentById(organizationId: string, agentId: string) {
+  const [row] = await db
+    .select()
+    .from(replyAgent)
+    .where(and(eq(replyAgent.id, agentId), eq(replyAgent.organizationId, organizationId)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function setReplyAgentEnabled(
+  organizationId: string,
+  agentId: string,
+  enabled: boolean,
+) {
+  const [row] = await db
+    .update(replyAgent)
+    .set({ enabled, updatedAt: new Date() })
+    .where(and(eq(replyAgent.id, agentId), eq(replyAgent.organizationId, organizationId)))
+    .returning();
+  return row ?? null;
+}
+
+export async function deleteReplyAgent(organizationId: string, agentId: string) {
+  const [row] = await db
+    .delete(replyAgent)
+    .where(and(eq(replyAgent.id, agentId), eq(replyAgent.organizationId, organizationId)))
+    .returning({ id: replyAgent.id });
+  return Boolean(row);
 }
 
 export async function createInboxEvent(input: {

@@ -14,7 +14,7 @@ import { NextResponse } from "next/server";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { notifyPostSubmittedForApproval } from "@/lib/approval-notifications";
 import { isLinkedInFeatureEnabled, isLinkedInPlatform } from "@/lib/features/linkedin";
-import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
+import { resolveCanPublishDirectly } from "@/lib/organization-roles";
 import { enqueuePublishPost } from "@/lib/publish-queue";
 import {
   parsePostHistoryFilter,
@@ -106,8 +106,7 @@ export async function POST(request: Request) {
       ? String((json as { ideaId: unknown }).ideaId).trim() || null
       : null;
 
-  const role = await getMemberRoleForUser(userId, organizationId);
-  const canPublish = canPublishDirectly(role);
+  const canPublish = await resolveCanPublishDirectly(userId, organizationId);
 
   if (!connectedAccountId) {
     return NextResponse.json({ error: "Select a channel." }, { status: 400 });

@@ -12,7 +12,7 @@ import { PostListLive } from "@/components/composer/post-list-live";
 import { withoutLinkedInAccounts } from "@/lib/features/linkedin";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
 import { serializeIdea } from "@/lib/ideas-api";
-import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
+import { resolveCanPublishDirectly } from "@/lib/organization-roles";
 import { toEditPostFormData } from "@/lib/post-detail";
 
 type ComposerPageProps = {
@@ -22,7 +22,7 @@ type ComposerPageProps = {
 export default async function ComposerPage({ searchParams }: ComposerPageProps) {
   const { organizationId, userId } = await requireActiveOrganization();
   const { ideaId, postId } = await searchParams;
-  const role = await getMemberRoleForUser(userId, organizationId);
+  const canPublish = await resolveCanPublishDirectly(userId, organizationId);
 
   const promoteIdea =
     ideaId && ideaId.trim() ? await getContentIdea(ideaId.trim(), organizationId) : null;
@@ -51,7 +51,7 @@ export default async function ComposerPage({ searchParams }: ComposerPageProps) 
     <div className="space-y-6">
       <ComposerForm
         channels={withoutLinkedInAccounts(channels)}
-        canPublishDirectly={canPublishDirectly(role)}
+        canPublishDirectly={canPublish}
         promoteIdea={promoteIdea && !editPost ? serializeIdea(promoteIdea) : null}
         editPost={editPost}
         editError={editError}

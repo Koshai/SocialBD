@@ -65,6 +65,7 @@ export const auth = betterAuth({
   trustedOrigins,
   plugins: [
     organization({
+      creatorRole: "owner",
       requireEmailVerificationOnInvitation: true,
       async sendInvitationEmail(data) {
         const inviterName =

@@ -1,10 +1,10 @@
 import { WorkspaceSettings } from "@/components/organization/workspace-settings";
 import { requireActiveOrganization } from "@/lib/dashboard-session";
-import { canPublishDirectly, getMemberRoleForUser } from "@/lib/organization-roles";
+import { resolveCanPublishDirectly } from "@/lib/organization-roles";
 
 export default async function SettingsPage() {
   const { organizationId, userId } = await requireActiveOrganization();
-  const role = await getMemberRoleForUser(userId, organizationId);
+  const canInvite = await resolveCanPublishDirectly(userId, organizationId);
 
-  return <WorkspaceSettings canInvite={canPublishDirectly(role)} />;
+  return <WorkspaceSettings canInvite={canInvite} />;
 }

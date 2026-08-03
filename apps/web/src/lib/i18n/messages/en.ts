@@ -558,8 +558,24 @@ export const en = {
     statusOff: "Paused",
     edit: "Edit",
     activityTitle: "Recent inbox activity",
-    activityDesc: "Incoming messages and replies from this workspace.",
-    noActivity: "No inbox events yet.",
+    activityDesc: "Log of DMs and comments this agent answered (current workspace only). Refresh after testing.",
+    noActivity:
+      "No logged events yet for this workspace. Send a DM, wait a few seconds, then refresh. Events only appear after the webhook stores them.",
+    activityRefresh: "Refresh activity",
+    activityIncoming: "Customer",
+    activityReply: "Agent reply",
+    activityStatus: {
+      pending: "Pending",
+      processing: "Processing",
+      replied: "Replied",
+      failed: "Failed",
+      skipped: "Skipped",
+    },
+    activityType: {
+      messenger: "Messenger / DM",
+      comment: "Comment",
+      mention: "Mention",
+    },
   },
   home: {
     featuresHeading: "Platform features",

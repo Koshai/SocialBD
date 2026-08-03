@@ -101,8 +101,33 @@ export function AgentsWorkspace() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load only
+    const timer = window.setInterval(() => {
+      void load();
+    }, 20_000);
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll activity while page is open
   }, []);
+
+  function statusLabel(status: string) {
+    const key = `agents.activityStatus.${status}`;
+    const translated = t(key);
+    return translated === key ? status : translated;
+  }
+
+  function typeLabel(eventType: string) {
+    const key = `agents.activityType.${eventType}`;
+    const translated = t(key);
+    return translated === key ? eventType : translated;
+  }
+
+  function formatWhen(value: string) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(date);
+  }
 
   const selectedTemplate = useMemo(
     () => data?.templates.find((item) => item.id === templateId) ?? null,
@@ -377,22 +402,38 @@ export function AgentsWorkspace() {
           </Card>
 
           <Card>
-            <CardTitle>{t("agents.activityTitle")}</CardTitle>
-            <CardDescription>{t("agents.activityDesc")}</CardDescription>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle>{t("agents.activityTitle")}</CardTitle>
+                <CardDescription>{t("agents.activityDesc")}</CardDescription>
+              </div>
+              <Button type="button" variant="secondary" onClick={() => void load()}>
+                {t("agents.activityRefresh")}
+              </Button>
+            </div>
             <ul className="mt-4 max-h-96 space-y-3 overflow-y-auto">
               {data.events.length === 0 ? (
                 <li className="text-sm text-muted">{t("agents.noActivity")}</li>
               ) : (
                 data.events.map((event) => (
                   <li key={event.id} className="rounded-xl border border-border px-3 py-3 text-sm">
-                    <p className="font-medium">
-                      {event.eventType} · {event.status}
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-medium">
+                        {typeLabel(event.eventType)} · {statusLabel(event.status)}
+                      </p>
+                      <span className="text-xs text-muted">{formatWhen(event.createdAt)}</span>
+                    </div>
                     {event.incomingText ? (
-                      <p className="mt-1 text-muted line-clamp-2">{event.incomingText}</p>
+                      <p className="mt-2 text-muted">
+                        <span className="font-medium text-foreground">{t("agents.activityIncoming")}: </span>
+                        <span className="line-clamp-3 whitespace-pre-wrap">{event.incomingText}</span>
+                      </p>
                     ) : null}
                     {event.replyText ? (
-                      <p className="mt-1 text-foreground line-clamp-2">{event.replyText}</p>
+                      <p className="mt-1 text-foreground">
+                        <span className="font-medium">{t("agents.activityReply")}: </span>
+                        <span className="line-clamp-3 whitespace-pre-wrap">{event.replyText}</span>
+                      </p>
                     ) : null}
                     {event.error ? <p className="mt-1 text-xs text-red-700">{event.error}</p> : null}
                   </li>

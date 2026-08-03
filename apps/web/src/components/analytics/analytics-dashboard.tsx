@@ -103,17 +103,34 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">{t("analytics.sourceNoteHandoff")}</p>
+        <p className="text-sm text-muted">{t("analytics.sourceNote")}</p>
         <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => void refresh()}>
           {pending ? t("analytics.refreshing") : t("analytics.refresh")}
         </Button>
       </div>
 
-      <Card>
-        <CardTitle className="text-base">{t("analytics.published")}</CardTitle>
-        <p className="mt-2 text-3xl font-bold">{formatNumber(totals.publishedPosts)}</p>
-        <CardDescription>{t("analytics.publishedDesc")}</CardDescription>
-      </Card>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card>
+          <CardTitle className="text-base">{t("analytics.published")}</CardTitle>
+          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.publishedPosts)}</p>
+          <CardDescription>{t("analytics.publishedDesc")}</CardDescription>
+        </Card>
+        <Card>
+          <CardTitle className="text-base">{t("analytics.engagement")}</CardTitle>
+          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.engagement)}</p>
+          <CardDescription>{t("analytics.engagementDesc")}</CardDescription>
+        </Card>
+        <Card>
+          <CardTitle className="text-base">{t("analytics.impressions")}</CardTitle>
+          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.impressions)}</p>
+          <CardDescription>{t("analytics.impressionsDesc")}</CardDescription>
+        </Card>
+        <Card>
+          <CardTitle className="text-base">{t("analytics.commentsCard")}</CardTitle>
+          <p className="mt-2 text-3xl font-bold">{formatNumber(totals.comments)}</p>
+          <CardDescription>{t("analytics.commentsDesc")}</CardDescription>
+        </Card>
+      </section>
 
       {channels.length === 0 ? (
         <Card>
@@ -153,6 +170,9 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
                         <dd className="font-semibold">{formatNumber(channel.followers)}</dd>
                       </div>
                     </dl>
+                    {channel.error ? (
+                      <p className="mt-2 text-xs text-red-600 line-clamp-2">{channel.error}</p>
+                    ) : null}
                   </button>
                 );
               })}
@@ -183,6 +203,27 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
                         <span className="text-xs text-muted">{formatWhen(post.publishedAt)}</span>
                       </div>
                       <p className="mt-2 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
+                      {post.error ? (
+                        <p className="mt-2 text-xs text-red-600">{post.error}</p>
+                      ) : post.platform === "facebook_page" ? (
+                        <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
+                          <span>
+                            {formatNumber(post.reactions)} {t("common.reactions")}
+                          </span>
+                          <span>
+                            {formatNumber(post.comments)} {t("common.comments")}
+                          </span>
+                          <span>
+                            {formatNumber(post.shares)} {t("common.shares")}
+                          </span>
+                          <span>
+                            {formatNumber(post.impressions)} {t("common.impressions")}
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {formatNumber(post.engagement)} {t("analytics.engagement").toLowerCase()}
+                          </span>
+                        </div>
+                      ) : null}
                       <PlatformPostLink
                         postId={post.id}
                         platform={post.platform}

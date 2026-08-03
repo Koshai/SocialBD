@@ -562,8 +562,25 @@ export const bn: Messages = {
     statusOff: "বন্ধ",
     edit: "এডিট",
     activityTitle: "সাম্প্রতিক ইনবক্স",
-    activityDesc: "এই ওয়ার্কস্পেসের ইনকামিং মেসেজ ও রিপ্লাই।",
-    noActivity: "এখনও কোনো ইনবক্স ইভেন্ট নেই।",
+    activityDesc:
+      "এই এজেন্ট যে ডিএম/কমেন্টের উত্তর দিয়েছে তার লগ (শুধু বর্তমান ওয়ার্কস্পেস)। টেস্টের পর রিফ্রেশ করুন।",
+    noActivity:
+      "এই ওয়ার্কস্পেসে এখনও লগ নেই। ডিএম পাঠান, কয়েক সেকেন্ড অপেক্ষা করে রিফ্রেশ করুন। ওয়েবহুক সেভ করলেই দেখাবে।",
+    activityRefresh: "অ্যাক্টিভিটি রিফ্রেশ",
+    activityIncoming: "গ্রাহক",
+    activityReply: "এজেন্টের উত্তর",
+    activityStatus: {
+      pending: "পেন্ডিং",
+      processing: "প্রসেসিং",
+      replied: "উত্তর দিয়েছে",
+      failed: "ব্যর্থ",
+      skipped: "এড়িয়ে গেছে",
+    },
+    activityType: {
+      messenger: "মেসেঞ্জার / ডিএম",
+      comment: "কমেন্ট",
+      mention: "ম্যানশন",
+    },
   },
   home: {
     featuresHeading: "প্ল্যাটফর্ম বৈশিষ্ট্য",

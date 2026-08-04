@@ -20,6 +20,7 @@
     "db:migrate:workspace-gallery": "pnpm --filter @socialbd/db db:migrate:workspace-gallery",
     "db:migrate:all": "pnpm --filter @socialbd/db db:migrate:all",
     "db:promote-owners": "pnpm --filter @socialbd/db db:promote-owners",
+    "db:create-test-user": "pnpm --filter @socialbd/db db:create-test-user",
     "start:web": "pnpm --filter @socialbd/web start",
     "start:worker": "pnpm --filter @socialbd/worker start",
     "build:web": "pnpm --filter @socialbd/web build",

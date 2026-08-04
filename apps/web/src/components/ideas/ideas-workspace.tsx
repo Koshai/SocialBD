@@ -99,9 +99,17 @@ export function IdeasWorkspace({
     setError(null);
   }, [status, campaignId, tagId, t]);
 
+  // SSR loads status=brainstorm + all campaigns/tags — skip first duplicate fetch.
+  const [filtersReady, setFiltersReady] = useState(false);
   useEffect(() => {
+    if (!filtersReady) {
+      setFiltersReady(true);
+      if (status === "brainstorm" && campaignId === "all" && tagId === "all") {
+        return;
+      }
+    }
     void fetchIdeas();
-  }, [fetchIdeas]);
+  }, [fetchIdeas, filtersReady, status, campaignId, tagId]);
 
   function openCreate() {
     setTitle("");

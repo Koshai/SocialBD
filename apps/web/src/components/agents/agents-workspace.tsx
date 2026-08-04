@@ -62,19 +62,24 @@ type AgentsPayload = {
 
 const TONES = ["friendly", "professional", "concise"] as const;
 
-export function AgentsWorkspace() {
+export function AgentsWorkspace({ initialData = null }: { initialData?: AgentsPayload | null }) {
   const { t, locale } = usePreferences();
-  const [data, setData] = useState<AgentsPayload | null>(null);
+  const [data, setData] = useState<AgentsPayload | null>(initialData);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const [connectedAccountId, setConnectedAccountId] = useState("");
+  const [connectedAccountId, setConnectedAccountId] = useState(
+    () => initialData?.channels[0]?.id ?? "",
+  );
   const [templateId, setTemplateId] = useState("customer-support");
   const [name, setName] = useState("");
   const [language, setLanguage] = useState<"en" | "bn">("en");
   const [tone, setTone] = useState<(typeof TONES)[number]>("friendly");
-  const [systemPrompt, setSystemPrompt] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState(() => {
+    const tpl = initialData?.templates.find((item) => item.id === "customer-support");
+    return tpl?.systemPromptEn ?? "";
+  });
   const [replyMessenger, setReplyMessenger] = useState(true);
   const [replyComments, setReplyComments] = useState(true);
   const [requireMention, setRequireMention] = useState(true);
@@ -101,13 +106,26 @@ export function AgentsWorkspace() {
   }
 
   useEffect(() => {
-    void load();
-    const timer = window.setInterval(() => {
+    if (!initialData) {
       void load();
-    }, 20_000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
+
+  useEffect(() => {
+    const hasLiveWork =
+      Boolean(data?.agents.some((a) => a.enabled)) ||
+      Boolean(data?.events.some((e) => e.status === "pending" || e.status === "processing"));
+    if (!hasLiveWork) return;
+
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void load();
+    }, 30_000);
+
     return () => window.clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll activity while page is open
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.agents, data?.events]);
 
   function statusLabel(status: string) {
     const key = `agents.activityStatus.${status}`;

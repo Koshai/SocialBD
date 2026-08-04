@@ -36,6 +36,16 @@ export async function userBelongsToOrganization(userId: string, organizationId: 
   return Boolean(row);
 }
 
+export async function userHasAnyOrganization(userId: string) {
+  const [row] = await db
+    .select({ id: member.id })
+    .from(member)
+    .where(eq(member.userId, userId))
+    .limit(1);
+
+  return Boolean(row);
+}
+
 export async function getOrganizationMemberRole(
   userId: string,
   organizationId: string,

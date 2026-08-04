@@ -22,30 +22,29 @@ type ComposerPageProps = {
 export default async function ComposerPage({ searchParams }: ComposerPageProps) {
   const { organizationId, userId } = await requireActiveOrganization();
   const { ideaId, postId } = await searchParams;
-  const canPublish = await resolveCanPublishDirectly(userId, organizationId);
 
-  const promoteIdea =
-    ideaId && ideaId.trim() ? await getContentIdea(ideaId.trim(), organizationId) : null;
+  const [canPublish, promoteIdea, editDetail, channels, posts, scheduledCount, pendingApprovalCount] =
+    await Promise.all([
+      resolveCanPublishDirectly(userId, organizationId),
+      ideaId?.trim() ? getContentIdea(ideaId.trim(), organizationId) : Promise.resolve(null),
+      postId?.trim() ? getPostDetail(postId.trim(), organizationId) : Promise.resolve(null),
+      listConnectedAccounts(organizationId),
+      listPostsForOrganization(organizationId, 8),
+      countScheduledPosts(organizationId),
+      countPendingApprovalPosts(organizationId),
+    ]);
 
   let editPost = null;
   let editError: string | null = null;
   if (postId?.trim()) {
-    const detail = await getPostDetail(postId.trim(), organizationId);
-    if (!detail) {
+    if (!editDetail) {
       editError = "not_found";
-    } else if (!detail.canEdit) {
+    } else if (!editDetail.canEdit) {
       editError = "not_editable";
     } else {
-      editPost = toEditPostFormData(detail);
+      editPost = toEditPostFormData(editDetail);
     }
   }
-
-  const [channels, posts, scheduledCount, pendingApprovalCount] = await Promise.all([
-    listConnectedAccounts(organizationId),
-    listPostsForOrganization(organizationId, 8),
-    countScheduledPosts(organizationId),
-    countPendingApprovalPosts(organizationId),
-  ]);
 
   return (
     <div className="space-y-6">

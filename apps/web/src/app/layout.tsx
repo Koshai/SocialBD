@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Bengali } from "next/font/google";
+import { Geist, Noto_Sans_Bengali } from "next/font/google";
 
 import { PreferencesProvider } from "@/components/preferences/preferences-provider";
 import { getServerPreferences } from "@/lib/i18n/server";
@@ -11,16 +11,11 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 /** Bengali script (Bangla) — pairs with system/Avro keyboard input. */
 const notoSansBengali = Noto_Sans_Bengali({
   variable: "--font-noto-bengali",
   subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
   display: "swap",
 });
 
@@ -44,7 +39,7 @@ export default async function RootLayout({
       lang={locale}
       data-theme={theme}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSansBengali.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${notoSansBengali.variable} h-full antialiased`}
     >
       <head>
         {/* Inline bootstrap avoids next/script + React 19 "script tag while rendering" warning. */}

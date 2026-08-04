@@ -10,10 +10,8 @@ import { getMetaErrorMessage } from "@/lib/i18n/meta-error-message";
 import { getLinkedInErrorMessage } from "@/lib/linkedin/error-message";
 import type { TranslateFn } from "@/lib/i18n/translate";
 import { getPlatformLabel } from "@/lib/platform-labels";
-import { META_ANALYTICS_SCOPE, tokenHasScope } from "@/lib/meta/permissions";
 
 import { LinkedInSetupCard } from "./linkedin-setup-card";
-import { MetaPermissionCard } from "./meta-permission-card";
 import { MetaSetupCard } from "./meta-setup-card";
 
 type ConnectedAccountsPanelProps = {
@@ -43,7 +41,7 @@ export function ConnectedAccountsPanel({
   metaConfigured,
   linkedInEnabled,
   linkedInConfigured,
-  usesLoginConfig,
+  usesLoginConfig: _usesLoginConfig,
   atChannelLimit,
 }: ConnectedAccountsPanelProps) {
   const router = useRouter();
@@ -109,14 +107,6 @@ export function ConnectedAccountsPanel({
     <div className="space-y-6">
       {!metaConfigured ? <MetaSetupCard /> : null}
       {linkedInEnabled && !linkedInConfigured ? <LinkedInSetupCard /> : null}
-
-      {metaConfigured &&
-      accounts.some(
-        (account) =>
-          account.platform === "facebook_page" && !tokenHasScope(account.scopes, META_ANALYTICS_SCOPE),
-      ) ? (
-        <MetaPermissionCard usesLoginConfig={usesLoginConfig} />
-      ) : null}
 
       {banner ? (
         <p
@@ -186,6 +176,7 @@ export function ConnectedAccountsPanel({
             >
               <div className="flex items-center gap-3">
                 {account.pictureUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={account.pictureUrl}
                     alt=""
@@ -203,16 +194,8 @@ export function ConnectedAccountsPanel({
                   <p className="font-medium">{account.displayName}</p>
                   <p className="text-sm text-muted">
                     {getPlatformLabel(account.platform, t)}
-                    {account.username ? ` · ${account.username}` : null}
+                    {account.username ? ` · @${account.username.replace(/^@/, "").split("|")[0]}` : null}
                   </p>
-                  {account.platform === "facebook_page" && account.scopes ? (
-                    <p className="text-xs text-muted">
-                      {t("common.tokenScopes")}: {account.scopes}
-                      {!tokenHasScope(account.scopes, META_ANALYTICS_SCOPE)
-                        ? t("common.missingEngagementScope")
-                        : null}
-                    </p>
-                  ) : null}
                 </div>
               </div>
               <Button

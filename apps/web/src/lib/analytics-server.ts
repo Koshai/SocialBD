@@ -1,7 +1,6 @@
 import {
   MetaApiError,
   countPublishedPosts,
-  debugTokenScopes,
   fetchInstagramSummary,
   fetchPageSummary,
   fetchPostEngagement,
@@ -16,6 +15,24 @@ import type { AnalyticsSnapshot, ChannelAnalytics, PostAnalytics } from "./analy
 export type { AnalyticsSnapshot, ChannelAnalytics, PostAnalytics };
 
 const ANALYTICS_SCOPE = "pages_read_engagement";
+
+async function mapPool<T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>) {
+  if (items.length === 0) return [] as R[];
+  const results = new Array<R>(items.length);
+  let next = 0;
+
+  async function worker() {
+    while (next < items.length) {
+      const index = next;
+      next += 1;
+      results[index] = await fn(items[index]!);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
 
 /**
  * Channel list + per-post Graph metrics for Facebook Pages (when tokens allow).
@@ -38,29 +55,22 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
     warnings.push("Connect a Facebook Page or Instagram account under Accounts to see analytics.");
   }
 
+  // Use stored token scopes only (no debug_token round-trips per page).
   const pageScopeById = new Map<string, boolean>();
   let pagesMissingScope = 0;
   for (const account of facebookPages) {
-    let hasScope = tokenHasScope(account.scopes, ANALYTICS_SCOPE);
-    try {
-      const granted = await debugTokenScopes(account.accessToken);
-      hasScope = granted.includes(ANALYTICS_SCOPE);
-    } catch {
-      // Fall back to stored scope list from last connect.
-    }
+    const hasScope = tokenHasScope(account.scopes, ANALYTICS_SCOPE);
     pageScopeById.set(account.providerAccountId, hasScope);
     if (!hasScope) pagesMissingScope += 1;
   }
 
   if (pagesMissingScope > 0) {
     warnings.push(
-      "Analytics needs the pages_read_engagement permission on your Page token. Add it to your Meta Login configuration (or enable META_OAUTH_EXTENDED_SCOPES), then disconnect and reconnect each Page under Accounts — saving it in the app dashboard alone is not enough.",
+      "Some Pages are missing pages_read_engagement. Reconnect Facebook under Accounts if metrics look incomplete.",
     );
   }
 
-  const channels: ChannelAnalytics[] = [];
-
-  for (const account of socialAccounts) {
+  const channels: ChannelAnalytics[] = await mapPool(socialAccounts, 5, async (account) => {
     const publishedOnChannel = publishedPosts.filter(
       (post) => post.pageId === account.providerAccountId,
     ).length;
@@ -70,16 +80,16 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         account.platform === "instagram"
           ? await fetchInstagramSummary(account.providerAccountId, account.accessToken)
           : await fetchPageSummary(account.providerAccountId, account.accessToken);
-      channels.push({
+      return {
         id: account.id,
         displayName: summary.name?.trim() || account.displayName,
         platform: account.platform,
         pageId: account.providerAccountId,
         followers: summary.followers,
         publishedPosts: publishedOnChannel,
-      });
+      };
     } catch (error) {
-      channels.push({
+      return {
         id: account.id,
         displayName: account.displayName,
         platform: account.platform,
@@ -87,16 +97,15 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         followers: null,
         publishedPosts: publishedOnChannel,
         error: userMessageForMetaError(error),
-      });
+      };
     }
-  }
+  });
 
-  const posts: PostAnalytics[] = [];
   let permissionFailures = 0;
   let expiredFailures = 0;
   const permissionFailurePages = new Set<string>();
 
-  for (const row of publishedPosts) {
+  const posts: PostAnalytics[] = await mapPool(publishedPosts, 6, async (row) => {
     const base = {
       id: row.id,
       body: row.body,
@@ -108,7 +117,7 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
     };
 
     if (row.platform !== "facebook_page") {
-      posts.push({
+      return {
         ...base,
         reactions: 0,
         comments: 0,
@@ -119,8 +128,7 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
           row.platform === "instagram"
             ? "In-app engagement is available for Facebook Page posts. Open Instagram Insights on the platform."
             : undefined,
-      });
-      continue;
+      };
     }
 
     const hasEngagementScope = pageScopeById.get(row.pageId) ?? false;
@@ -133,14 +141,14 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
       );
       const engagement = metrics.reactions + metrics.comments + metrics.shares;
 
-      posts.push({
+      return {
         ...base,
         reactions: metrics.reactions,
         comments: metrics.comments,
         shares: metrics.shares,
         impressions: metrics.impressions,
         engagement,
-      });
+      };
     } catch (error) {
       if (error instanceof MetaApiError) {
         if (error.kind === "permission") {
@@ -152,7 +160,7 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
         if (error.kind === "expired") expiredFailures += 1;
       }
 
-      posts.push({
+      return {
         ...base,
         reactions: 0,
         comments: 0,
@@ -163,9 +171,9 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
           hasEngagementScope,
           channelName: row.channelName,
         }),
-      });
+      };
     }
-  }
+  });
 
   if (posts.some((item) => item.platform === "facebook_page" && item.impressions === null && !item.error)) {
     warnings.push(
@@ -173,10 +181,10 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
     );
   }
 
-  if (permissionFailures > 0 && !warnings.some((w) => w.includes("pages_read_engagement"))) {
+  if (permissionFailures > 0) {
     const pageList = [...permissionFailurePages].join(", ");
     warnings.push(
-      `${permissionFailures} post(s) on ${pageList}: Page token is missing pages_read_engagement. Reconnect that Page under Accounts after updating your Meta Login configuration.`,
+      `${permissionFailures} post(s) on ${pageList}: missing engagement permission. Reconnect Facebook under Accounts if needed.`,
     );
   }
 

@@ -129,14 +129,16 @@ Stack: **Caddy → Next.js (PM2)**. Gzip on. Lighthouse root server response **~
 3. Server timing for `buildAnalyticsSnapshot`  
 4. Re-run public Lighthouse after font/marketing wins  
 
-## Implementation order (this branch)
+## Implementation status (feature/perf-audit)
 
-1. WorkspaceGate + session dedupe  
-2. Calendar / ideas / agents poll & double-fetch  
-3. Parallel page data  
-4. Analytics concurrency / skeleton  
-5. Fonts + optional marketing static-ish shell  
+Shipped in subsequent commits on this branch:
 
-## Out of scope
-
-Alpine rewrite · Supabase · Smarter AI / consent (later track)  
+- [x] WorkspaceGate server bootstrap + React `cache()` session  
+- [x] Calendar skip SSR double-fetch; poll 15s + visibility  
+- [x] Ideas skip initial brainstorm fetch  
+- [x] Agents SSR seed; poll 30s only when live work  
+- [x] Composer / approvals parallel awaits  
+- [x] Analytics concurrent Graph + no debug_token  
+- [x] Remove Meta token scope / permission debug UI  
+- [x] Lighter fonts (drop Geist Mono, fewer Noto weights)  
+- [x] Caption client constants split from OpenAI server module  

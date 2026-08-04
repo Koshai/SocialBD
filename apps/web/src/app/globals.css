@@ -15,7 +15,7 @@
   --color-border: var(--sb-border);
   --font-sans: var(--font-geist-sans);
   --font-bengali: var(--font-noto-bengali);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --radius-lg: var(--sb-radius);
 }
 

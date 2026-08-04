@@ -1,12 +1,9 @@
 import { chatCompletion, type CaptionTone } from "./openai-client";
+import { type CaptionLanguage } from "./caption-brief";
 
 export type { CaptionTone } from "./openai-client";
-
-export type CaptionLanguage = "en" | "bn";
-
-export function isCaptionLanguage(value: string): value is CaptionLanguage {
-  return value === "en" || value === "bn";
-}
+export type { CaptionLanguage } from "./caption-brief";
+export { defaultCaptionBrief, isCaptionLanguage } from "./caption-brief";
 
 const TONE_HINTS: Record<CaptionTone, string> = {
   casual: "Friendly and conversational, suitable for Facebook in Bangladesh.",
@@ -18,15 +15,6 @@ const LANGUAGE_HINTS: Record<CaptionLanguage, string> = {
   en: "Write the caption in English.",
   bn: "Write the caption in Bangla (Bengali script). Do not transliterate into English letters.",
 };
-
-const DEFAULT_BRIEFS: Record<CaptionLanguage, string> = {
-  en: "A product update for our Facebook Page",
-  bn: "আমাদের ফেসবুক পেজের জন্য একটি পণ্য আপডেট",
-};
-
-export function defaultCaptionBrief(language: CaptionLanguage) {
-  return DEFAULT_BRIEFS[language];
-}
 
 export async function generatePostCaption(input: {
   brief: string;

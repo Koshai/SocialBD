@@ -9,7 +9,7 @@ import {
   type PostSnapshotJson,
 } from "@/lib/posts-api";
 
-const POLL_INTERVAL_MS = 4_000;
+const POLL_INTERVAL_MS = 8_000;
 
 export function usePostsSnapshot(initial: PostSnapshot) {
   const [snapshot, setSnapshot] = useState(initial);
@@ -32,6 +32,7 @@ export function usePostsSnapshot(initial: PostSnapshot) {
     let cancelled = false;
 
     async function refresh() {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       setIsPolling(true);
       try {
         const response = await fetch("/api/posts", { cache: "no-store" });
@@ -49,10 +50,15 @@ export function usePostsSnapshot(initial: PostSnapshot) {
 
     void refresh();
     const intervalId = window.setInterval(() => void refresh(), POLL_INTERVAL_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [hasPending]);
 

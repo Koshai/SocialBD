@@ -30,7 +30,7 @@ import { PostDetailModal, type PostDetailJson } from "@/components/posts/post-de
 import { getPostStatusLabel } from "@/lib/i18n/post-status";
 import { getPlatformLabel } from "@/lib/platform-labels";
 
-const POLL_INTERVAL_MS = 4_000;
+const POLL_INTERVAL_MS = 15_000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 type CalendarView = "week" | "month";
@@ -138,9 +138,18 @@ export function PublishingCalendar({
     setScheduledCount(parsed.scheduledCount);
   }, [range.from, range.to]);
 
+  // Skip first fetch when still on the SSR week (avoids double-load). Refetch on range/view change.
+  const [rangeReady, setRangeReady] = useState(false);
   useEffect(() => {
+    if (!rangeReady) {
+      const ssrWeek = new Date(initialWeekStart).getTime();
+      const stillSsrWeek =
+        view === "week" && Math.abs(startOfWeek(anchor).getTime() - ssrWeek) < 1000;
+      setRangeReady(true);
+      if (stillSsrWeek) return;
+    }
     void fetchRange();
-  }, [fetchRange]);
+  }, [fetchRange, rangeReady, view, anchor, initialWeekStart]);
 
   useEffect(() => {
     if (!hasScheduled) return;
@@ -148,6 +157,7 @@ export function PublishingCalendar({
     let cancelled = false;
 
     async function tick() {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       setIsPolling(true);
       try {
         await fetchRange();
@@ -156,11 +166,15 @@ export function PublishingCalendar({
       }
     }
 
-    void tick();
     const intervalId = window.setInterval(() => void tick(), POLL_INTERVAL_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void tick();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [hasScheduled, fetchRange]);
 

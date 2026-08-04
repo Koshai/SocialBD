@@ -15,6 +15,8 @@ type DashboardShellProps = {
   title: string;
   description?: string;
   agentsEnabled?: boolean;
+  hasActiveOrganization?: boolean;
+  hasAnyOrganization?: boolean;
   children: React.ReactNode;
 };
 
@@ -23,6 +25,8 @@ export function DashboardShell({
   title,
   description,
   agentsEnabled = false,
+  hasActiveOrganization = false,
+  hasAnyOrganization = false,
   children,
 }: DashboardShellProps) {
   return (
@@ -35,7 +39,12 @@ export function DashboardShell({
         <MobileNav agentsEnabled={agentsEnabled} />
         <DashboardHeader user={user} title={title} description={description} />
         <main id="dashboard-main" className="flex-1 px-4 py-6 sm:px-6">
-          <WorkspaceGate>{children}</WorkspaceGate>
+          <WorkspaceGate
+            hasActiveOrganization={hasActiveOrganization}
+            hasAnyOrganization={hasAnyOrganization}
+          >
+            {children}
+          </WorkspaceGate>
         </main>
       </div>
     </div>

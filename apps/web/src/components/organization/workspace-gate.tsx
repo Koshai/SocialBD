@@ -8,7 +8,18 @@ import { authClient } from "@/lib/auth-client";
 
 import { CreateWorkspaceForm } from "./create-workspace-form";
 
-export function WorkspaceGate({ children }: { children: React.ReactNode }) {
+type WorkspaceGateProps = {
+  children: React.ReactNode;
+  /** From server session — paint content without waiting on client org hooks. */
+  hasActiveOrganization?: boolean;
+  hasAnyOrganization?: boolean;
+};
+
+export function WorkspaceGate({
+  children,
+  hasActiveOrganization = false,
+  hasAnyOrganization = false,
+}: WorkspaceGateProps) {
   const { t } = usePreferences();
   const pathname = usePathname();
   const router = useRouter();
@@ -21,6 +32,11 @@ export function WorkspaceGate({ children }: { children: React.ReactNode }) {
 
     void authClient.organization.setActive({ organizationId: first.id }).then(() => router.refresh());
   }, [organizations, activeOrganization, router]);
+
+  // Prefer server bootstrap: users with a workspace never wait on client org list.
+  if (hasActiveOrganization || hasAnyOrganization) {
+    return children;
+  }
 
   if (isPending) {
     return (

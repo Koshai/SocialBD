@@ -40,6 +40,10 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
             Privacy Policy
           </Link>
           {" · "}
+          <Link href="/terms" className="hover:text-foreground">
+            Terms of Service
+          </Link>
+          {" · "}
           <Link href="/" className="hover:text-foreground">
             Home
           </Link>

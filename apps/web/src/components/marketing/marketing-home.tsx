@@ -81,6 +81,10 @@ export function MarketingHome() {
           <Link href="/privacy" className="hover:text-foreground">
             Privacy Policy
           </Link>
+          {" · "}
+          <Link href="/terms" className="hover:text-foreground">
+            Terms of Service
+          </Link>
         </p>
         <p className="mt-2">© {new Date().getFullYear()} QueueOra</p>
       </footer>

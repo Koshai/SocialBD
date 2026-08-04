@@ -3,18 +3,17 @@ export function getLegalEntityName() {
   return process.env.LEGAL_ENTITY_NAME?.trim() || "QueueOra";
 }
 
+/**
+ * Contact address shown on the privacy policy and for Meta app review forms.
+ * Prefer PRIVACY_CONTACT_EMAIL when set; do not fall back to EMAIL_FROM
+ * (often a no-reply sender).
+ */
 export function getPrivacyContactEmail() {
   const direct = process.env.PRIVACY_CONTACT_EMAIL?.trim();
   if (direct) return direct;
 
-  const from = process.env.EMAIL_FROM?.trim();
-  if (from) {
-    const match = /<([^>]+)>/.exec(from);
-    if (match?.[1]) return match[1];
-    if (from.includes("@")) return from;
-  }
-
-  return "privacy@queueora.com";
+  // Temporary operator email until privacy@queueora.com is provisioned.
+  return "syed.r.akbar@gmail.com";
 }
 
 export function getPublicSiteUrl() {

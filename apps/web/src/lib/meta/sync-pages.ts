@@ -2,7 +2,6 @@ import {
   assertChannelCapacity,
   countNewMetaConnections,
   debugTokenScopes,
-  subscribeInstagramToApp,
   subscribePageToApp,
   upsertFacebookPageAccount,
   upsertInstagramAccount,
@@ -10,6 +9,17 @@ import {
 
 import { exchangeForLongLivedToken, fetchFacebookPages } from "./client";
 import { getMetaScopeString, isMetaMessagingOAuthEnabled } from "./scopes";
+
+function formatPageSubscribeError(pageId: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("#200") || /administrative permission|Two Factor/i.test(message)) {
+    return (
+      `[meta] Page ${pageId}: cannot enable message webhooks — the connecting user needs full Page admin ` +
+      `(MESSAGING / MANAGE) and 2FA on that Facebook account if the Page requires it. ${message}`
+    );
+  }
+  return `[meta] Could not subscribe page ${pageId} to webhooks: ${message}`;
+}
 
 export async function syncFacebookPagesForOrganization(input: {
   organizationId: string;
@@ -26,6 +36,8 @@ export async function syncFacebookPagesForOrganization(input: {
   await assertChannelCapacity(input.organizationId, await countNewMetaConnections(input.organizationId, pages));
   const requestedScopes = getMetaScopeString();
   let instagramCount = 0;
+  let pagesSubscribed = 0;
+  let pagesSubscribeFailed = 0;
 
   for (const page of pages) {
     let scopes = requestedScopes;
@@ -53,11 +65,10 @@ export async function syncFacebookPagesForOrganization(input: {
           pageId: page.id,
           pageAccessToken: page.access_token,
         });
+        pagesSubscribed += 1;
       } catch (error) {
-        console.warn(
-          `[meta] Could not subscribe page ${page.id} to webhooks:`,
-          error instanceof Error ? error.message : error,
-        );
+        pagesSubscribeFailed += 1;
+        console.warn(formatPageSubscribeError(page.id, error));
       }
     }
 
@@ -75,21 +86,17 @@ export async function syncFacebookPagesForOrganization(input: {
         tokenExpiresAt,
         scopes,
       });
-
-      if (isMetaMessagingOAuthEnabled()) {
-        try {
-          await subscribeInstagramToApp({
-            igUserId: ig.id,
-            pageAccessToken: page.access_token,
-          });
-        } catch (error) {
-          console.warn(
-            `[meta] Could not subscribe Instagram ${ig.id} to webhooks:`,
-            error instanceof Error ? error.message : error,
-          );
-        }
-      }
     }
+  }
+
+  if (isMetaMessagingOAuthEnabled() && instagramCount > 0) {
+    // Instagram messaging webhooks are configured only in Meta App Dashboard, not Graph API.
+    console.info(
+      `[meta] ${instagramCount} Instagram account(s) linked. ` +
+        `For IG DMs: Meta App Dashboard → Webhooks → Instagram → subscribe "messages" ` +
+        `(callback https://queueora.com/api/meta/webhook). ` +
+        `Page subscriptions: ${pagesSubscribed} ok, ${pagesSubscribeFailed} failed.`,
+    );
   }
 
   return { pageCount: pages.length, instagramCount };

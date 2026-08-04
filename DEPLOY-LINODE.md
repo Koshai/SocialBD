@@ -188,18 +188,24 @@ Caddy gets Let’s Encrypt certificates automatically once DNS points here.
 
 ### AI reply agents (optional)
 
-1. In Meta Developer → your app → Webhooks, add callback `https://queueora.com/api/meta/webhook` and your verify token.
-2. Subscribe to Page fields: `messages`, `feed`, `mention` (plus Instagram messaging fields if used).
-3. On the Linode `.env` set:
+1. In Meta Developer → your app → **Webhooks**:
+   - Callback: `https://queueora.com/api/meta/webhook` + verify token matching `META_WEBHOOK_VERIFY_TOKEN`
+   - Object **Page**: subscribe `messages`, `feed`, `mention`
+   - Object **Instagram** (required for IG DMs): subscribe **`messages`**
+     - Meta does **not** allow Graph API `/ig-id/subscribed_apps` for messaging; dashboard-only
+2. On the Linode `.env` set:
    - `NEXT_PUBLIC_AGENTS_ENABLED=true`
    - `META_OAUTH_MESSAGING=true`
+   - `META_OAUTH_INSTAGRAM=true` (for IG scopes + follower counts)
    - `META_WEBHOOK_VERIFY_TOKEN=...` (same as Meta)
    - `OPENAI_API_KEY=...`
-4. Rebuild/restart web + worker, run `pnpm db:migrate:all` (includes `0008_reply_agents.sql`).
-5. Reconnect Facebook in QueueOra Accounts so messaging scopes are granted and Pages subscribe to the app.
-6. Open **Agents** in the dashboard, pick a template, enable the agent.
+3. Rebuild/restart web + worker, run `pnpm db:migrate:all` (includes `0008_reply_agents.sql`).
+4. Reconnect Facebook in QueueOra Accounts so messaging scopes are granted and **each Page** gets `subscribed_apps` with `messages`.
+   - Errors with `#200` / admin permission / 2FA: that Page will not receive webhooks until the connecting user is a full Page admin with 2FA (if the Page requires it).
+5. Open **Agents** in the dashboard, enable an agent on the **Instagram** channel (or linked Page).
+6. Test IG DMs from a **personal** Instagram account (not the business account talking to itself).
 
-Production messaging scopes usually need Meta App Review (`pages_messaging`, `pages_manage_engagement`, Instagram message/comment permissions).
+Production messaging scopes usually need Meta App Review (`pages_messaging`, `pages_manage_metadata`, `instagram_manage_messages`, etc.).
 
 ## 11. Smoke test
 

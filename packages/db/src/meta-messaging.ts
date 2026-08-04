@@ -86,7 +86,15 @@ export async function replyToComment(input: {
   );
 }
 
-/** Subscribe the Page to webhook fields needed for agents. */
+/**
+ * Subscribe the Facebook Page to webhook fields for agents (Messenger + feed).
+ *
+ * Instagram DMs for Page-linked IG accounts are enabled by:
+ * 1) Successful Page `subscribed_apps` with `messages` (this call), and
+ * 2) App Dashboard → Webhooks → object **Instagram** → subscribe **messages**
+ *    (cannot be done via Graph API — Meta returns capability error #3 on
+ *    `/{ig-user-id}/subscribed_apps` for messaging apps).
+ */
 export async function subscribePageToApp(input: {
   pageId: string;
   pageAccessToken: string;
@@ -100,23 +108,6 @@ export async function subscribePageToApp(input: {
         "feed",
         "mention",
       ].join(","),
-    },
-    input.pageAccessToken,
-  );
-}
-
-/**
- * Subscribe the Instagram professional account so Meta delivers `object: "instagram"`
- * message webhooks (Page subscription alone is not always enough).
- */
-export async function subscribeInstagramToApp(input: {
-  igUserId: string;
-  pageAccessToken: string;
-}) {
-  return graphPost<{ success?: boolean }>(
-    `/${input.igUserId}/subscribed_apps`,
-    {
-      subscribed_fields: ["messages", "messaging_postbacks", "comments", "mentions"].join(","),
     },
     input.pageAccessToken,
   );

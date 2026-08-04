@@ -2,6 +2,7 @@ import {
   MetaApiError,
   countPublishedPosts,
   debugTokenScopes,
+  fetchInstagramSummary,
   fetchPageSummary,
   fetchPostEngagement,
   listConnectedAccountsWithTokens,
@@ -65,7 +66,10 @@ export async function buildAnalyticsSnapshot(organizationId: string): Promise<An
     ).length;
 
     try {
-      const summary = await fetchPageSummary(account.providerAccountId, account.accessToken);
+      const summary =
+        account.platform === "instagram"
+          ? await fetchInstagramSummary(account.providerAccountId, account.accessToken)
+          : await fetchPageSummary(account.providerAccountId, account.accessToken);
       channels.push({
         id: account.id,
         displayName: summary.name?.trim() || account.displayName,

@@ -358,3 +358,27 @@ export async function fetchPageSummary(pageId: string, pageAccessToken: string) 
     followers,
   } satisfies PageSummaryMetrics;
 }
+
+type InstagramSummaryResponse = {
+  name?: string;
+  username?: string;
+  followers_count?: number;
+};
+
+/**
+ * IG professional accounts expose followers_count, not Page fan_count.
+ * Calling fetchPageSummary with an IG id fails or returns empty fans.
+ */
+export async function fetchInstagramSummary(igUserId: string, pageAccessToken: string) {
+  const data = await graphGet<InstagramSummaryResponse>(`/${igUserId}`, {
+    access_token: pageAccessToken,
+    fields: "name,username,followers_count",
+  });
+
+  const handle = data.username ? `@${data.username}` : null;
+
+  return {
+    name: data.name?.trim() || handle || "Instagram",
+    followers: data.followers_count ?? null,
+  } satisfies PageSummaryMetrics;
+}

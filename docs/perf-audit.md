@@ -1,7 +1,7 @@
 # Performance audit — QueueOra web (`apps/web`)
 
 Branch: `feature/perf-audit`  
-Date: 2026-08-03  
+Date: 2026-08-03 (code) · 2026-08-04 (production)  
 Scope: feel-faster for dashboard users. Worker out of scope. No code changes yet.
 
 ## Verdict
@@ -17,71 +17,126 @@ Client bundle bloat is mild (no chart libs, full OpenAI SDK, etc.). The main iss
 
 Alpine/rewrite would not address these better than targeted Next fixes.
 
+**Production (`queueora.com`):** Public marketing already scores well in lab Lighthouse (~95). Most remaining user-perceived slowness is almost certainly **logged-in dashboard** paths, not the homepage.
+
 ---
 
-## Ranked findings
+## Production audit — https://queueora.com (2026-08-04)
+
+Measured externally (no login cookies): document timing + asset weights + Lighthouse home.
+
+### Latency (document HTML)
+
+| URL | Status | ~ms cold/sample | ~ms warm | HTML size | Cache-Control |
+|-----|--------|-----------------|----------|-----------|---------------|
+| `/` | 200 | ~250 | ~80 | ~15 KB | `private, no-cache, no-store` |
+| `/login` | 200 | ~70 | ~60 | ~17 KB | same |
+| `/signup` | 200 | ~65 | — | ~17 KB | same |
+| `/privacy` | 200 | ~90 | ~100 | ~36 KB | same |
+| `/terms` | 200 | ~85 | — | ~37 KB | same |
+| `/dashboard` (logged out) | **307** → auth | ~85 | — | login shell | same |
+| Meta webhook unauth | 403 | expected | — | — | — |
+
+Stack: **Caddy → Next.js (PM2)**. Gzip on. Lighthouse root server response **~20 ms** (good).
+
+### First-load assets
+
+**Home**
+
+- ~12 `/_next/static` files in HTML  
+- ~**765 KB** raw JS+CSS sum (browser compresses further)  
+- Largest chunks ~222 / 138 / 110 KB  
+- Static: `public, max-age=31536000, immutable`  
+
+**Login**
+
+- ~**804 KB** raw static sum (similar + auth form chunks)
+
+**Fonts (preloaded)**
+
+- 4 × woff2 ≈ **181 KB** total (~105 + 25 + 23 + 29)  
+- Matches multi-family / multi-weight preload (Geist + Noto)
+
+### Lighthouse (headless, home only)
+
+| Metric | Result |
+|--------|--------|
+| Performance score | **~95** |
+| FCP | ~0.8 s |
+| LCP | ~2.9 s (softest vitals metric) |
+| TBT | ~60 ms |
+| CLS | 0 |
+| TTI | ~2.9 s |
+| Payload (LH) | ~398 KiB total weight path |
+| Opportunity | Unused JS ~29 KiB |
+
+### Production conclusions
+
+| Finding | Severity |
+|---------|----------|
+| HTML always `no-store` (dynamic root prefs/cookies) | Low for app; medium for marketing caching |
+| ~0.75 MB raw JS on public pages | Medium — can slim marketing client shell |
+| Font preload ~181 KB | Medium — LCP candidate |
+| Gzip + immutable static + low TTFB | Good |
+| Unauth `/dashboard` → 307 login | Correct |
+| **Logged-in dashboard not measured live** | Highest remaining gap (manual / auth Lighthouse) |
+
+### How to re-check logged-in live
+
+1. Log in at https://queueora.com/login  
+2. Network hard-reload `/dashboard` — count org/session calls before main  
+3. Lighthouse on `/dashboard`, `/dashboard/composer`, `/dashboard/analytics`  
+4. Calendar with scheduled posts — expect `/api/posts/calendar` every ~4s today  
+
+---
+
+## Ranked findings (codebase)
 
 ### HIGH impact · LOW effort
 
 | # | Issue | Evidence | User impact |
 |---|--------|----------|-------------|
-| 1 | **WorkspaceGate** waits on client org list before showing main content | `workspace-gate.tsx`, `dashboard-shell.tsx` | Spinner even when server already knows active org |
-| 2 | **Session fetched multiple times** per request (layout + page + home) | `dashboard/layout.tsx`, `dashboard-session.ts`, `dashboard-home.tsx` | Extra auth DB work every navigation |
-| 3 | **Calendar** re-fetches after SSR + **4s poll** if any scheduled post exists | `publishing-calendar.tsx` | Continuous network load; needless double load |
-| 4 | **Ideas** SSR then immediate client `fetchIdeas` | `ideas-workspace.tsx` | Waste + flicker |
-| 5 | **Agents** pure CSR + **20s** poll always | `agents/page.tsx`, `agents-workspace.tsx` | Empty shell then load; background chatter |
-| 6 | Composer / approvals **sequential awaits** before parallel data | `composer/page.tsx`, `approvals/page.tsx` | Slightly higher TTFB |
-| 7 | Root **cookies()** → all routes dynamic incl. marketing | `app/layout.tsx` | Marketing never static |
+| 1 | **WorkspaceGate** waits on client org list before main | `workspace-gate.tsx`, `dashboard-shell.tsx` | Spinner despite active org |
+| 2 | **Session 2–3×** per nav | layout + `dashboard-session` + home | Extra auth DB work |
+| 3 | **Calendar** SSR refetch + 4s poll | `publishing-calendar.tsx` | Constant network |
+| 4 | **Ideas** SSR then client refetch | `ideas-workspace.tsx` | Waste / flicker |
+| 5 | **Agents** CSR + 20s poll | `agents/*` | Empty then load |
+| 6 | Composer / approvals serial awaits | page servers | Slight TTFB |
+| 7 | Root `cookies()` → all dynamic | `app/layout.tsx` | Marketing never static |
 
 ### HIGH impact · MEDIUM effort
 
 | # | Issue | Notes |
 |---|--------|--------|
-| 8 | **Analytics** sequential Meta debug_token + channel summaries + up to 25 post metrics | `analytics-server.ts` — worst TTFB |
-| 9 | Full dashboard shell is client; **no** `loading.tsx`, no `next/dynamic` | Soft-nav waits with little feedback |
-| 10 | **Both** `en` + `bn` catalogs bundled via PreferencesProvider | ~78KB messages total |
-| 11 | `defaultCaptionBrief` imported from `openai-caption.ts` (pulls server client module graph) | Verify not in browser chunks; split constants |
-| 12 | 3 fonts; Noto 4 weights always | Slow first paint on mobile |
-
-### LOW impact
-
-- Raw `<img>` instead of `next/image` for avatars/previews  
-- Accounts `Suspense` wrapping already-awaited data  
-- No code-split for gallery/template pickers until open  
+| 8 | Analytics sequential Meta Graph | Worst TTFB |
+| 9 | Client shell; no `loading.tsx` / little dynamic import | Soft-nav lag feel |
+| 10 | EN + BN catalogs always via prefs | Extra client weight |
+| 11 | caption constants co-imported with openai path | Split constants |
+| 12 | Fonts / preloads | **Live ~181 KB** fonts |
 
 ### Already fine
 
-- Lean deps (no recharts/moment/lodash mega-kit)  
-- Many pages already use `Promise.all` for lists  
-- Composer/calendar/posts often SSR first  
-- Polling for publish status only when pending  
-- Small public gallery SVGs  
+- Lean deps; many `Promise.all` pages  
+- Gzip + long-cache static assets on prod  
+- Public Lighthouse ~95  
 
 ---
 
 ## Measurement plan
 
-1. **DevTools Network** on `/dashboard`: count better-auth org/session calls before main content  
-2. **Lighthouse** (logged-in): `/dashboard`, `/dashboard/analytics`, `/dashboard/composer`, `/dashboard/calendar` (with scheduled posts)  
-3. **`next build` + bundle analyzer**: confirm no `pg`/`bullmq`/`openai` api key path in client; locale catalogs  
-4. **Server timing**: log ms for `buildAnalyticsSnapshot` vs rest of dashboard  
+1. Logged-in Network + Lighthouse on dashboard routes  
+2. Bundle analyzer on build  
+3. Server timing for `buildAnalyticsSnapshot`  
+4. Re-run public Lighthouse after font/marketing wins  
 
----
+## Implementation order (this branch)
 
-## Proposed implementation order (next steps on this branch)
+1. WorkspaceGate + session dedupe  
+2. Calendar / ideas / agents poll & double-fetch  
+3. Parallel page data  
+4. Analytics concurrency / skeleton  
+5. Fonts + optional marketing static-ish shell  
 
-1. Unblock main when session already has `activeOrganizationId` (gate only if missing)  
-2. `cache()` / pass session+org from layout; remove redundant home session  
-3. Calendar: skip first client fetch when SSR matches; poll only focused + has active scheduled in range  
-4. Ideas: skip initial refetch; Agents: SSR seed + poll only when activity  
-5. Parallelize composer/approvals awaits  
-6. Analytics: concurrent Graph + skeleton first paint  
-7. Locales split / lighter fonts (as capacity allows)  
+## Out of scope
 
----
-
-## Not in scope for this track
-
-- Rewrite to Alpine  
-- Supabase  
-- Smarter AI / consent / style profiles (follow-up track)  
+Alpine rewrite · Supabase · Smarter AI / consent (later track)  

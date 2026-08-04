@@ -80,11 +80,22 @@ async function ingestEvent(input: {
   skipWithoutMention?: boolean;
 }) {
   const matched = await getEnabledAgentForMetaPageOrIg(input.pageOrIgId);
-  if (!matched) return;
+  if (!matched) {
+    console.info(
+      `[meta/webhook] No enabled agent for ${input.platform} id=${input.pageOrIgId} ` +
+        `event=${input.eventType} (deploy/enable agent on that channel, or reconnect Meta).`,
+    );
+    return;
+  }
 
   const { agent, account } = matched;
 
-  if (input.eventType === "messenger" && !agent.replyMessenger) return;
+  if (input.eventType === "messenger" && !agent.replyMessenger) {
+    console.info(
+      `[meta/webhook] Agent ${agent.id} has messenger replies disabled for ${input.pageOrIgId}`,
+    );
+    return;
+  }
   if ((input.eventType === "comment" || input.eventType === "mention") && !agent.replyComments) {
     return;
   }
@@ -112,6 +123,10 @@ async function ingestEvent(input: {
   });
 
   if (duplicate || !event) return;
+  console.info(
+    `[meta/webhook] Queued ${input.eventType} event ${event.id} for agent ${agent.id} ` +
+      `(${input.platform} ${input.pageOrIgId})`,
+  );
   await enqueueMetaInboxEvent(event.id);
 }
 
@@ -221,6 +236,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  const entryIds = (body.entry ?? []).map((e) => e.id).filter(Boolean);
+  const messagingItems =
+    body.entry?.reduce((n, e) => n + (e.messaging?.length ?? 0), 0) ?? 0;
+  console.info(
+    `[meta/webhook] POST object=${objectType} entries=${body.entry?.length ?? 0} ` +
+      `messagingItems=${messagingItems} ids=${entryIds.join(",") || "(none)"}`,
+  );
+
   try {
     for (const entry of body.entry ?? []) {
       await handleMessaging(objectType, entry);
@@ -228,17 +251,6 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error("[meta/webhook] Failed to process payload", error);
-  }
-
-  if (objectType === "instagram") {
-    const entries = body.entry?.length ?? 0;
-    const msgCount =
-      body.entry?.reduce((n, e) => n + (e.messaging?.length ?? 0), 0) ?? 0;
-    if (entries > 0 && msgCount === 0) {
-      console.info(
-        "[meta/webhook] Instagram payload with no text messaging items (may be echo/attachment/comment).",
-      );
-    }
   }
 
   // Always 200 quickly so Meta does not retry aggressively.

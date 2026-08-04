@@ -63,6 +63,15 @@ export const bn: Messages = {
     couldNotCreate: "অ্যাকাউন্ট তৈরি করা যায়নি।",
     invalidCredentials: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।",
     verifyHint: " ইনবক্সে যাচাইকরণ লিংক দেখুন, তারপর আবার চেষ্টা করুন।",
+    resendVerification: "যাচাইকরণ ইমেইল আবার পাঠান",
+    sendingVerification: "যাচাইকরণ পাঠানো হচ্ছে…",
+    resendSuccess:
+      "{email} এর জন্য যাচাই দরকার হলে নতুন লিংক পাঠানো হয়েছে। ইনবক্স ও স্প্যাম চেক করুন।",
+    resendFailed: "যাচাইকরণ ইমেইল পাঠানো যায়নি।",
+    resendNeedEmail: "আগে আপনার ইমেইল লিখুন।",
+    alreadyVerified: "এই ইমেইল ইতিমধ্যে যাচাই করা আছে। সাইন ইন করতে পারেন।",
+    accountCreatedButEmailFailed:
+      "অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু যাচাইকরণ ইমেইল পাঠানো যায়নি।",
     genericError: "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
     loading: "লোড হচ্ছে…",
   },

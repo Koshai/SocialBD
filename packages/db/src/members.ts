@@ -116,6 +116,31 @@ export async function ensureSoleMembersAreOwners(organizationId?: string) {
   return updated;
 }
 
+export async function getUserEmailVerificationState(email: string) {
+  const normalized = email.trim().toLowerCase();
+  const [found] = await db
+    .select({
+      id: user.id,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    })
+    .from(user)
+    .where(eq(user.email, normalized))
+    .limit(1);
+
+  if (found) return found;
+
+  // Case-insensitive fallback if legacy rows store mixed case
+  const all = await db
+    .select({
+      id: user.id,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    })
+    .from(user);
+  return all.find((row) => row.email.toLowerCase() === normalized) ?? null;
+}
+
 export async function promoteUserToOwnerByEmail(email: string) {
   const normalized = email.trim().toLowerCase();
   const [found] = await db

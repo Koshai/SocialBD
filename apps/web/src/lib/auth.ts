@@ -49,13 +49,12 @@ export const auth = betterAuth({
     schema,
   }),
   emailVerification: {
-    sendOnSignUp: true,
+    // Better Auth swallows send errors (runInBackgroundOrAwait). We send from the
+    // client via POST /api/auth/resend-verification so failures can surface.
+    sendOnSignUp: false,
     autoSignInAfterVerification: true,
     async sendVerificationEmail({ user, url }) {
-      // Do not await before returning (timing-attack guidance); fire-and-forget with logging on failure.
-      void sendEmailVerificationMessage({ email: user.email, url }).catch((error) => {
-        console.error("[QueueOra email:verification] Failed to send:", error);
-      });
+      await sendEmailVerificationMessage({ email: user.email, url });
     },
   },
   emailAndPassword: {

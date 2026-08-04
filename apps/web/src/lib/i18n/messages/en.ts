@@ -60,6 +60,15 @@ export const en = {
     couldNotCreate: "Could not create account.",
     invalidCredentials: "Invalid email or password.",
     verifyHint: " Check your inbox for the verification link, then try again.",
+    resendVerification: "Resend verification email",
+    sendingVerification: "Sending verification…",
+    resendSuccess:
+      "If an account for {email} needs verification, we sent a new link. Check inbox and spam.",
+    resendFailed: "Could not send verification email.",
+    resendNeedEmail: "Enter your email address first.",
+    alreadyVerified: "This email is already verified. You can sign in.",
+    accountCreatedButEmailFailed:
+      "Your account was created, but we could not send the verification email.",
     genericError: "Something went wrong. Please try again.",
     loading: "Loading…",
   },

@@ -11,6 +11,24 @@ import { authClient } from "@/lib/auth-client";
 
 type AuthMode = "login" | "signup";
 
+async function requestVerificationEmail(email: string, callbackURL: string) {
+  const response = await fetch("/api/auth/resend-verification", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, callbackURL }),
+  });
+  const data = (await response.json().catch(() => ({}))) as {
+    ok?: boolean;
+    error?: string;
+    message?: string;
+    alreadyVerified?: boolean;
+  };
+  if (!response.ok) {
+    throw new Error(data.error ?? "Could not send verification email.");
+  }
+  return data;
+}
+
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const { t } = usePreferences();
   const router = useRouter();
@@ -18,11 +36,44 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [resendPending, setResendPending] = useState(false);
+  const [lastEmail, setLastEmail] = useState("");
+  const [showResend, setShowResend] = useState(false);
 
   const isSignup = mode === "signup";
   const nextPath = searchParams.get("next");
   const redirectTo =
     nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
+
+  async function handleResend(emailOverride?: string) {
+    const email = (emailOverride ?? lastEmail).trim();
+    if (!email) {
+      setError(t("auth.resendNeedEmail"));
+      setShowResend(true);
+      return;
+    }
+
+    setError(null);
+    setNotice(null);
+    setResendPending(true);
+    setLastEmail(email);
+    try {
+      const data = await requestVerificationEmail(email, redirectTo);
+      if (data.alreadyVerified) {
+        setNotice(data.message ?? t("auth.alreadyVerified"));
+        setShowResend(false);
+      } else {
+        setNotice(data.message ?? t("auth.resendSuccess", { email }));
+        setShowResend(true);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t("auth.resendFailed");
+      setError(message);
+      setShowResend(true);
+    } finally {
+      setResendPending(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,6 +85,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
     const name = String(formData.get("name") ?? "");
+    setLastEmail(email);
 
     try {
       if (isSignup) {
@@ -49,12 +101,22 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           return;
         }
 
-        setNotice(
-          t("auth.verifyNotice", {
-            email,
-            inviteSuffix: nextPath ? t("auth.verifyNoticeInviteSuffix") : "",
-          }),
-        );
+        // Account created — send verification ourselves so Resend failures reach the UI.
+        try {
+          const data = await requestVerificationEmail(email, redirectTo);
+          setNotice(
+            data.message ??
+              t("auth.verifyNotice", {
+                email,
+                inviteSuffix: nextPath ? t("auth.verifyNoticeInviteSuffix") : "",
+              }),
+          );
+          setShowResend(true);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : t("auth.resendFailed");
+          setError(`${t("auth.accountCreatedButEmailFailed")} ${message}`);
+          setShowResend(true);
+        }
         return;
       }
 
@@ -68,6 +130,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         const message = result.error.message ?? t("auth.invalidCredentials");
         if (message.toLowerCase().includes("verif")) {
           setError(`${message}${t("auth.verifyHint")}`);
+          setShowResend(true);
         } else {
           setError(message);
         }
@@ -111,7 +174,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 type="text"
                 autoComplete="name"
                 required
-                disabled={pending}
+                disabled={pending || resendPending}
                 className="h-10 w-full rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
               />
             </label>
@@ -124,7 +187,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               type="email"
               autoComplete="email"
               required
-              disabled={pending}
+              disabled={pending || resendPending}
+              defaultValue={lastEmail}
+              onChange={(event) => setLastEmail(event.target.value)}
               className="h-10 w-full rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
             />
           </label>
@@ -137,7 +202,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               autoComplete={isSignup ? "new-password" : "current-password"}
               required
               minLength={8}
-              disabled={pending}
+              disabled={pending || resendPending}
               className="h-10 w-full rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
             />
           </label>
@@ -161,7 +226,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             type="submit"
             className="w-full"
             variant={isSignup ? "secondary" : "default"}
-            disabled={pending}
+            disabled={pending || resendPending}
           >
             {pending
               ? t("auth.pleaseWait")
@@ -169,6 +234,18 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 ? t("auth.createAccountBtn")
                 : t("auth.signIn")}
           </Button>
+
+          {showResend ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={pending || resendPending}
+              onClick={() => void handleResend()}
+            >
+              {resendPending ? t("auth.sendingVerification") : t("auth.resendVerification")}
+            </Button>
+          ) : null}
         </form>
 
         <p className="text-center text-sm text-muted">

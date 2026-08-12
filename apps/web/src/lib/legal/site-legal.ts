@@ -1,6 +1,12 @@
 /** Parent company shown in site footer and legal pages. */
 export const LEGAL_PARENT_COMPANY = "FR Partners NY Inc";
 
+/** Default privacy / legal contact addresses (shown on privacy + terms). */
+export const DEFAULT_PRIVACY_CONTACT_EMAILS = [
+  "syed@queueora.com",
+  "syed.r.akbar@gmail.com",
+] as const;
+
 /** Legal entity details for privacy policy and developer app review forms. */
 export function getLegalEntityName() {
   return process.env.LEGAL_ENTITY_NAME?.trim() || LEGAL_PARENT_COMPANY;
@@ -12,16 +18,25 @@ export function getSiteCopyrightNotice(year = new Date().getFullYear()) {
 }
 
 /**
- * Contact address shown on the privacy policy and for Meta app review forms.
- * Prefer PRIVACY_CONTACT_EMAIL when set; do not fall back to EMAIL_FROM
- * (often a no-reply sender).
+ * Contact addresses shown on the privacy policy, terms, and Meta app review forms.
+ * Prefer PRIVACY_CONTACT_EMAIL when set (comma-separated for multiple); do not fall
+ * back to EMAIL_FROM (often a no-reply sender).
  */
-export function getPrivacyContactEmail() {
+export function getPrivacyContactEmails() {
   const direct = process.env.PRIVACY_CONTACT_EMAIL?.trim();
-  if (direct) return direct;
+  if (direct) {
+    return direct
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+  }
 
-  // Temporary operator email until privacy@queueora.com is provisioned.
-  return "syed.r.akbar@gmail.com";
+  return [...DEFAULT_PRIVACY_CONTACT_EMAILS];
+}
+
+/** Primary contact (first address) for single-email contexts. */
+export function getPrivacyContactEmail() {
+  return getPrivacyContactEmails()[0] ?? DEFAULT_PRIVACY_CONTACT_EMAILS[0];
 }
 
 export function getPublicSiteUrl() {

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { LegalPageShell } from "@/components/marketing/legal-page-shell";
 import {
   getLegalEntityName,
-  getPrivacyContactEmail,
+  getPrivacyContactEmails,
   getPublicSiteUrl,
 } from "@/lib/legal/site-legal";
 
@@ -25,8 +25,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPolicyPage() {
   const entity = getLegalEntityName();
-  const contactEmail = getPrivacyContactEmail();
+  const contactEmails = getPrivacyContactEmails();
   const siteUrl = getPublicSiteUrl();
+
+  function ContactEmailList({ join = " or " }: { join?: string }) {
+    return (
+      <>
+        {contactEmails.map((email, index) => (
+          <span key={email}>
+            {index > 0 ? join : null}
+            <a
+              href={`mailto:${email}`}
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              {email}
+            </a>
+          </span>
+        ))}
+      </>
+    );
+  }
 
   return (
     <LegalPageShell title="Privacy Policy">
@@ -45,14 +63,7 @@ export default function PrivacyPolicyPage() {
           use our website and services.
         </p>
         <p>
-          For privacy questions or requests, contact us at{" "}
-          <a
-            href={`mailto:${contactEmail}`}
-            className="text-primary underline-offset-2 hover:underline"
-          >
-            {contactEmail}
-          </a>
-          .
+          For privacy questions or requests, contact us at <ContactEmailList />.
         </p>
       </Section>
 
@@ -181,14 +192,7 @@ export default function PrivacyPolicyPage() {
         <p>
           Depending on your location, you may have rights to access, correct, delete, or restrict
           processing of your personal data, or to object to certain processing. To exercise these
-          rights, email{" "}
-          <a
-            href={`mailto:${contactEmail}`}
-            className="text-primary underline-offset-2 hover:underline"
-          >
-            {contactEmail}
-          </a>
-          . We will respond within a reasonable time.
+          rights, email <ContactEmailList />. We will respond within a reasonable time.
         </p>
         <p>
           You can disconnect social accounts at any time from the Accounts section of the dashboard.
@@ -225,13 +229,7 @@ export default function PrivacyPolicyPage() {
         <p>
           {entity}
           <br />
-          Email:{" "}
-          <a
-            href={`mailto:${contactEmail}`}
-            className="text-primary underline-offset-2 hover:underline"
-          >
-            {contactEmail}
-          </a>
+          Email: <ContactEmailList join="; " />
           <br />
           Website:{" "}
           <a href={siteUrl} className="text-primary underline-offset-2 hover:underline">

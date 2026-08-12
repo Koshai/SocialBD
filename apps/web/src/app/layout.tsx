@@ -24,7 +24,7 @@ const preferencesBootstrapScript = `(function(){try{var c=document.cookie.split(
 export const metadata: Metadata = {
   title: "QueueOra — Social media scheduling made simple",
   description:
-    "Schedule posts, manage teams, and grow your brand — priced in BDT with local payments.",
+    "Schedule posts, manage teams, and grow your brand — priced in BDT and USD with local and international payments.",
 };
 
 export default async function RootLayout({

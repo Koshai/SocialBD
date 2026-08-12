@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LegalPageShell } from "@/components/marketing/legal-page-shell";
 import {
   getLegalEntityName,
-  getPrivacyContactEmail,
+  getPrivacyContactEmails,
   getPublicSiteUrl,
 } from "@/lib/legal/site-legal";
 
@@ -26,8 +26,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function TermsOfServicePage() {
   const entity = getLegalEntityName();
-  const contactEmail = getPrivacyContactEmail();
+  const contactEmails = getPrivacyContactEmails();
   const siteUrl = getPublicSiteUrl();
+
+  function ContactEmailList({ join = " or " }: { join?: string }) {
+    return (
+      <>
+        {contactEmails.map((email, index) => (
+          <span key={email}>
+            {index > 0 ? join : null}
+            <a
+              href={`mailto:${email}`}
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              {email}
+            </a>
+          </span>
+        ))}
+      </>
+    );
+  }
 
   return (
     <LegalPageShell title="Terms of Service">
@@ -226,13 +244,7 @@ export default function TermsOfServicePage() {
 
       <Section title="16. Contact">
         <p>
-          Questions about these Terms:{" "}
-          <a
-            href={`mailto:${contactEmail}`}
-            className="text-primary underline-offset-2 hover:underline"
-          >
-            {contactEmail}
-          </a>
+          Questions about these Terms: <ContactEmailList />
           <br />
           {entity}
           <br />

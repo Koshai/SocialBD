@@ -1,6 +1,14 @@
+/** Parent company shown in site footer and legal pages. */
+export const LEGAL_PARENT_COMPANY = "FR Partners NY Inc";
+
 /** Legal entity details for privacy policy and developer app review forms. */
 export function getLegalEntityName() {
-  return process.env.LEGAL_ENTITY_NAME?.trim() || "QueueOra";
+  return process.env.LEGAL_ENTITY_NAME?.trim() || LEGAL_PARENT_COMPANY;
+}
+
+/** Site footer copyright line (homepage, privacy, terms). */
+export function getSiteCopyrightNotice(year = new Date().getFullYear()) {
+  return `© ${year}, QueueOra, a ${LEGAL_PARENT_COMPANY} company`;
 }
 
 /**

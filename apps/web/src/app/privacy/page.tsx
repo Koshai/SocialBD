@@ -36,8 +36,8 @@ export default function PrivacyPolicyPage() {
 
       <Section title="1. Who we are">
         <p>
-          {entity} (“<strong className="text-foreground">QueueOra</strong>”, “we”, “us”) operates a
-          social media management platform at{" "}
+          {entity} (“<strong className="text-foreground">QueueOra</strong>”, “we”, “us”) operates the
+          QueueOra social media management platform at{" "}
           <a href={siteUrl} className="text-primary underline-offset-2 hover:underline">
             {siteUrl}
           </a>

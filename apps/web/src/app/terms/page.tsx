@@ -37,8 +37,8 @@ export default function TermsOfServicePage() {
 
       <Section title="1. Agreement">
         <p>
-          These Terms of Service (“Terms”) are a contract between you and{" "}
-          {entity} (“<strong className="text-foreground">QueueOra</strong>”, “we”, “us”) for
+          These Terms of Service (“Terms”) are a contract between you and {entity}, which operates the
+          QueueOra platform (“<strong className="text-foreground">QueueOra</strong>”, “we”, “us”), for
           access to and use of the website and services available at{" "}
           <a href={siteUrl} className="text-primary underline-offset-2 hover:underline">
             {siteUrl}

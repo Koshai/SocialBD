@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import { QueueOraLogo } from "@socialbd/ui";
 
+import { getSiteCopyrightNotice } from "@/lib/legal/site-legal";
+
 type LegalPageShellProps = {
   title: string;
   children: ReactNode;
@@ -48,7 +50,7 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
             Home
           </Link>
         </p>
-        <p className="mt-2">© {new Date().getFullYear()} QueueOra</p>
+        <p className="mt-2">{getSiteCopyrightNotice()}</p>
       </footer>
     </div>
   );

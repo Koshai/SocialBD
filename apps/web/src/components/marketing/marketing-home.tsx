@@ -5,6 +5,7 @@ import { Card, CardDescription, CardTitle, QueueOraLogo } from "@socialbd/ui";
 
 import { AppearanceControls } from "@/components/preferences/appearance-controls";
 import { usePreferences } from "@/components/preferences/preferences-provider";
+import { getSiteCopyrightNotice } from "@/lib/legal/site-legal";
 
 export function MarketingHome() {
   const { t } = usePreferences();
@@ -21,11 +22,13 @@ export function MarketingHome() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
           <QueueOraLogo showTagline={false} />
           <div className="flex flex-wrap items-center gap-3">
-            <AppearanceControls />
+            <div className="hidden sm:block">
+              <AppearanceControls />
+            </div>
             <nav aria-label="Primary" className="flex gap-3">
               <Link
                 href="#features"
-                className="rounded-lg px-3 py-2 text-sm text-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="hidden rounded-lg px-3 py-2 text-sm text-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:inline-flex"
               >
                 {t("home.seeFeatures")}
               </Link>
@@ -86,7 +89,7 @@ export function MarketingHome() {
             Terms of Service
           </Link>
         </p>
-        <p className="mt-2">© {new Date().getFullYear()} QueueOra</p>
+        <p className="mt-2">{getSiteCopyrightNotice()}</p>
       </footer>
     </div>
   );

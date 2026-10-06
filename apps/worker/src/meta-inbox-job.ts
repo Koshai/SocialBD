@@ -87,10 +87,14 @@ export async function processMetaInboxJob(eventId: string) {
       let commentId: string | null = null;
       try {
         const payload = JSON.parse(event.payload) as {
-          value?: { comment_id?: string };
+          value?: { comment_id?: string; id?: string };
           comment_id?: string;
         };
-        commentId = payload.value?.comment_id ?? payload.comment_id ?? null;
+        commentId =
+          payload.value?.comment_id ??
+          payload.comment_id ??
+          (event.platform === "instagram" ? payload.value?.id : undefined) ??
+          null;
       } catch {
         commentId = null;
       }
@@ -105,6 +109,7 @@ export async function processMetaInboxJob(eventId: string) {
         commentId,
         message: replyText,
         pageAccessToken: account.accessToken,
+        instagram: event.platform === "instagram",
       });
     } else {
       throw new Error(`Unsupported event type: ${event.eventType}`);

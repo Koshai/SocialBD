@@ -1,7 +1,8 @@
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, like, ne, or } from "drizzle-orm";
 
 import { db } from "./db";
 import { connectedAccount } from "./schema/connected-account";
+import { member, organization } from "./schema/organization";
 import { inboxEvent, replyAgent } from "./schema/reply-agent";
 
 export type ReplyAgentRow = typeof replyAgent.$inferSelect;
@@ -74,8 +75,28 @@ export async function getReplyAgentWithAccountById(agentId: string) {
   return row ?? null;
 }
 
-export async function getEnabledAgentByProviderAccountId(providerAccountId: string) {
-  const [row] = await db
+export type MetaInboxEventKind = "messenger" | "comment" | "mention";
+
+type AgentMatch = { agent: ReplyAgentRow; account: typeof connectedAccount.$inferSelect };
+
+/**
+ * The same Page/IG account can be connected (with an enabled agent) in several workspaces.
+ * Prefer an agent that actually handles this event type, then the most recently updated one,
+ * so Messenger and comment events for one Page resolve to the same workspace deterministically.
+ */
+function pickAgentForEvent(rows: AgentMatch[], eventKind?: MetaInboxEventKind) {
+  if (rows.length === 0) return null;
+  if (!eventKind) return rows[0];
+  const handles = (row: AgentMatch) =>
+    eventKind === "messenger" ? row.agent.replyMessenger : row.agent.replyComments;
+  return rows.find(handles) ?? rows[0];
+}
+
+export async function getEnabledAgentByProviderAccountId(
+  providerAccountId: string,
+  eventKind?: MetaInboxEventKind,
+) {
+  const rows = await db
     .select({
       agent: replyAgent,
       account: connectedAccount,
@@ -89,9 +110,9 @@ export async function getEnabledAgentByProviderAccountId(providerAccountId: stri
         eq(replyAgent.enabled, true),
       ),
     )
-    .limit(1);
+    .orderBy(desc(replyAgent.updatedAt));
 
-  return row ?? null;
+  return pickAgentForEvent(rows, eventKind);
 }
 
 /** Parse linked Facebook Page id from IG account username (`page:{id}` or `handle|page:{id}`). */
@@ -158,8 +179,11 @@ export async function resolveMessengerSendPageId(input: {
  * IG accounts store linked Page as username `page:{pageId}` when no IG username,
  * or share the Page access token — we fall back to token match within the org.
  */
-export async function getEnabledAgentForMetaPageOrIg(pageOrIgId: string) {
-  const direct = await getEnabledAgentByProviderAccountId(pageOrIgId);
+export async function getEnabledAgentForMetaPageOrIg(
+  pageOrIgId: string,
+  eventKind?: MetaInboxEventKind,
+) {
+  const direct = await getEnabledAgentByProviderAccountId(pageOrIgId, eventKind);
   if (direct) return direct;
 
   // Legacy `page:{pageId}` and current `handle|page:{pageId}` encodings.
@@ -181,9 +205,10 @@ export async function getEnabledAgentForMetaPageOrIg(pageOrIgId: string) {
         eq(replyAgent.enabled, true),
       ),
     )
-    .limit(1);
+    .orderBy(desc(replyAgent.updatedAt));
 
-  if (byLinkedUsername[0]) return byLinkedUsername[0];
+  const linkedMatch = pickAgentForEvent(byLinkedUsername, eventKind);
+  if (linkedMatch) return linkedMatch;
 
   const [pageAccount] = await db
     .select()
@@ -254,6 +279,67 @@ export async function getEnabledAgentForMetaPageOrIg(pageOrIgId: string) {
   }
 
   return null;
+}
+
+/**
+ * A Page/IG account can be connected in several workspaces, but webhooks can only be answered
+ * by one agent. Returns the other workspace's live agent for the same channel, if any.
+ * `workspaceName` is only revealed when the requesting user is a member of that workspace.
+ */
+export async function findLiveAgentConflict(input: {
+  organizationId: string;
+  connectedAccountId: string;
+  userId: string;
+}) {
+  const [account] = await db
+    .select({
+      platform: connectedAccount.platform,
+      providerAccountId: connectedAccount.providerAccountId,
+    })
+    .from(connectedAccount)
+    .where(eq(connectedAccount.id, input.connectedAccountId))
+    .limit(1);
+  if (!account) return null;
+
+  const [conflict] = await db
+    .select({
+      agentId: replyAgent.id,
+      organizationId: replyAgent.organizationId,
+      workspaceName: organization.name,
+    })
+    .from(replyAgent)
+    .innerJoin(connectedAccount, eq(replyAgent.connectedAccountId, connectedAccount.id))
+    .innerJoin(organization, eq(replyAgent.organizationId, organization.id))
+    .where(
+      and(
+        eq(connectedAccount.platform, account.platform),
+        eq(connectedAccount.providerAccountId, account.providerAccountId),
+        eq(connectedAccount.status, "active"),
+        eq(replyAgent.enabled, true),
+        ne(replyAgent.organizationId, input.organizationId),
+      ),
+    )
+    .limit(1);
+  if (!conflict) return null;
+
+  const [membership] = await db
+    .select({ id: member.id })
+    .from(member)
+    .where(and(eq(member.organizationId, conflict.organizationId), eq(member.userId, input.userId)))
+    .limit(1);
+
+  return {
+    agentId: conflict.agentId,
+    workspaceName: membership ? conflict.workspaceName : null,
+  };
+}
+
+export function liveAgentConflictMessage(workspaceName: string | null) {
+  return workspaceName
+    ? `This channel already has a live agent in your workspace "${workspaceName}". ` +
+        "Turn it off or delete it there first — only one live agent per Page/Instagram account is allowed."
+    : "This channel already has a live agent in another QueueOra workspace. " +
+        "Only one live agent per Page/Instagram account is allowed.";
 }
 
 export async function upsertReplyAgent(input: {

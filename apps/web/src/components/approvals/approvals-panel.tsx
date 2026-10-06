@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
@@ -52,6 +53,12 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
       <Card>
         <CardTitle>{t("approvals.title")}</CardTitle>
         <CardDescription>{t("approvals.noAccessDesc")}</CardDescription>
+        <Link
+          href="/dashboard/composer"
+          className="mt-4 inline-flex h-11 items-center text-sm font-medium text-primary hover:underline"
+        >
+          {t("approvals.noAccessCta")} →
+        </Link>
       </Card>
     );
   }
@@ -68,7 +75,15 @@ export function ApprovalsPanel({ posts, canReview }: ApprovalsPanelProps) {
       ) : null}
 
       {posts.length === 0 ? (
-        <p className="mt-4 text-sm text-muted">{t("approvals.empty")}</p>
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-muted">{t("approvals.empty")}</p>
+          <Link
+            href="/dashboard/composer"
+            className="inline-flex h-11 items-center text-sm font-medium text-primary hover:underline"
+          >
+            {t("approvals.emptyCta")} →
+          </Link>
+        </div>
       ) : (
         <ul className="mt-4 space-y-3">
           {posts.map((post) => (

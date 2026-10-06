@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import {
   deleteReplyAgent,
+  findLiveAgentConflict,
   getReplyAgentById,
+  liveAgentConflictMessage,
   setReplyAgentEnabled,
 } from "@socialbd/db";
 
@@ -18,7 +20,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Agents feature is disabled." }, { status: 404 });
   }
 
-  const { organizationId } = await requireActiveOrganization();
+  const { organizationId, userId } = await requireActiveOrganization();
   const { agentId } = await context.params;
   if (!agentId?.trim()) {
     return NextResponse.json({ error: "agentId is required." }, { status: 400 });
@@ -41,6 +43,20 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const enabled = (json as { enabled: unknown }).enabled === true;
+  if (enabled) {
+    const conflict = await findLiveAgentConflict({
+      organizationId,
+      connectedAccountId: existing.connectedAccountId,
+      userId,
+    });
+    if (conflict) {
+      return NextResponse.json(
+        { error: liveAgentConflictMessage(conflict.workspaceName) },
+        { status: 409 },
+      );
+    }
+  }
+
   const agent = await setReplyAgentEnabled(organizationId, agentId.trim(), enabled);
   if (!agent) {
     return NextResponse.json({ error: "Could not update agent." }, { status: 500 });

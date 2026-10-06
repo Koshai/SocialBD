@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, Card, CardDescription, CardTitle } from "@socialbd/ui";
@@ -119,6 +120,12 @@ export function ComposerForm({
       <Card>
         <CardTitle>{t("composer.noChannelsTitle")}</CardTitle>
         <CardDescription>{t("composer.noChannelsDesc")}</CardDescription>
+        <Link
+          href="/dashboard/accounts"
+          className="mt-4 inline-flex h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white hover:opacity-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          {t("composer.connectChannels")}
+        </Link>
       </Card>
     );
   }

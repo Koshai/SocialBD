@@ -115,8 +115,26 @@ export function PostHistoryPanel({
         <CardTitle>{t("posts.historyTitle")}</CardTitle>
         <CardDescription>{t("posts.historyDesc")}</CardDescription>
 
+        <div className="mt-4 sm:hidden">
+          <label className="block space-y-1 text-sm">
+            <span className="font-medium text-muted">{t("posts.filterByStatus")}</span>
+            <select
+              value={filter.status}
+              disabled={pending}
+              onChange={(e) => changeStatus(e.target.value as PostHistoryFilter["status"])}
+              className="h-11 w-full rounded-lg border border-border bg-background px-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              {statusTabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label} ({tab.count})
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div
-          className="mt-4 flex flex-wrap gap-2"
+          className="mt-4 hidden flex-wrap gap-2 sm:flex"
           role="tablist"
           aria-label={t("posts.filterByStatus")}
         >
@@ -128,7 +146,7 @@ export function PostHistoryPanel({
               aria-selected={filter.status === tab.id}
               disabled={pending}
               onClick={() => changeStatus(tab.id)}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`min-h-10 rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
                 filter.status === tab.id
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-background text-foreground hover:bg-muted/40"
@@ -146,7 +164,7 @@ export function PostHistoryPanel({
             value={filter.platform}
             disabled={pending}
             onChange={(e) => changePlatform(e.target.value as PostHistoryFilter["platform"])}
-            className="h-9 rounded-lg border border-border bg-background px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-11 min-w-[12rem] flex-1 rounded-lg border border-border bg-background px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-9 sm:flex-none"
           >
             {buildPlatformOptions().map((option) => (
               <option key={option.id} value={option.id}>
@@ -167,6 +185,7 @@ export function PostHistoryPanel({
         posts={posts}
         isPolling={pending}
         emptyMessage={t("posts.historyEmpty")}
+        footerLink={{ href: "/dashboard/composer", label: t("posts.historyEmptyCta") }}
       />
 
       {nextCursor ? (

@@ -149,7 +149,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center gap-4 px-6 py-12">
-      <AppearanceControls />
+      <div className="hidden w-full sm:block">
+        <AppearanceControls />
+      </div>
       <Card className="w-full space-y-6">
         <div className="space-y-4 text-center">
           <div className="flex justify-center">

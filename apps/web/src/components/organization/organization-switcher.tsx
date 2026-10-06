@@ -7,7 +7,12 @@ import { Button } from "@socialbd/ui";
 import { usePreferences } from "@/components/preferences/preferences-provider";
 import { authClient } from "@/lib/auth-client";
 
-export function OrganizationSwitcher() {
+type OrganizationSwitcherProps = {
+  /** Full-width select, hide New button (mobile header row). */
+  compact?: boolean;
+};
+
+export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherProps) {
   const { t } = usePreferences();
   const router = useRouter();
   const { data: organizations, isPending } = authClient.useListOrganizations();
@@ -35,14 +40,25 @@ export function OrganizationSwitcher() {
   }
 
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <label
+      className={[
+        "flex items-center gap-2 text-sm",
+        compact ? "w-full" : "",
+      ].join(" ")}
+    >
       <span className="sr-only">{t("common.activeWorkspace")}</span>
-      <span className="hidden text-muted sm:inline">{t("common.workspace")}</span>
+      {!compact ? (
+        <span className="hidden text-muted lg:inline">{t("common.workspace")}</span>
+      ) : null}
       <select
         value={activeOrganization?.id ?? ""}
         disabled={pending}
         onChange={(e) => handleChange(e.target.value)}
-        className="h-9 max-w-[12rem] truncate rounded-lg border border-border bg-background px-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:max-w-[14rem]"
+        className={[
+          "h-10 rounded-lg border border-border bg-background px-2 text-sm",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          compact ? "min-h-11 w-full max-w-none" : "max-w-[12rem] truncate sm:max-w-[14rem] h-9",
+        ].join(" ")}
       >
         {organizations.map((org) => (
           <option key={org.id} value={org.id}>
@@ -50,14 +66,16 @@ export function OrganizationSwitcher() {
           </option>
         ))}
       </select>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => router.push("/dashboard/workspaces/new")}
-      >
-        {t("common.new")}
-      </Button>
+      {!compact ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/dashboard/workspaces/new")}
+        >
+          {t("common.new")}
+        </Button>
+      ) : null}
     </label>
   );
 }

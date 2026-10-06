@@ -22,8 +22,8 @@ export default async function PostsHistoryPage({ searchParams }: PostsHistoryPag
   const { organizationId } = await requireActiveOrganization();
   const params = await searchParams;
 
-  const statusRaw = params.status?.trim() || "published";
-  const status = (VALID_STATUSES.has(statusRaw) ? statusRaw : "published") as PostHistoryFilter["status"];
+  const statusRaw = params.status?.trim() || "all";
+  const status = (VALID_STATUSES.has(statusRaw) ? statusRaw : "all") as PostHistoryFilter["status"];
   const platform = (params.platform?.trim() || "all") as PostHistoryFilter["platform"];
 
   const initialFilter: PostHistoryFilter = { status, platform };

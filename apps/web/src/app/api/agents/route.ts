@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import {
   AGENT_TEMPLATES,
+  findLiveAgentConflict,
   getConnectedAccountForOrganization,
+  liveAgentConflictMessage,
   getTemplateSystemPrompt,
   listRecentInboxEvents,
   listReplyAgents,
@@ -46,7 +48,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Agents feature is disabled." }, { status: 404 });
   }
 
-  const { organizationId } = await requireActiveOrganization();
+  const { organizationId, userId } = await requireActiveOrganization();
   const body = (await request.json()) as {
     connectedAccountId?: string;
     name?: string;
@@ -74,6 +76,16 @@ export async function POST(request: Request) {
       { error: "Agents only support Facebook Pages and Instagram." },
       { status: 400 },
     );
+  }
+
+  if (body.enabled === true) {
+    const conflict = await findLiveAgentConflict({ organizationId, connectedAccountId, userId });
+    if (conflict) {
+      return NextResponse.json(
+        { error: liveAgentConflictMessage(conflict.workspaceName) },
+        { status: 409 },
+      );
+    }
   }
 
   const language = body.language === "bn" ? "bn" : "en";

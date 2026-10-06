@@ -78,9 +78,11 @@ export async function replyToComment(input: {
   commentId: string;
   message: string;
   pageAccessToken: string;
+  /** Instagram comment replies use `/{ig-comment-id}/replies`; Facebook uses `/comments`. */
+  instagram?: boolean;
 }) {
   return graphPost<{ id?: string }>(
-    `/${input.commentId}/comments`,
+    `/${input.commentId}/${input.instagram ? "replies" : "comments"}`,
     { message: input.message.slice(0, 1900) },
     input.pageAccessToken,
   );

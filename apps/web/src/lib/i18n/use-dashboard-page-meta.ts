@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { dashboardNavRoutes } from "./dashboard-nav";
+import { dashboardNavRoutes, isNavActive } from "./dashboard-nav";
 import { usePreferences } from "@/components/preferences/preferences-provider";
 
 export function useDashboardPageMeta() {
@@ -16,9 +16,10 @@ export function useDashboardPageMeta() {
     };
   }
 
-  const item = dashboardNavRoutes.find(
-    (nav) => nav.href === pathname || pathname.startsWith(`${nav.href}/`),
-  );
+  // Match longest route first so /dashboard does not steal every nested page.
+  const item = [...dashboardNavRoutes]
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((nav) => isNavActive(pathname, nav.href));
 
   if (!item) {
     return {

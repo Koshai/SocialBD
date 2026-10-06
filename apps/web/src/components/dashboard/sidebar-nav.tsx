@@ -17,7 +17,7 @@ export function SidebarNav({ agentsEnabled = false }: SidebarNavProps) {
   const routes = getDashboardNavRoutes(agentsEnabled);
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-border bg-surface">
+    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-border bg-surface">
       <div className="border-b border-border px-5 py-5">
         <Link
           href="/dashboard"

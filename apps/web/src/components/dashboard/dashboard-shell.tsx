@@ -35,10 +35,9 @@ export function DashboardShell({
         <SidebarNav agentsEnabled={agentsEnabled} />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <MobileNav agentsEnabled={agentsEnabled} />
+      <div className="flex min-w-0 flex-1 flex-col pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
         <DashboardHeader user={user} title={title} description={description} />
-        <main id="dashboard-main" className="flex-1 px-4 py-6 sm:px-6">
+        <main id="dashboard-main" className="flex-1 px-4 py-5 sm:px-6 sm:py-6">
           <WorkspaceGate
             hasActiveOrganization={hasActiveOrganization}
             hasAnyOrganization={hasAnyOrganization}
@@ -46,6 +45,7 @@ export function DashboardShell({
             {children}
           </WorkspaceGate>
         </main>
+        <MobileNav agentsEnabled={agentsEnabled} />
       </div>
     </div>
   );

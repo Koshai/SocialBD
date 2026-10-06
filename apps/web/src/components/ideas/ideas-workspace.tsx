@@ -639,6 +639,13 @@ export function IdeasWorkspace({
       {ideas.length === 0 ? (
         <Card>
           <CardDescription>{t("ideas.empty")}</CardDescription>
+          <Button
+            type="button"
+            className="mt-4 min-h-11"
+            onClick={() => setEditor({ mode: "create" })}
+          >
+            {t("ideas.emptyCta")}
+          </Button>
         </Card>
       ) : (
         <ul className="space-y-3">

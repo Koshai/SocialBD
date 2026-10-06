@@ -136,6 +136,12 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
         <Card>
           <CardTitle>{t("analytics.channelsTitle")}</CardTitle>
           <CardDescription>{t("analytics.emptyPosts")}</CardDescription>
+          <a
+            href="/dashboard/composer"
+            className="mt-4 inline-flex h-11 items-center text-sm font-medium text-primary hover:underline"
+          >
+            {t("analytics.emptyCta")} →
+          </a>
         </Card>
       ) : (
         <>
@@ -150,7 +156,7 @@ export function AnalyticsDashboard({ initial, initialError }: AnalyticsDashboard
                     key={channel.id}
                     type="button"
                     onClick={() => setSelectedChannelId(channel.id)}
-                    className={`min-w-[12rem] flex-1 rounded-xl border px-4 py-3 text-left transition-colors sm:flex-none ${
+                    className={`min-w-0 flex-1 basis-[calc(50%-0.25rem)] rounded-xl border px-3 py-3 text-left transition-colors sm:min-w-[12rem] sm:flex-none sm:basis-auto sm:px-4 ${
                       selected
                         ? "border-primary bg-primary/5 ring-1 ring-primary/30"
                         : "border-border bg-background hover:border-primary/40"

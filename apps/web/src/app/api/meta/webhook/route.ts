@@ -21,6 +21,8 @@ type MessagingItem = {
 };
 
 type FeedChangeValue = {
+  /** Instagram `comments` field: the comment id lives here, not in `comment_id`. */
+  id?: string;
   item?: string;
   verb?: string;
   comment_id?: string;
@@ -28,7 +30,9 @@ type FeedChangeValue = {
   parent_id?: string;
   message?: string;
   text?: string;
+  sender_id?: string;
   from?: { id?: string; name?: string; username?: string };
+  message_tags?: Array<{ id?: string; name?: string }>;
 };
 
 type WebhookEntry = {
@@ -62,10 +66,16 @@ function verifySignature(rawBody: string, signatureHeader: string | null) {
   }
 }
 
-function mentionsPage(text: string, pageName?: string | null) {
-  const lower = text.toLowerCase();
+function mentionsPage(input: {
+  text: string;
+  pageId: string;
+  pageName?: string | null;
+  messageTags?: FeedChangeValue["message_tags"];
+}) {
+  if (input.messageTags?.some((tag) => tag.id === input.pageId)) return true;
+  const lower = input.text.toLowerCase();
   if (lower.includes("@")) return true;
-  if (pageName && lower.includes(pageName.toLowerCase())) return true;
+  if (input.pageName && lower.includes(input.pageName.toLowerCase())) return true;
   return false;
 }
 
@@ -78,8 +88,9 @@ async function ingestEvent(input: {
   incomingText?: string | null;
   payload: unknown;
   skipWithoutMention?: boolean;
+  messageTags?: FeedChangeValue["message_tags"];
 }) {
-  const matched = await getEnabledAgentForMetaPageOrIg(input.pageOrIgId);
+  const matched = await getEnabledAgentForMetaPageOrIg(input.pageOrIgId, input.eventType);
   if (!matched) {
     console.info(
       `[meta/webhook] No enabled agent for ${input.platform} id=${input.pageOrIgId} ` +
@@ -97,6 +108,10 @@ async function ingestEvent(input: {
     return;
   }
   if ((input.eventType === "comment" || input.eventType === "mention") && !agent.replyComments) {
+    console.info(
+      `[meta/webhook] Agent ${agent.id} has comment replies disabled for ${input.pageOrIgId} ` +
+        `(event=${input.eventType}).`,
+    );
     return;
   }
 
@@ -104,8 +119,17 @@ async function ingestEvent(input: {
     input.skipWithoutMention &&
     agent.requireMention &&
     input.incomingText &&
-    !mentionsPage(input.incomingText, account.displayName)
+    !mentionsPage({
+      text: input.incomingText,
+      pageId: input.pageOrIgId,
+      pageName: account.displayName,
+      messageTags: input.messageTags,
+    })
   ) {
+    console.info(
+      `[meta/webhook] Skipped comment ${input.externalId} for agent ${agent.id}: ` +
+        `"Only reply when mentioned" is on and the comment does not tag ${account.displayName}.`,
+    );
     return;
   }
 
@@ -122,7 +146,10 @@ async function ingestEvent(input: {
     incomingText: input.incomingText ?? null,
   });
 
-  if (duplicate || !event) return;
+  if (duplicate || !event) {
+    console.info(`[meta/webhook] Duplicate ${input.eventType} ${input.externalId} ignored.`);
+    return;
+  }
   console.info(
     `[meta/webhook] Queued ${input.eventType} event ${event.id} for agent ${agent.id} ` +
       `(${input.platform} ${input.pageOrIgId})`,
@@ -164,21 +191,35 @@ async function handleChanges(objectType: string, entry: WebhookEntry) {
 
     if (change.field === "feed" || change.field === "comments") {
       if (value.item && value.item !== "comment") continue;
-      if (value.verb && value.verb !== "add") continue;
-      const commentId = value.comment_id;
+      if (value.verb && value.verb !== "add") {
+        console.info(
+          `[meta/webhook] Ignored comment verb=${value.verb} on ${platform} ${pageOrIgId}.`,
+        );
+        continue;
+      }
+      const commentId =
+        value.comment_id ?? (objectType === "instagram" ? value.id : undefined);
       const text = (value.message ?? value.text ?? "").trim();
-      if (!commentId || !text) continue;
+      if (!commentId || !text) {
+        console.info(
+          `[meta/webhook] Ignored ${change.field} change on ${platform} ${pageOrIgId}: ` +
+            `missing comment id or text.`,
+        );
+        continue;
+      }
       if (value.from?.id && value.from.id === pageOrIgId) continue;
 
       await ingestEvent({
         pageOrIgId,
         platform,
         eventType: "comment",
+        // Shared with `mention` so a tagged comment delivered on both fields replies once.
         externalId: `comment:${commentId}`,
         senderId: value.from?.id ?? null,
         incomingText: text,
         payload: change,
         skipWithoutMention: true,
+        messageTags: value.message_tags,
       });
       continue;
     }
@@ -186,14 +227,21 @@ async function handleChanges(objectType: string, entry: WebhookEntry) {
     if (change.field === "mention") {
       const commentId = value.comment_id ?? value.post_id;
       const text = (value.message ?? value.text ?? "").trim();
-      if (!commentId || !text) continue;
+      if (!commentId || !text) {
+        console.info(
+          `[meta/webhook] Ignored mention on ${platform} ${pageOrIgId}: missing id or text.`,
+        );
+        continue;
+      }
+      const senderId = value.sender_id ?? value.from?.id ?? null;
+      if (senderId && senderId === pageOrIgId) continue;
 
       await ingestEvent({
         pageOrIgId,
         platform,
         eventType: "mention",
-        externalId: `mention:${commentId}`,
-        senderId: value.from?.id ?? null,
+        externalId: value.comment_id ? `comment:${value.comment_id}` : `mention:${commentId}`,
+        senderId,
         incomingText: text,
         payload: change,
       });

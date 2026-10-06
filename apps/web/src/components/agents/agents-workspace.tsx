@@ -313,6 +313,14 @@ export function AgentsWorkspace({ initialData = null }: { initialData?: AgentsPa
                 )}
               </select>
             </label>
+            {data.channels.length === 0 ? (
+              <a
+                href="/dashboard/accounts"
+                className="inline-flex h-11 items-center text-sm font-medium text-primary hover:underline"
+              >
+                {t("agents.connectChannels")} →
+              </a>
+            ) : null}
 
             <div>
               <p className="mb-2 text-sm font-medium">{t("agents.templates")}</p>

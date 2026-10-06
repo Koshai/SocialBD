@@ -336,7 +336,7 @@ export function PublishingCalendar({
           pasteable
             ? "cursor-pointer hover:border-primary/50 hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             : ""
-        } ${compact ? "" : "min-h-[8rem]"}`}
+        } ${compact ? "" : "min-h-[8rem]"} sm:min-h-0`}
       >
         <p className={`mb-2 text-xs font-semibold ${isToday ? "text-primary" : "text-muted"}`}>
           {compact ? formatMonthDayNumber(day) : formatWeekDayHeader(day)}
@@ -471,8 +471,21 @@ export function PublishingCalendar({
             {weekDays.map((day) => renderDayCell(day, { compact: false, inMonth: true }))}
           </div>
         ) : (
-          <div className="mt-6 overflow-x-auto">
-            <div className="grid min-w-[44rem] grid-cols-7 gap-2">
+          <>
+            {/* Mobile: agenda list (no forced wide grid) */}
+            <div className="mt-6 space-y-2 md:hidden">
+              {monthDays
+                .filter((day) => isSameCalendarMonth(day, anchor))
+                .map((day) =>
+                  renderDayCell(day, {
+                    compact: false,
+                    inMonth: true,
+                    isToday: isSameCalendarDay(day, new Date()),
+                  }),
+                )}
+            </div>
+            {/* Desktop month grid */}
+            <div className="mt-6 hidden grid-cols-7 gap-2 md:grid">
               {weekdayLabels.map((day) => (
                 <p key={day.toISOString()} className="px-1 text-xs font-semibold text-muted">
                   {formatWeekdayLabel(day)}
@@ -486,7 +499,7 @@ export function PublishingCalendar({
                 }),
               )}
             </div>
-          </div>
+          </>
         )}
       </Card>
 
